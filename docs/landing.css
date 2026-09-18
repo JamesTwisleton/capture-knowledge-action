@@ -36,8 +36,20 @@ body {
 a { color: var(--blue); }
 img, svg { max-width: 100%; }
 .wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 24px; }
-section { padding: 96px 0; }
+section { padding: 96px 0; scroll-margin-top: 72px; }
 @media (max-width: 700px) { section { padding: 64px 0; } }
+section.story-first { padding-top: 24px; }
+
+.anchor {
+  color: var(--ink-muted);
+  text-decoration: none;
+  font-weight: 500;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+h2:hover .anchor, .w-title:hover .anchor { opacity: 1; }
+.anchor:hover { color: var(--blue); }
+@media (hover: none) { .anchor { opacity: 0.5; } }
 
 h1, h2, h3 { line-height: 1.15; font-weight: 750; letter-spacing: -0.01em; }
 .eyebrow {
@@ -110,15 +122,32 @@ nav.top .cta-small:hover { background: #2a78d6; }
 
 /* ---------- Hero ---------- */
 
-.hero { padding: 120px 0 100px; text-align: center; }
-@media (max-width: 700px) { .hero { padding: 72px 0 56px; } }
-.hero h1 {
-  font-size: clamp(36px, 6vw, 64px);
-  max-width: 18ch;
-  margin: 0 auto 20px;
+.hero { padding: 96px 0 40px; text-align: center; }
+@media (max-width: 700px) { .hero { padding: 56px 0 24px; } }
+
+.logo-lockup {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 2vw, 22px);
+  flex-wrap: wrap;
+  font-size: clamp(28px, 5vw, 58px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 auto 22px;
 }
-.hero .lede { margin: 0 auto 36px; font-size: 20px; }
-.hero .fineprint { color: var(--ink-muted); font-size: 13px; margin-top: 20px; }
+.logo-lockup .logo-stage { color: var(--ink); }
+.logo-lockup .logo-stage.accent { color: var(--blue); }
+.logo-lockup .logo-arrow {
+  color: var(--ink-muted);
+  font-weight: 400;
+  font-size: 0.62em;
+  transform: translateY(0.06em);
+}
+
+.hero .lede { margin: 0 auto 8px; font-size: 20px; }
+.fineprint { color: var(--ink-muted); font-size: 13px; margin-top: 20px; }
+.fineprint.center { text-align: center; }
 
 .badge-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 28px; }
 .pill {
@@ -234,13 +263,6 @@ nav.top .cta-small:hover { background: #2a78d6; }
 .story-shot:hover { border-color: var(--blue); }
 .story-shot img { display: block; width: 100%; height: auto; }
 
-.story-cta {
-  text-align: center;
-  margin-top: 48px;
-  font-size: 17px;
-  color: var(--ink-2);
-}
-.story-cta a { font-weight: 650; }
 
 /* ---------- Cost ---------- */
 

@@ -162,9 +162,9 @@
     $view.innerHTML = `
       <div class="hero">
         <div class="kicker">Interactive prototype · fabricated data</div>
-        <h1>Take control of your AI usage.</h1>
-        <p class="tagline">Meetings in, knowledge and finished tickets out — automatically. Assembled from
-        <strong>whatever AI and tools you already have</strong> — or run it fully offline and private.</p>
+        <h1>Capture <span style="color:var(--ink-muted);font-weight:400">→</span> Knowledge <span style="color:var(--ink-muted);font-weight:400">→</span> <span style="color:var(--series-1)">Action</span></h1>
+        <p class="tagline">Turn your knowledge into action automatically, with
+        <strong>the tools you already know</strong> — or run it fully offline and private.</p>
         <div class="cta-row">
           <a class="btn primary" href="#/wizard">Run the setup wizard (J4)</a>
           <a class="btn" href="#/activity">Skip to the configured demo workspace</a>

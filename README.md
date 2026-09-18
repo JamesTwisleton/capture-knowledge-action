@@ -1,6 +1,6 @@
 # Capture-Knowledge-Action
 
-**Product Requirements Document — Draft v0.9.2 for review**
+**Product Requirements Document — Draft v0.9.3 for review**
 
 | | |
 |---|---|
@@ -31,13 +31,13 @@ Capture-Knowledge-Action is an open-source framework that turns meeting recordin
 
 You assemble a stack from the providers you already have (or want): a meeting capture source; a knowledge store (an offline Markdown vault, an LLM-readable knowledge base, or a hosted platform such as Confluence); a work item tracker; one or more LLMs; an event bus (the messaging backbone that carries events between the parts of the system); and an audit database. CKA orchestrates the flow between them and lets you swap any one of them without rewriting the rest. It is deliberately conservative: it comments freely, but only changes state when a human has asked it to in plain words and a calibrated decision model is confident enough — and it earns the right to act autonomously by proving itself in review first.
 
-**In one line:** Meetings in, knowledge and finished tickets out — automatically. Bring whatever AI you already use, or keep it all offline and private.
+**In one line:** Turn your knowledge into action automatically, with the tools you already know.
 
 ## 2. The gap
 
-**The pattern.** Organisations everywhere are building the same pipeline: meeting recordings → an LLM summariser → a CI/CD pipeline (continuous integration / continuous delivery — the automation that builds and ships software) → a wiki or documentation store, so that their search or AI assistant can index and answer questions about every meeting. Each version works. Each is also entirely vendor-specific: it assumes one meeting platform, one LLM, one pipeline tool, one knowledge store and one work tracker, and needs rewriting for any organisation using a different combination.
+**The pattern.** Meetings-to-knowledge-to-action automation is already on sale — but only inside a single vendor's suite. Atlassian sells it across Jira and Confluence, Google across Meet and Workspace, Microsoft across Teams and 365. Each works well, right up to the edge of its own ecosystem, on the condition that every other tool you use is theirs too — and each is priced at a suite premium, upsold module by module.
 
-**The observation.** The problem is not that the pipeline is hard; it is that every version of it is bespoke, locked in, unreusable and unportable — and it is being rebuilt from scratch, over and over, with each organisation's vendor tools bolted on.
+**The observation.** The problem is not that the pipeline is hard to build; it is that buying it means buying a vendor. A stack that spans providers — one vendor's tracker, another's meeting platform, an offline wiki, a local model — is simply not supported by any of them, and wanting to swap one piece becomes a reason to re-buy an entire suite. **Composability across providers is the gap**, and it is what none of the suite vendors has an incentive to offer.
 
 **What already exists.** Existing open-source meeting tools (for example Meetily and anarlog) have solved swappable LLM providers and local-first transcription well; their platform integrations — Confluence, Jira and equivalents — are thin or still on the roadmap. Separately, LLM gateways (LiteLLM, LangChain4j and others — a gateway is a single library or service that talks to many model providers through one interface) have fully solved provider-agnostic model access, routing and per-call cost tracking. Nobody has combined the two into a provider-agnostic *workflow* framework with a guided setup, swappable platform providers, and a decision layer for taking actions safely.
 
