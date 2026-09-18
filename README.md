@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| Author | James |
+| Author | James Twisleton |
 | Date | 18 September 2026 |
 | Status | Draft — seeking feedback on the product statement and user journeys before prototyping |
 
