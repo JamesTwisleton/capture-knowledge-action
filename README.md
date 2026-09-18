@@ -1,6 +1,6 @@
 # Capture-Knowledge-Action
 
-**Product Requirements Document — Draft v0.9 for review**
+**Product Requirements Document — Draft v0.9.1 for review**
 
 | | |
 |---|---|
@@ -31,7 +31,7 @@ Capture-Knowledge-Action is an open-source framework that turns meeting recordin
 
 You assemble a stack from the providers you already have (or want): a meeting capture source; a knowledge store (an offline Markdown vault, an LLM-readable knowledge base, or a hosted platform such as Confluence); a work item tracker; one or more LLMs; an event bus (the messaging backbone that carries events between the parts of the system); and an audit database. CKA orchestrates the flow between them and lets you swap any one of them without rewriting the rest. It is deliberately conservative: it comments freely, but only changes state when a human has asked it to in plain words and a calibrated decision model is confident enough — and it earns the right to act autonomously by proving itself in review first.
 
-**In one line:** assemble a meeting-capture, knowledge and workflow-action stack from any providers, at the lowest achievable cost, with no vendor commitment — and with local models and an offline knowledge base as first-class citizens.
+**In one line:** Meetings in, knowledge and finished tickets out — automatically. Bring whatever AI you already use, or keep it all offline and private.
 
 ## 2. The gap
 

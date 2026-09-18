@@ -95,6 +95,37 @@
     return `<span class="provider-attr">${text}</span>`;
   }
 
+  function wait(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  function streamText(el, fullText, msPerChar = 16) {
+    return new Promise(resolve => {
+      el.textContent = "";
+      el.classList.add("streaming");
+      let i = 0;
+      (function tick() {
+        if (i >= fullText.length) {
+          el.classList.remove("streaming");
+          el.dataset.streamDone = "true";
+          resolve();
+          return;
+        }
+        el.textContent += fullText[i++];
+        setTimeout(tick, msPerChar);
+      })();
+    });
+  }
+
+  function animateFillsIn(scopeEl) {
+    if (!scopeEl) return;
+    scopeEl.querySelectorAll(".conf .fill, .bar-row .b-fill, .trust-meter .fill").forEach(f => {
+      const target = f.style.width;
+      f.style.width = "0%";
+      requestAnimationFrame(() => requestAnimationFrame(() => { f.style.width = target; }));
+    });
+  }
+
   /* ---------------- routing ---------------- */
 
   const routes = {
@@ -132,10 +163,8 @@
       <div class="hero">
         <div class="kicker">Interactive prototype · fabricated data</div>
         <h1>Take control of your AI usage.</h1>
-        <p class="tagline">Capture-Knowledge-Action turns meeting recordings and documentation into
-        searchable knowledge and safe, auditable workflow actions — assembled from
-        <strong>whatever providers you already have</strong>, with no vendor commitment.
-        Use whatever AI you like — including your own.</p>
+        <p class="tagline">Meetings in, knowledge and finished tickets out — automatically. Assembled from
+        <strong>whatever AI and tools you already have</strong> — or run it fully offline and private.</p>
         <div class="cta-row">
           <a class="btn primary" href="#/wizard">Run the setup wizard (J4)</a>
           <a class="btn" href="#/activity">Skip to the configured demo workspace</a>
@@ -519,7 +548,11 @@ Full platform transcript stored below this section (elided in this prototype).
     const steps = [
       {
         title: "Content captured", by: "Meeting capture · Google Meet (Drive folder watch)",
-        html: `<p class="small dim2">${m.title} · ${m.date} · ${m.duration} · ${m.attendees.length} attendees.
+        html: `<div class="meeting-live">
+          <div class="avatar-row">${m.attendees.map((a, i) => `<span class="avatar-chip" style="--c:var(--series-${i % 2 + 1})" title="${a}">${a.split(" ").map(w => w[0]).join("")}</span>`).join("")}</div>
+          <span class="rec-indicator"><span class="rec-dot"></span>REC · ${m.duration}</span>
+        </div>
+        <p class="small dim2">${m.title} · ${m.date} · ${m.attendees.length} attendees.
         The recording landed in the watched Drive folder, <strong>with the platform's own transcript attached</strong>.</p>`
       },
       {
@@ -535,9 +568,8 @@ Full platform transcript stored below this section (elided in this prototype).
       },
       {
         title: "Summarised with the ticket-refinement prompt", by: "LLM · claude-sonnet-5 via LangChain4j · prompt v3",
-        html: `<details><summary class="small" style="cursor:pointer;color:var(--series-1)">Show summary</summary>
-          <div class="card sub" style="margin-top:10px">${m.summary.map(p => `<p class="small dim2" style="margin-bottom:8px">${p}</p>`).join("")}</div>
-        </details>`
+        html: `<p class="small dim2" data-stream data-full-text="Six items discussed — #142 (retry with backoff) is code-complete, merged, and ready to close."></p>
+        <div class="card sub" style="margin-top:10px">${m.summary.map(p => `<p class="small dim2" style="margin-bottom:8px">${p}</p>`).join("")}</div>`
       },
       {
         title: "Stored in the knowledge vault", by: "Knowledge · Local Markdown vault (Obsidian-compatible)",
@@ -617,16 +649,38 @@ Full platform transcript stored below this section (elided in this prototype).
       </div>
     `;
 
-    document.getElementById("replay").addEventListener("click", () => {
-      const nodes = [...document.querySelectorAll(".pipe-step")];
-      nodes.forEach(n => n.classList.add("pending"));
-      nodes.forEach((n, i) => setTimeout(() => n.classList.remove("pending"), 350 + i * 650));
-      setTimeout(() => toast("Pipeline complete — two proposals are waiting in the Triage Inbox"), 350 + nodes.length * 650);
+    /* A visitor landing here directly (not via Replay) sees the full streamable text immediately. */
+    document.querySelectorAll("[data-stream]").forEach(el => {
+      el.textContent = el.dataset.fullText;
+      el.dataset.streamDone = "true";
     });
+
+    async function runReplay() {
+      const nodes = [...document.querySelectorAll(".pipe-step")];
+      const btn = document.getElementById("replay");
+      btn.disabled = true;
+      nodes.forEach(n => n.classList.add("pending"));
+      for (let i = 0; i < nodes.length; i++) {
+        await wait(i === 0 ? 300 : 550);
+        const n = nodes[i];
+        n.classList.remove("pending");
+        n.scrollIntoView({ behavior: "smooth", block: "center" });
+        animateFillsIn(n);
+        const streamEl = n.querySelector("[data-stream]");
+        if (streamEl) {
+          await wait(350);
+          await streamText(streamEl, streamEl.dataset.fullText, 16);
+        }
+      }
+      toast("Pipeline complete — two proposals are waiting in the Triage Inbox");
+      btn.disabled = false;
+    }
+
+    document.getElementById("replay").addEventListener("click", runReplay);
 
     if (!S.replayDone) {
       S.replayDone = true;
-      document.getElementById("replay").click();
+      runReplay();
     }
   }
 
@@ -784,16 +838,30 @@ Full platform transcript stored below this section (elided in this prototype).
   function decide(id, approved) {
     const p = S.proposals.find(x => x.id === id);
     if (!p || p.status !== "pending") return;
-    p.status = approved ? "approved" : "rejected";
-    const t = S.trust[p.type];
-    if (t) approved ? t.approvals++ : t.rejections++;
-    audit(approved ? "Action approved" : "Action rejected",
-      `${p.verb} · confidence ${p.confidence}% · decided by demo-user`,
-      approved ? "Human decision → Work item provider · GitHub Issues" : "Human decision");
-    if (approved) toast(`${p.verb} — applied and audited`);
-    else toast(`${p.verb} — rejected; feeds the trust score for “${p.type}”`);
-    viewInbox();
-    renderBadge();
+    const btn = document.querySelector(`[data-approve="${id}"], [data-reject="${id}"]`);
+    const card = btn && btn.closest(".proposal");
+
+    const finish = () => {
+      p.status = approved ? "approved" : "rejected";
+      const t = S.trust[p.type];
+      if (t) approved ? t.approvals++ : t.rejections++;
+      audit(approved ? "Action approved" : "Action rejected",
+        `${p.verb} · confidence ${p.confidence}% · decided by demo-user`,
+        approved ? "Human decision → Work item provider · GitHub Issues" : "Human decision");
+      if (approved) toast(`${p.verb} — applied and audited`);
+      else toast(`${p.verb} — rejected; feeds the trust score for “${p.type}”`);
+      viewInbox();
+      renderBadge();
+      animateFillsIn(document.querySelector(".trust-grid"));
+    };
+
+    if (card) {
+      card.classList.add(approved ? "flash-approve" : "flash-reject");
+      card.style.pointerEvents = "none";
+      setTimeout(finish, 500);
+    } else {
+      finish();
+    }
   }
 
   function renderBadge() {

@@ -223,7 +223,7 @@ table.data th.num { text-align: right; }
   overflow: hidden;
   min-width: 70px;
 }
-.conf .fill { display: block; height: 100%; border-radius: 4px; background: var(--series-1); }
+.conf .fill { display: block; height: 100%; border-radius: 4px; background: var(--series-1); transition: width 0.6s ease; }
 .conf .fill.low { background: var(--hairline); }
 .conf .val { font-variant-numeric: tabular-nums; font-size: 12.5px; width: 34px; text-align: right; }
 
@@ -373,6 +373,24 @@ input.text:focus { outline: none; border-color: var(--series-1); }
 }
 .pipe-step.skipped .pipe-dot { border-color: var(--ink-muted); }
 .pipe-line { width: 2px; flex: 1; background: var(--hairline); }
+
+.streaming::after { content: "▍"; animation: blink 0.9s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+.meeting-live { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+.avatar-row { display: flex; }
+.avatar-chip {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: var(--page);
+  background: var(--c, var(--series-1));
+  border: 2px solid var(--surface);
+  margin-left: -8px;
+}
+.avatar-chip:first-child { margin-left: 0; }
+.rec-indicator { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--critical); font-weight: 650; letter-spacing: 0.04em; }
+.rec-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--critical); animation: rec-pulse 1.4s ease-in-out infinite; }
+@keyframes rec-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.8); } }
 .pipe-card { margin: 8px 0 14px; flex: 1; }
 .pipe-card .pipe-head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .pipe-card .pipe-title { font-weight: 650; font-size: 14.5px; }
@@ -417,6 +435,10 @@ input.text:focus { outline: none; border-color: var(--series-1); }
 .proposal { border-left: 4px solid var(--series-2); }
 .proposal.resolved-approved { border-left-color: var(--good); }
 .proposal.resolved-rejected { border-left-color: var(--critical); opacity: 0.75; }
+.proposal.flash-approve { animation: flashApprove 0.5s ease; }
+.proposal.flash-reject { animation: flashReject 0.5s ease; }
+@keyframes flashApprove { 0% { background: rgba(12, 163, 12, 0.28); } 100% { background: transparent; } }
+@keyframes flashReject { 0% { background: rgba(208, 59, 59, 0.28); } 100% { background: transparent; } }
 .proposal .p-head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .proposal .p-title { font-weight: 650; }
 .proposal blockquote {
@@ -440,7 +462,7 @@ input.text:focus { outline: none; border-color: var(--series-1); }
 .trust-cell .t-stats { color: var(--ink-2); font-size: 12.5px; margin-top: 8px; font-variant-numeric: tabular-nums; }
 .trust-cell .t-note { color: var(--ink-muted); font-size: 12px; margin-top: 4px; }
 .trust-meter { height: 6px; border-radius: 4px; background: var(--surface-2); overflow: hidden; margin-top: 10px; }
-.trust-meter .fill { height: 100%; background: var(--good); border-radius: 4px; }
+.trust-meter .fill { height: 100%; background: var(--good); border-radius: 4px; transition: width 0.6s ease; }
 .trust-meter .fill.bad { background: var(--critical); }
 
 /* ---------- Cost dashboard ---------- */
@@ -464,6 +486,7 @@ input.text:focus { outline: none; border-color: var(--series-1); }
   background: var(--series-1);
   border-radius: 0 4px 4px 0;
   min-width: 2px;
+  transition: width 0.6s ease;
 }
 .bar-row .b-fill.actual { background: var(--series-2); }
 .bar-row .b-fill.zero { background: transparent; border-left: 2px solid var(--ink-muted); border-radius: 0; }
