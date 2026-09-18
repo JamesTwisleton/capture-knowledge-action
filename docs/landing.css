@@ -36,9 +36,9 @@ body {
 a { color: var(--blue); }
 img, svg { max-width: 100%; }
 .wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 24px; }
-section { padding: 96px 0; scroll-margin-top: 72px; }
-@media (max-width: 700px) { section { padding: 64px 0; } }
-section.story-first { padding-top: 24px; }
+section { padding: 64px 0; scroll-margin-top: 72px; border-top: 1px solid var(--hairline); }
+@media (max-width: 700px) { section { padding: 44px 0; } }
+section.story-first { padding: 0; border-top: none; }
 
 .anchor {
   color: var(--ink-muted);
@@ -151,6 +151,47 @@ nav.top .cta-small:hover { background: #2a78d6; }
   font-size: 15.5px;
   max-width: 64ch;
   margin: 0 auto;
+}
+
+/* Scroll cue: the idiomatic bouncing chevron. Mobile fills the viewport with
+   the hero so the story is discovered by scrolling, cued by the arrow. */
+.scroll-cue { display: none; }
+@media (max-width: 700px) {
+  .hero {
+    min-height: calc(100svh - 71px); /* fill the viewport minus the sticky nav */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding-bottom: 90px;
+  }
+  .scroll-cue {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    bottom: 26px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 44px;
+    height: 44px;
+    animation: cue-bounce 1.8s ease-in-out infinite;
+  }
+  .scroll-cue .chevron {
+    width: 14px;
+    height: 14px;
+    border-right: 2px solid var(--ink-2);
+    border-bottom: 2px solid var(--ink-2);
+    transform: rotate(45deg);
+  }
+  @keyframes cue-bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(8px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-cue { animation: none; }
+  }
 }
 .fineprint { color: var(--ink-muted); font-size: 13px; margin-top: 20px; }
 .fineprint.center { text-align: center; }
@@ -299,28 +340,28 @@ nav.top .cta-small:hover { background: #2a78d6; }
   max-height: min(56svh, 620px);
 }
 
-/* On small screens a desktop-wide screenshot shrunk to the viewport is
-   unreadable — render it at readable width inside a pannable strip instead. */
+/* Mobile serves narrow captures (via <picture>) whose text is already wrapped
+   for a phone-width layout — shown at full width, never panned horizontally.
+   Only a capture taller than the scene (the mention table) scrolls vertically. */
 @media (max-width: 700px) {
   .scene-shot {
-    width: 96vw;
-    overflow-x: auto;
+    width: min(96vw, 460px);
+    max-height: 52svh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
   }
   .scene-shot img {
-    max-width: none;
-    width: 780px;
+    width: 100%;
+    max-width: 100%;
     max-height: none;
   }
-  .scene-hint { display: block; }
 }
-.scene-hint {
-  display: none;
-  color: var(--ink-muted);
-  font-size: 12px;
-  margin-top: 8px;
-  text-align: center;
-}
+
+/* Scene 1 carries the section heading; scene 5 carries the closing CTAs. */
+.scene-head h2 { font-size: clamp(24px, 4vw, 34px); margin-bottom: 10px; }
+.scene-head .scene-sub { color: var(--ink-2); font-size: clamp(14px, 1.6vw, 16px); }
+.scene-cta { margin-top: 6px; }
 
 /* Entrance animation — initial hidden state only applies once JS has run,
    so a no-JS visitor sees everything immediately. */

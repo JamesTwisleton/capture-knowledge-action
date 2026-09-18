@@ -39,29 +39,31 @@
       files what matters into your knowledge base, and updates your tickets — using whichever meeting tool,
       wiki, work tracker and AI your team already has. Nothing changes state without a human saying so, out
       loud and on purpose.</p>
+      <a class="scroll-cue" href="#story" aria-label="Scroll down to the story"><span class="chevron"></span></a>
     </div>
   </header>
 
   <section id="story" class="story-first">
-    <div class="wrap">
-      <div class="section-head">
-        <h2>One meeting. Watch what happens. <a class="anchor" href="#story" aria-label="Link to this section">#</a></h2>
-        <p>Real screenshots from the <a href="app/">interactive prototype</a> — fabricated people, real interface.</p>
-      </div>
-    </div>
-
     <div class="scenes">
 
       <div class="scene">
         <div class="scene-pin">
+          <div class="scene-copy scene-head">
+            <h2>One meeting. Watch what happens. <a class="anchor" href="#story" aria-label="Link to this section">#</a></h2>
+            <p class="scene-sub">Real screenshots from the <a href="app/">interactive prototype</a> — fabricated people, real interface.</p>
+          </div>
           <div class="scene-copy">
             <span class="s-num">1</span>
             <h3>10:00 — the team meets, as usual</h3>
             <p>Sofia, Tom, Priya and Dan run their usual refinement call on Google Meet. Nobody takes notes
             for the robot — CKA is just watching the folder where recordings land.</p>
           </div>
-          <a class="scene-shot" href="app/#/activity"><img src="media/story-meeting.png" width="1776" height="346" alt="The prototype's activity view showing the captured meeting with attendees and a recording indicator"></a>
-          <span class="scene-hint" aria-hidden="true">↔ drag the screenshot to pan</span>
+          <a class="scene-shot" href="app/#/activity">
+            <picture>
+              <source media="(max-width: 700px)" srcset="media/story-meeting-m.png">
+              <img src="media/story-meeting.png" width="1776" height="346" alt="The prototype's activity view showing the captured meeting with attendees and a recording indicator">
+            </picture>
+          </a>
         </div>
       </div>
 
@@ -74,8 +76,12 @@
             <span class="mono-ref">#128</span>. Just conversation — and CKA notices every ticket that came up
             and posts a link to the meeting on each one. No magic words needed for that.</p>
           </div>
-          <a class="scene-shot" href="app/#/activity"><img src="media/story-mentions.png" width="1776" height="1068" alt="Mention detection: a table of tickets with confidence scores, the confident ones marked comment" loading="lazy"></a>
-          <span class="scene-hint" aria-hidden="true">↔ drag the screenshot to pan</span>
+          <a class="scene-shot" href="app/#/activity">
+            <picture>
+              <source media="(max-width: 700px)" srcset="media/story-mentions-m.png">
+              <img src="media/story-mentions.png" width="1776" height="1068" alt="Mention detection: a table of tickets with confidence scores, the confident ones marked comment" loading="lazy">
+            </picture>
+          </a>
         </div>
       </div>
 
@@ -88,8 +94,12 @@
             it's verified in staging.</em>” The team's trigger phrase plus an explicit ticket number is the
             only way CKA will ever touch a ticket.</p>
           </div>
-          <a class="scene-shot" href="app/#/activity"><img src="media/story-trigger.png" width="1776" height="550" alt="The trigger phrase detected in the transcript, with the quote and a 94% confidence score" loading="lazy"></a>
-          <span class="scene-hint" aria-hidden="true">↔ drag the screenshot to pan</span>
+          <a class="scene-shot" href="app/#/activity">
+            <picture>
+              <source media="(max-width: 700px)" srcset="media/story-trigger-m.png">
+              <img src="media/story-trigger.png" width="1776" height="550" alt="The trigger phrase detected in the transcript, with the quote and a 94% confidence score" loading="lazy">
+            </picture>
+          </a>
         </div>
       </div>
 
@@ -102,8 +112,12 @@
             <span class="mono-ref">#142</span> is queued as a proposal — 94% confident, showing exactly which
             AI decided and which gates it passed. Nothing has actually changed yet.</p>
           </div>
-          <a class="scene-shot" href="app/#/inbox"><img src="media/story-inbox.png" width="1864" height="420" alt="A Triage Inbox proposal to close ticket 142 with Approve and Reject buttons" loading="lazy"></a>
-          <span class="scene-hint" aria-hidden="true">↔ drag the screenshot to pan</span>
+          <a class="scene-shot" href="app/#/inbox">
+            <picture>
+              <source media="(max-width: 700px)" srcset="media/story-inbox-m.png">
+              <img src="media/story-inbox.png" width="1864" height="420" alt="A Triage Inbox proposal to close ticket 142 with Approve and Reject buttons" loading="lazy">
+            </picture>
+          </a>
         </div>
       </div>
 
@@ -116,20 +130,19 @@
             because the AI has got every closure right for two weeks, CKA offers to handle closures on its
             own from here. Her call, reversible any time. <strong>Don't just trust it — see it earn it.</strong></p>
           </div>
-          <a class="scene-shot" href="app/#/inbox"><img src="media/story-trust.png" width="1864" height="296" alt="CKA suggesting closures switch to auto-approve after two weeks of correct proposals" loading="lazy"></a>
-          <span class="scene-hint" aria-hidden="true">↔ drag the screenshot to pan</span>
+          <a class="scene-shot" href="app/#/inbox">
+            <picture>
+              <source media="(max-width: 700px)" srcset="media/story-trust-m.png">
+              <img src="media/story-trust.png" width="1864" height="296" alt="CKA suggesting closures switch to auto-approve after two weeks of correct proposals" loading="lazy">
+            </picture>
+          </a>
+          <div class="btn-row center scene-cta">
+            <a class="btn primary" href="app/">▶ See how it works</a>
+            <a class="btn" href="https://github.com/JamesTwisleton/capture-knowledge-action" target="_blank" rel="noopener">Read the PRD on GitHub</a>
+          </div>
         </div>
       </div>
 
-    </div>
-
-    <div class="wrap">
-      <div class="btn-row center" style="margin-top:48px">
-        <a class="btn primary" href="app/">▶ See how it works</a>
-        <a class="btn" href="https://github.com/JamesTwisleton/capture-knowledge-action" target="_blank" rel="noopener">Read the PRD on GitHub</a>
-      </div>
-      <p class="fineprint center">A framework you assemble from your own tools — not a hosted product. Currently a
-      validated PRD and interactive prototype, seeking feedback before the first build.</p>
     </div>
   </section>
 
