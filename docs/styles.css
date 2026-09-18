@@ -39,6 +39,12 @@ a:hover { text-decoration: underline; }
 
 /* ---------- Shell ---------- */
 
+.site-head {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
 .proto-banner {
   background: var(--surface-2);
   border-bottom: 1px solid var(--hairline);
@@ -56,11 +62,8 @@ header.appbar {
   flex-wrap: wrap;
   padding: 14px 24px;
   border-bottom: 1px solid var(--hairline);
-  position: sticky;
-  top: 0;
   background: rgba(13, 13, 13, 0.92);
   backdrop-filter: blur(6px);
-  z-index: 10;
 }
 
 .wordmark { font-weight: 700; font-size: 16px; letter-spacing: 0.02em; white-space: nowrap; }
@@ -267,6 +270,7 @@ table.data th.num { text-align: right; }
 @media (max-width: 760px) { .wizard { grid-template-columns: 1fr; } }
 
 .wizard-rail { position: sticky; top: 86px; }
+@media (max-width: 760px) { .wizard-rail { position: static; top: auto; } }
 .wizard-rail ol { list-style: none; }
 .wizard-rail li {
   padding: 7px 10px;
