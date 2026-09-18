@@ -232,42 +232,132 @@ nav.top .cta-small:hover { background: #2a78d6; }
 }
 .tagline-banner span { color: var(--blue); }
 
-/* ---------- The story (golden path) ---------- */
+/* ---------- The story (golden path): sticky, scroll-linked scenes ----------
+   Each .scene is a tall scroll runway; its .scene-pin sticks for the duration,
+   so scenes stack over each other Apple-style as you scroll. Pinning is pure
+   CSS (position: sticky) so it works everywhere with no scroll hijacking;
+   a tiny IntersectionObserver adds .active for the entrance animation, and
+   scroll-driven parallax is layered on only where the browser supports it. */
 
-.story { display: flex; flex-direction: column; gap: 56px; margin-top: 8px; }
+.scenes { margin-top: 8px; }
 
-.story-step {
-  display: grid;
-  grid-template-columns: 320px 1fr;
-  gap: 36px;
-  align-items: center;
+.scene {
+  height: 160vh;
+  view-timeline-name: --scene;
+  view-timeline-axis: block;
 }
-@media (max-width: 860px) { .story-step { grid-template-columns: 1fr; gap: 16px; } }
 
-.story-text .s-num {
+.scene-pin {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  background: var(--page);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(18px, 3vh, 34px);
+  padding: 86px 16px 30px;
+  overflow: hidden;
+}
+
+.scene-copy {
+  text-align: center;
+  max-width: 62ch;
+}
+.scene-copy .s-num {
   width: 34px; height: 34px;
   border-radius: 50%;
   background: var(--blue);
   color: #fff;
   font-weight: 800;
   font-size: 16px;
-  display: flex; align-items: center; justify-content: center;
+  display: inline-flex; align-items: center; justify-content: center;
   margin-bottom: 14px;
 }
-.story-text h3 { font-size: 20px; margin-bottom: 10px; }
-.story-text p { color: var(--ink-2); font-size: 15px; }
-.story-text .mono-ref { font-family: var(--mono); font-size: 0.92em; color: var(--ink); }
+.scene-copy h3 { font-size: clamp(21px, 3vw, 28px); margin-bottom: 10px; }
+.scene-copy p { color: var(--ink-2); font-size: clamp(15px, 1.7vw, 17px); }
+.scene-copy .mono-ref { font-family: var(--mono); font-size: 0.92em; color: var(--ink); }
 
-.story-shot {
+.scene-shot {
   display: block;
   border-radius: var(--radius);
   overflow: hidden;
   border: 1px solid var(--border);
   background: var(--surface);
   transition: border-color 0.2s ease;
+  max-width: min(960px, 96vw);
 }
-.story-shot:hover { border-color: var(--blue); }
-.story-shot img { display: block; width: 100%; height: auto; }
+.scene-shot:hover { border-color: var(--blue); }
+.scene-shot img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: min(56vh, 620px);
+  max-height: min(56svh, 620px);
+}
+
+/* On small screens a desktop-wide screenshot shrunk to the viewport is
+   unreadable — render it at readable width inside a pannable strip instead. */
+@media (max-width: 700px) {
+  .scene-shot {
+    width: 96vw;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .scene-shot img {
+    max-width: none;
+    width: 780px;
+    max-height: none;
+  }
+  .scene-hint { display: block; }
+}
+.scene-hint {
+  display: none;
+  color: var(--ink-muted);
+  font-size: 12px;
+  margin-top: 8px;
+  text-align: center;
+}
+
+/* Entrance animation — initial hidden state only applies once JS has run,
+   so a no-JS visitor sees everything immediately. */
+html.js .scene-copy,
+html.js .scene-shot {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.65s ease, transform 0.65s ease, border-color 0.2s ease;
+}
+html.js .scene-shot { transition-delay: 0.12s; }
+html.js .scene.active .scene-copy,
+html.js .scene.active .scene-shot {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Scroll-linked parallax, only where the browser supports it. */
+@supports (animation-timeline: view()) {
+  .scene-shot img {
+    animation: scene-parallax linear both;
+    animation-timeline: --scene;
+  }
+  @keyframes scene-parallax {
+    from { transform: translateY(3.5%) scale(0.985); }
+    to { transform: translateY(-3.5%) scale(1); }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.js .scene-copy,
+  html.js .scene-shot {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .scene-shot img { animation: none; }
+}
 
 
 /* ---------- Cost ---------- */
