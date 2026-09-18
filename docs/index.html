@@ -22,11 +22,6 @@
 
   <header class="hero" id="top">
     <div class="wrap">
-      <div class="badge-row">
-        <span class="pill">Open source</span>
-        <span class="pill">Apache 2.0 (proposed)</span>
-        <span class="pill">Bring your own AI</span>
-      </div>
       <h1 class="logo-lockup" aria-label="Capture, Knowledge, Action">
         <span class="logo-stage">Capture</span>
         <span class="logo-arrow" aria-hidden="true">→</span>
@@ -34,6 +29,11 @@
         <span class="logo-arrow" aria-hidden="true">→</span>
         <span class="logo-stage accent">Action</span>
       </h1>
+      <div class="badge-row">
+        <span class="pill">Open source</span>
+        <span class="pill">Apache 2.0 (proposed)</span>
+        <span class="pill">Bring your own AI</span>
+      </div>
       <p class="lede center">Turn your knowledge into action automatically, with the tools you already know.</p>
       <p class="hero-intro">CKA is an open-source framework that listens to your meetings and documents,
       files what matters into your knowledge base, and updates your tickets — using whichever meeting tool,
@@ -60,7 +60,7 @@
           </div>
           <a class="scene-shot" href="app/#/activity">
             <picture>
-              <source media="(max-width: 700px)" srcset="media/story-meeting-m.png">
+              <source media="(max-width: 700px)" srcset="media/story-meeting-m.png" width="586" height="554">
               <img src="media/story-meeting.png" width="1776" height="346" alt="The prototype's activity view showing the captured meeting with attendees and a recording indicator">
             </picture>
           </a>
@@ -78,7 +78,7 @@
           </div>
           <a class="scene-shot" href="app/#/activity">
             <picture>
-              <source media="(max-width: 700px)" srcset="media/story-mentions-m.png">
+              <source media="(max-width: 700px)" srcset="media/story-mentions-m.png" width="842" height="1458">
               <img src="media/story-mentions.png" width="1776" height="1068" alt="Mention detection: a table of tickets with confidence scores, the confident ones marked comment" loading="lazy">
             </picture>
           </a>
@@ -96,7 +96,7 @@
           </div>
           <a class="scene-shot" href="app/#/activity">
             <picture>
-              <source media="(max-width: 700px)" srcset="media/story-trigger-m.png">
+              <source media="(max-width: 700px)" srcset="media/story-trigger-m.png" width="586" height="834">
               <img src="media/story-trigger.png" width="1776" height="550" alt="The trigger phrase detected in the transcript, with the quote and a 94% confidence score" loading="lazy">
             </picture>
           </a>
@@ -114,7 +114,7 @@
           </div>
           <a class="scene-shot" href="app/#/inbox">
             <picture>
-              <source media="(max-width: 700px)" srcset="media/story-inbox-m.png">
+              <source media="(max-width: 700px)" srcset="media/story-inbox-m.png" width="674" height="692">
               <img src="media/story-inbox.png" width="1864" height="420" alt="A Triage Inbox proposal to close ticket 142 with Approve and Reject buttons" loading="lazy">
             </picture>
           </a>
@@ -132,10 +132,41 @@
           </div>
           <a class="scene-shot" href="app/#/inbox">
             <picture>
-              <source media="(max-width: 700px)" srcset="media/story-trust-m.png">
+              <source media="(max-width: 700px)" srcset="media/story-trust-m.png" width="674" height="604">
               <img src="media/story-trust.png" width="1864" height="296" alt="CKA suggesting closures switch to auto-approve after two weeks of correct proposals" loading="lazy">
             </picture>
           </a>
+        </div>
+      </div>
+
+      <div class="scene">
+        <div class="scene-pin">
+          <div class="scene-copy">
+            <h3>That's the whole flow</h3>
+            <p>Three stages, connected by events — each one usable on its own, or chained end to end.</p>
+          </div>
+          <div class="flow-row">
+            <div class="flow-stage">
+              <div class="f-num">1 · Capture</div>
+              <h4>The meeting happens</h4>
+              <p>A recording (with a transcript, if your platform already makes one) lands where CKA is
+              watching. No transcript? It transcribes for you.</p>
+            </div>
+            <div class="flow-arrow" aria-hidden="true">→</div>
+            <div class="flow-stage">
+              <div class="f-num">2 · Knowledge</div>
+              <h4>It gets summarised and stored</h4>
+              <p>Summarised in the style that fits — a stand-up isn't a refinement session — and written to
+              your knowledge base, linked and searchable.</p>
+            </div>
+            <div class="flow-arrow" aria-hidden="true">→</div>
+            <div class="flow-stage">
+              <div class="f-num">3 · Action</div>
+              <h4>Work items update themselves</h4>
+              <p>Items mentioned get a comment automatically. Say the trigger phrase, and a real update gets
+              proposed — reviewed until it earns trust.</p>
+            </div>
+          </div>
           <div class="btn-row center scene-cta">
             <a class="btn primary" href="app/">▶ See how it works</a>
             <a class="btn" href="https://github.com/JamesTwisleton/capture-knowledge-action" target="_blank" rel="noopener">Read the PRD on GitHub</a>
@@ -161,7 +192,7 @@
         entries.forEach(function (e) {
           if (e.isIntersecting) e.target.classList.add("active");
         });
-      }, { threshold: 0.35 });
+      }, { threshold: 0.12 });
       scenes.forEach(function (s) { io.observe(s); });
     })();
   </script>
