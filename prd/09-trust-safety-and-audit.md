@@ -8,7 +8,7 @@
 ---
 title: The gate model, from transcript segment to action
 ---
-%%{init: {"theme":"base","themeVariables":{"background":"#000000","fontSize":"20px","fontFamily":"Helvetica, Arial, sans-serif","primaryColor":"#000000","primaryTextColor":"#ffffff","primaryBorderColor":"#ffffff","secondaryColor":"#000000","secondaryTextColor":"#ffffff","secondaryBorderColor":"#ffffff","tertiaryColor":"#000000","tertiaryTextColor":"#ffffff","tertiaryBorderColor":"#ffffff","lineColor":"#ffffff","textColor":"#ffffff","mainBkg":"#000000","nodeBorder":"#ffffff","nodeTextColor":"#ffffff","clusterBkg":"#000000","clusterBorder":"#ffffff","titleColor":"#ffffff","edgeLabelBackground":"#000000"},"flowchart":{"nodeSpacing":80,"rankSpacing":100,"padding":24,"curve":"linear"}}}%%
+%%{init: {"theme":"base","themeVariables":{"background":"#000000","fontSize":"20px","primaryColor":"#000000","primaryTextColor":"#ffffff","primaryBorderColor":"#ffffff","secondaryColor":"#000000","secondaryTextColor":"#ffffff","secondaryBorderColor":"#ffffff","tertiaryColor":"#000000","tertiaryTextColor":"#ffffff","tertiaryBorderColor":"#ffffff","lineColor":"#6e6e6e","textColor":"#ffffff","mainBkg":"#000000","nodeBorder":"#ffffff","nodeTextColor":"#ffffff","clusterBkg":"#000000","clusterBorder":"#ffffff","titleColor":"#6e6e6e","edgeLabelBackground":"#000000"},"flowchart":{"nodeSpacing":80,"rankSpacing":100,"padding":24,"curve":"linear"},"themeCSS":"svg{background:#000000 !important;}"}}%%
 flowchart TB
   T["TRANSCRIPT SEGMENT"] ==> G1{"GATE 1 · MENTION<br/>Jev confidence at or<br/>above the threshold?"}
   G1 ==>|"no"| X1["IGNORE"]
@@ -24,7 +24,7 @@ flowchart TB
   INBOX -.-> AUD
   ACT -.-> AUD
   classDef default fill:#000000,stroke:#ffffff,stroke-width:2px,color:#ffffff
-  linkStyle default stroke:#ffffff,stroke-width:3px
+  linkStyle default stroke:#6e6e6e,stroke-width:3px
 ```
 
 - **Gate 1 — mention.** Jev confidence that a candidate work item was mentioned is at or above the mention threshold (default 90%). Outcome: a comment. No trigger phrase required.

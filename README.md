@@ -1,6 +1,6 @@
 # Capture-Knowledge-Action
 
-**Product Requirements Document — Draft v0.5 for review**
+**Product Requirements Document — Draft v0.6 for review**
 
 | | |
 |---|---|
@@ -101,7 +101,7 @@ J1 is the golden path. J2 and J3 are independently valid entry points: the stage
 ---
 title: J1 golden path, meeting to knowledge to actions
 ---
-%%{init: {"theme":"base","themeVariables":{"background":"#000000","fontSize":"20px","fontFamily":"Helvetica, Arial, sans-serif","primaryColor":"#000000","primaryTextColor":"#ffffff","primaryBorderColor":"#ffffff","lineColor":"#ffffff","textColor":"#ffffff","titleColor":"#ffffff","actorBkg":"#000000","actorBorder":"#ffffff","actorTextColor":"#ffffff","actorLineColor":"#ffffff","signalColor":"#ffffff","signalTextColor":"#ffffff","labelBoxBkgColor":"#000000","labelBoxBorderColor":"#ffffff","labelTextColor":"#ffffff","loopTextColor":"#ffffff","noteBkgColor":"#000000","noteTextColor":"#ffffff","noteBorderColor":"#ffffff","activationBkgColor":"#000000","activationBorderColor":"#ffffff","sequenceNumberColor":"#000000"},"sequence":{"wrap":true,"width":240,"height":80,"actorMargin":70,"messageMargin":50,"boxMargin":20,"noteMargin":16,"actorFontSize":20,"actorFontWeight":"bold","messageFontSize":18,"noteFontSize":16}}}%%
+%%{init: {"theme":"base","themeVariables":{"background":"#000000","fontSize":"20px","primaryColor":"#000000","primaryTextColor":"#ffffff","primaryBorderColor":"#ffffff","lineColor":"#6e6e6e","textColor":"#ffffff","titleColor":"#6e6e6e","actorBkg":"#000000","actorBorder":"#ffffff","actorTextColor":"#ffffff","actorLineColor":"#6e6e6e","signalColor":"#6e6e6e","signalTextColor":"#6e6e6e","labelBoxBkgColor":"#000000","labelBoxBorderColor":"#ffffff","labelTextColor":"#ffffff","loopTextColor":"#ffffff","noteBkgColor":"#000000","noteTextColor":"#ffffff","noteBorderColor":"#ffffff","activationBkgColor":"#000000","activationBorderColor":"#ffffff","sequenceNumberColor":"#000000"},"sequence":{"wrap":true,"width":240,"height":80,"actorMargin":70,"messageMargin":50,"boxMargin":20,"noteMargin":16,"actorFontSize":20,"actorFontWeight":"bold","messageFontSize":18,"noteFontSize":16},"themeCSS":"svg{background:#000000 !important;}"}}%%
 sequenceDiagram
   autonumber
   participant M as Capture provider
@@ -163,7 +163,7 @@ The data-sensitivity warning is shown at the LLM provider step and must be ackno
 ---
 title: J4 setup wizard
 ---
-%%{init: {"theme":"base","themeVariables":{"background":"#000000","fontSize":"20px","fontFamily":"Helvetica, Arial, sans-serif","primaryColor":"#000000","primaryTextColor":"#ffffff","primaryBorderColor":"#ffffff","secondaryColor":"#000000","secondaryTextColor":"#ffffff","secondaryBorderColor":"#ffffff","tertiaryColor":"#000000","tertiaryTextColor":"#ffffff","tertiaryBorderColor":"#ffffff","lineColor":"#ffffff","textColor":"#ffffff","mainBkg":"#000000","nodeBorder":"#ffffff","nodeTextColor":"#ffffff","clusterBkg":"#000000","clusterBorder":"#ffffff","titleColor":"#ffffff","edgeLabelBackground":"#000000"},"flowchart":{"nodeSpacing":70,"rankSpacing":90,"padding":24,"curve":"linear"}}}%%
+%%{init: {"theme":"base","themeVariables":{"background":"#000000","fontSize":"20px","primaryColor":"#000000","primaryTextColor":"#ffffff","primaryBorderColor":"#ffffff","secondaryColor":"#000000","secondaryTextColor":"#ffffff","secondaryBorderColor":"#ffffff","tertiaryColor":"#000000","tertiaryTextColor":"#ffffff","tertiaryBorderColor":"#ffffff","lineColor":"#6e6e6e","textColor":"#ffffff","mainBkg":"#000000","nodeBorder":"#ffffff","nodeTextColor":"#ffffff","clusterBkg":"#000000","clusterBorder":"#ffffff","titleColor":"#6e6e6e","edgeLabelBackground":"#000000"},"flowchart":{"nodeSpacing":70,"rankSpacing":90,"padding":24,"curve":"linear"},"themeCSS":"svg{background:#000000 !important;}"}}%%
 flowchart TB
   S1["1 · CHOOSE PROVIDERS<br/>one implementation per category"] ==> S2["2 · AUTHORISE<br/>log in with Google, Microsoft,<br/>Atlassian or GitHub via OAuth"]
   S2 ==> S3["3 · CAPTURE SET UP FOR YOU<br/>service account or folder watch;<br/>detects platform transcripts"]
@@ -174,7 +174,7 @@ flowchart TB
   S7 ==> S8["8 · AUDIT STORE<br/>SQLite by default,<br/>any SQL database"]
   S8 ==> S9["9 · TEST RUN<br/>one capture, end to end"]
   classDef default fill:#000000,stroke:#ffffff,stroke-width:2px,color:#ffffff
-  linkStyle default stroke:#ffffff,stroke-width:3px
+  linkStyle default stroke:#6e6e6e,stroke-width:3px
 ```
 
 ### J5 — Triage Inbox and the trust ramp
@@ -189,7 +189,7 @@ flowchart TB
 ---
 title: J5 trust ramp, tracked per action type
 ---
-%%{init: {"theme":"base","themeVariables":{"background":"#000000","fontSize":"20px","fontFamily":"Helvetica, Arial, sans-serif","primaryColor":"#000000","primaryTextColor":"#ffffff","primaryBorderColor":"#ffffff","secondaryColor":"#000000","secondaryTextColor":"#ffffff","secondaryBorderColor":"#ffffff","tertiaryColor":"#000000","tertiaryTextColor":"#ffffff","tertiaryBorderColor":"#ffffff","lineColor":"#ffffff","textColor":"#ffffff","mainBkg":"#000000","nodeBorder":"#ffffff","nodeTextColor":"#ffffff","clusterBkg":"#000000","clusterBorder":"#ffffff","titleColor":"#ffffff","edgeLabelBackground":"#000000"},"flowchart":{"nodeSpacing":90,"rankSpacing":110,"padding":24,"curve":"linear"}}}%%
+%%{init: {"theme":"base","themeVariables":{"background":"#000000","fontSize":"20px","primaryColor":"#000000","primaryTextColor":"#ffffff","primaryBorderColor":"#ffffff","secondaryColor":"#000000","secondaryTextColor":"#ffffff","secondaryBorderColor":"#ffffff","tertiaryColor":"#000000","tertiaryTextColor":"#ffffff","tertiaryBorderColor":"#ffffff","lineColor":"#6e6e6e","textColor":"#ffffff","mainBkg":"#000000","nodeBorder":"#ffffff","nodeTextColor":"#ffffff","clusterBkg":"#000000","clusterBorder":"#ffffff","titleColor":"#6e6e6e","edgeLabelBackground":"#000000"},"flowchart":{"nodeSpacing":90,"rankSpacing":110,"padding":24,"curve":"linear"},"themeCSS":"svg{background:#000000 !important;}"}}%%
 flowchart TB
   START(("START")) ==> REVIEW
   REVIEW["REVIEW MODE<br/>every proposal waits<br/>for a human decision"]
@@ -202,7 +202,7 @@ flowchart TB
   OFFQ ==>|"switch provider<br/>or model"| REVIEW
   OFF ==>|"re-enable"| REVIEW
   classDef default fill:#000000,stroke:#ffffff,stroke-width:2px,color:#ffffff
-  linkStyle default stroke:#ffffff,stroke-width:3px
+  linkStyle default stroke:#6e6e6e,stroke-width:3px
 ```
 
 ### J6 — Failure handling
@@ -216,20 +216,20 @@ flowchart TB
 ---
 title: J6 failure handling
 ---
-%%{init: {"theme":"base","themeVariables":{"background":"#000000","fontSize":"20px","fontFamily":"Helvetica, Arial, sans-serif","primaryColor":"#000000","primaryTextColor":"#ffffff","primaryBorderColor":"#ffffff","secondaryColor":"#000000","secondaryTextColor":"#ffffff","secondaryBorderColor":"#ffffff","tertiaryColor":"#000000","tertiaryTextColor":"#ffffff","tertiaryBorderColor":"#ffffff","lineColor":"#ffffff","textColor":"#ffffff","mainBkg":"#000000","nodeBorder":"#ffffff","nodeTextColor":"#ffffff","clusterBkg":"#000000","clusterBorder":"#ffffff","titleColor":"#ffffff","edgeLabelBackground":"#000000"},"flowchart":{"nodeSpacing":80,"rankSpacing":100,"padding":24,"curve":"linear"}}}%%
+%%{init: {"theme":"base","themeVariables":{"background":"#000000","fontSize":"20px","primaryColor":"#000000","primaryTextColor":"#ffffff","primaryBorderColor":"#ffffff","secondaryColor":"#000000","secondaryTextColor":"#ffffff","secondaryBorderColor":"#ffffff","tertiaryColor":"#000000","tertiaryTextColor":"#ffffff","tertiaryBorderColor":"#ffffff","lineColor":"#6e6e6e","textColor":"#ffffff","mainBkg":"#000000","nodeBorder":"#ffffff","nodeTextColor":"#ffffff","clusterBkg":"#000000","clusterBorder":"#ffffff","titleColor":"#6e6e6e","edgeLabelBackground":"#000000"},"flowchart":{"nodeSpacing":80,"rankSpacing":100,"padding":24,"curve":"linear"},"themeCSS":"svg{background:#000000 !important;}"}}%%
 flowchart TB
   A["PROVIDER CALL FAILS<br/>timeout, rate limit or outage"] ==> R{"RETRY POLICY<br/>EXHAUSTED?"}
   R ==>|"no"| B["RETRY WITH BACKOFF"]
   B ==> A
   R ==>|"yes"| O["OUTBOX<br/>failed action recorded with<br/>provider and error"]
   O ==> N["NOTIFY THE USER<br/>via the configured<br/>notification provider"]
-  N ==> U{"USER DECIDES"}
+  N ==> U{"USER<br/>DECIDES"}
   U ==>|"retry now"| U1["RETRY"]
   U ==>|"switch"| U2["SWITCH PROVIDER<br/>OR MODEL"]
   U ==>|"dismiss"| U3["DISMISS"]
   O -.-> AUD[("AUDIT SERVICE")]
   classDef default fill:#000000,stroke:#ffffff,stroke-width:2px,color:#ffffff
-  linkStyle default stroke:#ffffff,stroke-width:3px
+  linkStyle default stroke:#6e6e6e,stroke-width:3px
 ```
 
 ### J7 — Cost and provider dashboard

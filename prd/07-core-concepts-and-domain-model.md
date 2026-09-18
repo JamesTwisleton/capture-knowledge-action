@@ -10,7 +10,7 @@ Capture, Knowledge and Action are independently invokable stages connected by ev
 ---
 title: The three stages, and how content flows through them
 ---
-%%{init: {"theme":"base","themeVariables":{"background":"#000000","fontSize":"20px","fontFamily":"Helvetica, Arial, sans-serif","primaryColor":"#000000","primaryTextColor":"#ffffff","primaryBorderColor":"#ffffff","secondaryColor":"#000000","secondaryTextColor":"#ffffff","secondaryBorderColor":"#ffffff","tertiaryColor":"#000000","tertiaryTextColor":"#ffffff","tertiaryBorderColor":"#ffffff","lineColor":"#ffffff","textColor":"#ffffff","mainBkg":"#000000","nodeBorder":"#ffffff","nodeTextColor":"#ffffff","clusterBkg":"#000000","clusterBorder":"#ffffff","titleColor":"#ffffff","edgeLabelBackground":"#000000"},"flowchart":{"nodeSpacing":80,"rankSpacing":110,"padding":30,"curve":"linear"}}}%%
+%%{init: {"theme":"base","themeVariables":{"background":"#000000","fontSize":"20px","primaryColor":"#000000","primaryTextColor":"#ffffff","primaryBorderColor":"#ffffff","secondaryColor":"#000000","secondaryTextColor":"#ffffff","secondaryBorderColor":"#ffffff","tertiaryColor":"#000000","tertiaryTextColor":"#ffffff","tertiaryBorderColor":"#ffffff","lineColor":"#6e6e6e","textColor":"#ffffff","mainBkg":"#000000","nodeBorder":"#ffffff","nodeTextColor":"#ffffff","clusterBkg":"#000000","clusterBorder":"#ffffff","titleColor":"#6e6e6e","edgeLabelBackground":"#000000"},"flowchart":{"nodeSpacing":80,"rankSpacing":110,"padding":30,"curve":"linear"},"themeCSS":"svg{background:#000000 !important;}"}}%%
 flowchart LR
   subgraph CAP["1 · CAPTURE"]
     direction TB
@@ -40,7 +40,7 @@ flowchart LR
   style CAP fill:#000000,stroke:#ffffff,stroke-width:3px,color:#ffffff
   style KNO fill:#000000,stroke:#ffffff,stroke-width:3px,color:#ffffff
   style ACT fill:#000000,stroke:#ffffff,stroke-width:3px,color:#ffffff
-  linkStyle default stroke:#ffffff,stroke-width:3px
+  linkStyle default stroke:#6e6e6e,stroke-width:3px
 ```
 
 ### 7.2 Providers

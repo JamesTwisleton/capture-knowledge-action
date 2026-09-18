@@ -10,7 +10,7 @@ A web front end talks to a Java core over a REST API (a standard style of web in
 ---
 title: Architecture overview
 ---
-%%{init: {"theme":"base","themeVariables":{"background":"#000000","fontSize":"20px","fontFamily":"Helvetica, Arial, sans-serif","primaryColor":"#000000","primaryTextColor":"#ffffff","primaryBorderColor":"#ffffff","secondaryColor":"#000000","secondaryTextColor":"#ffffff","secondaryBorderColor":"#ffffff","tertiaryColor":"#000000","tertiaryTextColor":"#ffffff","tertiaryBorderColor":"#ffffff","lineColor":"#ffffff","textColor":"#ffffff","mainBkg":"#000000","nodeBorder":"#ffffff","nodeTextColor":"#ffffff","clusterBkg":"#000000","clusterBorder":"#ffffff","titleColor":"#ffffff","edgeLabelBackground":"#000000"},"flowchart":{"nodeSpacing":60,"rankSpacing":100,"padding":30,"curve":"linear"}}}%%
+%%{init: {"theme":"base","themeVariables":{"background":"#000000","fontSize":"20px","primaryColor":"#000000","primaryTextColor":"#ffffff","primaryBorderColor":"#ffffff","secondaryColor":"#000000","secondaryTextColor":"#ffffff","secondaryBorderColor":"#ffffff","tertiaryColor":"#000000","tertiaryTextColor":"#ffffff","tertiaryBorderColor":"#ffffff","lineColor":"#6e6e6e","textColor":"#ffffff","mainBkg":"#000000","nodeBorder":"#ffffff","nodeTextColor":"#ffffff","clusterBkg":"#000000","clusterBorder":"#ffffff","titleColor":"#6e6e6e","edgeLabelBackground":"#000000"},"flowchart":{"nodeSpacing":60,"rankSpacing":100,"padding":30,"curve":"linear"},"themeCSS":"svg{background:#000000 !important;}"}}%%
 flowchart TB
   UI["NEXT.JS WEB UI<br/>setup wizard, content types and prompts,<br/>Triage Inbox, Outbox, dashboard, activity view"]
   API["SPRING BOOT CORE<br/>REST API"]
@@ -46,7 +46,7 @@ flowchart TB
   classDef default fill:#000000,stroke:#ffffff,stroke-width:2px,color:#ffffff
   style CORE fill:#000000,stroke:#ffffff,stroke-width:3px,color:#ffffff
   style PROV fill:#000000,stroke:#ffffff,stroke-width:3px,color:#ffffff
-  linkStyle default stroke:#ffffff,stroke-width:3px
+  linkStyle default stroke:#6e6e6e,stroke-width:3px
 ```
 
 - **Backend:** Java (latest long-term support, or LTS, release) with Spring Boot (the standard Java application framework). Each provider category is a Java interface; each implementation is a Spring bean (a component Spring creates and wires in for you), selected by configuration through dependency injection (DI) — the mechanism that lets the core ask for "a work item provider" and receive whichever one is configured. The backend does all processing and orchestration, and is the piece that needs to scale in a large organisation.
