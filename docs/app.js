@@ -213,6 +213,34 @@
     return !!(opt && opt.cloud);
   }
 
+  function llmName() {
+    const sel = S.wizard.selections.llm;
+    const opt = D.providerCategories.find(c => c.id === "llm").options.find(o => o.id === sel);
+    return opt ? opt.name : null;
+  }
+
+  /* Decision fallback chain: Jev first; if an LLM provider is configured it is
+     the fallback (constrained-decision mode via the gateway); with no LLM,
+     Jev handles all decisions with no fallback. The user can also run
+     decisions on their LLM directly. */
+  function decisionNoteHTML() {
+    const name = llmName();
+    if (S.wizard.selections.decision === "jev") {
+      return name
+        ? `<p class="small" style="color:#4ec24e">✓ Fallback configured: if Jev is unavailable, decision calls fall back to <strong>${name}</strong> — your chosen LLM — in constrained-decision mode, and the switch is recorded in the audit trail.</p>`
+        : `<p class="small muted">No LLM provider configured — Jev handles all decisions with no fallback.</p>`;
+    }
+    return `<p class="small dim2">Decisions will run on <strong>${name}</strong> in constrained-decision mode via the gateway. A general LLM's confidence is less calibrated than a dedicated decision model, so review thresholds apply more conservatively.</p>`;
+  }
+
+  function decisionAttr() {
+    if (S.wizard.selections.decision === "llm") {
+      return `Decision · ${llmName()} via gateway (constrained-decision mode)`;
+    }
+    const name = llmName();
+    return `Decision · Jev (TypeSafe AI)${name ? ` · fallback: ${name}` : ""}`;
+  }
+
   function wizCanNext() {
     const w = S.wizard;
     switch (w.step) {
@@ -271,6 +299,7 @@
               <input type="radio" name="cat-${cat.id}" value="${o.id}" ${w.selections[cat.id] === o.id ? "checked" : ""}>
               <span><span class="opt-name">${o.name}</span>${o.note ? ` <span class="opt-note">— ${o.note}</span>` : ""}</span>
             </label>`).join("")}
+          ${cat.id === "decision" ? decisionNoteHTML() : ""}
           ${cat.sensitive && w.selections[cat.id] && llmIsCloud() ? `
             <div class="warning-box">
               <div class="wtitle">⚠ DATA SENSITIVITY</div>
@@ -518,7 +547,7 @@ Full platform transcript stored below this section (elided in this prototype).
         <div style="margin-top:10px">${vaultNoteHTML()}</div></details>`
       },
       {
-        title: "Mention detection over the scoped candidate pool", by: "Decision · Jev (TypeSafe AI)",
+        title: "Mention detection over the scoped candidate pool", by: decisionAttr(),
         html: `<p class="small dim2">Pool: ${pool.scope.toLowerCase()} — ${pool.size} items. Jev returns a calibrated
         confidence per candidate; the threshold is ${pool.threshold}%. This replaces brittle exact-text matching and
         tolerates mistranscribed item IDs.</p>
@@ -543,7 +572,7 @@ Full platform transcript stored below this section (elided in this prototype).
         retries — it's in the <a href="#/inbox">Outbox</a> with a notification sent. Nothing stalls silently. (J6)</p>`
       },
       {
-        title: "Trigger phrase heard — actions proposed", by: "Decision · Jev (TypeSafe AI)",
+        title: "Trigger phrase heard — actions proposed", by: decisionAttr(),
         html: `<p class="small dim2">Two segments used the team phrase <em>“${S.wizard.trigger}”</em> with an explicit
         item ID, so they were classified for action intent. <em>Close</em> and <em>assign</em> are in
         <strong>review</strong>, so both proposals went to the <a href="#/inbox">Triage Inbox</a> rather than being
@@ -734,13 +763,13 @@ Full platform transcript stored below this section (elided in this prototype).
     const cls = p.status === "approved" ? "resolved-approved" : p.status === "rejected" ? "resolved-rejected" : "";
     return `<div class="card proposal ${cls}">
       <div class="p-head">
-        <span class="p-title">Jev proposes: ${p.verb}</span>
+        <span class="p-title">${S.wizard.selections.decision === "llm" ? llmName() : "Jev"} proposes: ${p.verb}</span>
         <span class="badge blue">confidence ${p.confidence}%</span>
         <span class="badge dim">${p.type}</span>
       </div>
       <div class="p-meta">${p.item} — ${p.itemTitle}</div>
       <blockquote>${p.quote} <span class="muted">— ${p.speaker}, ${p.time}</span></blockquote>
-      <div class="p-meta">Proposed by ${attr("Decision · Jev (TypeSafe AI)")} from ${attr("transcript · Google Meet")} · gates passed: trigger phrase ✓ · explicit ID ✓ · confidence ✓</div>
+      <div class="p-meta">Proposed by ${attr(decisionAttr())} from ${attr("transcript · Google Meet")} · gates passed: trigger phrase ✓ · explicit ID ✓ · confidence ✓</div>
       ${p.status === "pending"
         ? `<div class="p-actions">
              <button class="btn good small" data-approve="${p.id}">✓ Approve</button>

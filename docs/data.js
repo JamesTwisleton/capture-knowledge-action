@@ -57,7 +57,8 @@ window.CKA_DATA = {
       id: "decision", name: "Decision", role: "Golden path",
       blurb: "Calibrated classification and scoring — a probability or a fixed choice, never prose.",
       options: [
-        { id: "jev", name: "Jev (TypeSafe AI)", note: "mention detection · action classification", default: true }
+        { id: "jev", name: "Jev (TypeSafe AI)", note: "purpose-built decision model · mention detection · action classification", default: true },
+        { id: "llm", name: "Your configured LLM", note: "constrained-decision mode via the gateway — uses whichever LLM you chose above" }
       ]
     },
     {
