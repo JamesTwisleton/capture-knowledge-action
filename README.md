@@ -1,6 +1,6 @@
 # Capture-Knowledge-Action
 
-**Product Requirements Document — Draft v0.8 for review**
+**Product Requirements Document — Draft v0.9 for review**
 
 | | |
 |---|---|
@@ -10,7 +10,7 @@
 
 *"Capture-Knowledge-Action" (CKA) is a working title. An initial search found no product using this exact name; a trademark and domain check is still to do.*
 
-**▶ [Try the interactive prototype](https://jamestwisleton.github.io/capture-knowledge-action/)** — a click-through demo of journeys J1, J4, J5 and J7 with fabricated data. No install required.
+**▶ [See the product site](https://jamestwisleton.github.io/capture-knowledge-action/)** — the value proposition in plain language, linking through to a click-through demo of journeys J1, J4, J5 and J7 with fabricated data. No install required.
 
 ---
 

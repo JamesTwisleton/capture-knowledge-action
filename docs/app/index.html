@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Capture-Knowledge-Action — Interactive Prototype</title>
+  <meta name="description" content="Interactive prototype of Capture-Knowledge-Action (CKA): a provider-agnostic framework turning meetings and documents into knowledge and safe, auditable workflow actions. Fabricated data.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦆</text></svg>">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="site-head">
+    <div class="proto-banner"><strong>Prototype</strong> — fabricated data, no real providers connected. Built to validate the user journeys in the <a href="https://github.com/JamesTwisleton/capture-knowledge-action" target="_blank" rel="noopener">CKA PRD</a>.</div>
+    <header class="appbar">
+      <a class="wordmark" href="../" style="color:inherit">CKA<span class="dot">·</span><span class="muted" style="font-weight:500;font-size:13px">Capture · Knowledge · Action</span></a>
+      <nav class="tabs">
+        <a href="#/overview" data-route="overview">Overview</a>
+        <a href="#/wizard" data-route="wizard">Setup wizard</a>
+        <a href="#/activity" data-route="activity">Activity</a>
+        <a href="#/inbox" data-route="inbox">Triage Inbox<span class="badge-count" id="inbox-badge"></span></a>
+        <a href="#/costs" data-route="costs">Costs</a>
+      </nav>
+      <span class="appbar-spacer"></span>
+      <button class="btn small ghost" id="reset-demo" title="Restore the seeded demo state">↺ Reset demo</button>
+    </header>
+  </div>
+
+  <main id="view"></main>
+
+  <footer class="site">
+    Capture-Knowledge-Action — interactive prototype of PRD journeys J1, J4, J5 and J7 ·
+    <a href="https://github.com/JamesTwisleton/capture-knowledge-action" target="_blank" rel="noopener">Read the PRD on GitHub</a> ·
+    All people, meetings, work items and costs are fabricated.
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
