@@ -134,7 +134,7 @@ window.CKA_DATA = {
     platformTranscript: true,
     vaultPath: "meetings/2026-09-17-atlas-sprint-14-refinement.md",
     summary: [
-      "Six items discussed. #142 (retry with backoff for provider timeouts) is code-complete and merged; Priya asked for it to be closed. #156 (batched audit inserts) re-estimated from 3 to 5 points after Sofia flagged the SQLite locking behaviour; acceptance criteria updated to include a migration test. #128 (silent OAuth token refresh failure) reproduced by Tom; agreed it must log and notify, not swallow — moved up the board.",
+      "Six items discussed. #142 (retry with backoff for provider timeouts) is code-complete and merged; Priya used the team's trigger phrase to ask for it to be closed, citing this morning's merge and staging verification. #156 (batched audit inserts) re-estimated from 3 to 5 points after Sofia flagged the SQLite locking behaviour; acceptance criteria updated to include a migration test, and Tom used the trigger phrase to assign it to Sofia. #128 (silent OAuth token refresh failure) reproduced by Tom; agreed it must log and notify, not swallow — moved up the board.",
       "#151 (GBP currency formatting) confirmed small; Dan takes it next. #139 (wizard transcript detection) demoed working against Meet and Teams fixtures; needs copy review only. #133 (RabbitMQ event bus spike) deferred to Sprint 15 — no capacity, and the in-memory bus is sufficient for the demo path.",
       "Items touched: #142, #156, #128, #151, #139. Deferred: #133."
     ]
