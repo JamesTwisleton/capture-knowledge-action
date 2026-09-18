@@ -10,6 +10,8 @@
 
 *"Capture-Knowledge-Action" (CKA) is a working title. An initial search found no product using this exact name; a trademark and domain check is still to do.*
 
+**▶ [Try the interactive prototype](https://jamestwisleton.github.io/capture-knowledge-action/)** — a click-through demo of journeys J1, J4, J5 and J7 with fabricated data. No install required.
+
 ---
 
 ## How to review this document
@@ -255,5 +257,3 @@ Sections 1–6 above are the product statement and user journeys — the primary
 | 15 | [Decision log](prd/15-decision-log.md) | How we got here, in order |
 | 16–17 | [Open questions and next steps](prd/16-17-open-questions-and-next-steps.md) | What's still unresolved, what happens next |
 | — | [Changelog](prd/changelog.md) | Version history of this document |
-
-An [interactive prototype](https://jamestwisleton.github.io/capture-knowledge-action/) of journeys J1, J4, J5 and J7 is also available, built from this PRD with fabricated data.
