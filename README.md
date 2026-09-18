@@ -1,12 +1,12 @@
 # Capture-Knowledge-Action
 
-**Product Requirements Document — Draft v0.7 for review**
+**Product Requirements Document — Draft v0.8 for review**
 
 | | |
 |---|---|
 | Author | James Twisleton |
 | Date | 18 September 2026 |
-| Status | Draft — seeking feedback on the product statement and user journeys before prototyping |
+| Status | Draft — prototyped; seeking feedback on the product statement, user journeys and prototype before building |
 
 *"Capture-Knowledge-Action" (CKA) is a working title. An initial search found no product using this exact name; a trademark and domain check is still to do.*
 
