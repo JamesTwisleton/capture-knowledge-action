@@ -17,10 +17,10 @@
 
 ## 17. Next steps
 
-1. Circulate this PRD to product and engineering contacts; gather comments on Sections 1–6 first.
-2. Prototype journeys J1, J4, J5 and J7 in Penpot; put the prototypes in front of the same reviewers.
-3. Build the GitHub Pages landing page from the validated journeys.
-4. Build a local-first vertical slice of J1 with example data (fabricated meetings and work items), then the one tested cloud deploy path.
+1. Circulate this PRD to product and engineering contacts; gather comments on Sections 1–6 first. **Still open.**
+2. Prototype journeys J1, J4, J5 and J7 in Penpot; put the prototypes in front of the same reviewers. **Prototyping done, reviewer circulation still open.** Rather than static Penpot mockups, an [interactive click-through prototype](https://jamestwisleton.github.io/capture-knowledge-action/) was built and deployed to GitHub Pages, covering all four journeys with fabricated data — putting it in front of reviewers is the part still to do.
+3. Build the GitHub Pages landing page from the validated journeys. **Still open** — distinct from the interactive prototype above (Section 14 describes a separate, scroll-driven marketing front door), and comes after journeys are validated with reviewers, so it can't precede step 2's remaining half either.
+4. Build a local-first vertical slice of J1 with example data (fabricated meetings and work items), then the one tested cloud deploy path. **Still open.** The interactive prototype simulates this journey in the browser with fabricated in-memory data; no backend, real stage orchestration, or deploy path (Section 8, Section 11) has been built yet.
 
 ---
 
