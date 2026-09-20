@@ -208,6 +208,7 @@ window.CKA_DATA = {
     { t: "10:41:13", event: "Content type assigned", detail: "Ticket refinement · rule match on calendar title", by: "CKA core (rule)" },
     { t: "10:41:13", event: "Transcription skipped", detail: "Platform transcript supplied — no LLM call, ~£0.11 saved", by: "CKA core" },
     { t: "10:41:58", event: "Summarised", detail: "claude-sonnet-5 via LangChain4j · prompt: ticket-refinement v3", by: "LLM provider" },
+    { t: "10:41:58", event: "Content summarised", detail: "Event published — the LLM provider never calls the knowledge provider directly", by: "Event bus · RabbitMQ" },
     { t: "10:41:59", event: "Knowledge stored", detail: "meetings/2026-09-17-atlas-sprint-14-refinement.md", by: "Knowledge provider · Markdown vault" },
     { t: "10:42:31", event: "Mentions detected", detail: "5 of 84 candidates ≥ 90% confidence", by: "Decision provider · Jev" },
     { t: "10:42:40", event: "Comments posted", detail: "#142 #156 #128 #139 · comment on #151 failed → Outbox", by: "Work item provider · GitHub Issues" },
