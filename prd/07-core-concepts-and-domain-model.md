@@ -13,9 +13,16 @@ Capture, Knowledge and Action are independently invokable stages connected by ev
 | **content captured** | the capture provider's content listener | the LLM provider |
 | **content summarised** | the LLM provider, once it has summarised (and transcribed first, if the platform supplied no transcript) | the knowledge provider |
 | **knowledge stored** | the knowledge provider, once the write completes | the Action stage |
-| **action proposed**, **action applied**, **action failed** | the Action stage | the audit service, the front end |
+| **action proposed**, **action applied**, **action failed** | the Action stage | nothing downstream — these are terminal (see below) |
 
 Nothing in the Action stage is invoked by the orchestrator or by the LLM step, and the LLM provider never hands its output to the knowledge provider directly — it announces that it has finished, and the knowledge provider picks the work up. This is the mechanism behind the composability claim rather than a restatement of it: any stage, and any provider within one, can be replaced, run alone, or driven by something else entirely, because none holds a reference to the next.
+
+Two things this table is deliberately **not** saying:
+
+- **The front end is not on the bus.** It never subscribes to anything. It is a Next.js app talking to the core over the REST API ([8.1](08-architecture.md#81-overview)), and it learns about proposals, applied actions and failures by reading them back from the audit store through that API ([`mvp-tickets.md`](mvp-tickets.md) T15). A browser cannot hold an AMQP subscription, and putting the Next.js server on the bus would give the front end a second, parallel route into the core alongside the REST API — two contracts to keep in step instead of one.
+- **The audit service is a cross-cutting sink, not a consumer of these three events.** It records *every* step of the action decision chain — capture, summarisation, the knowledge write, mention detection, unmatched mentions, comments, proposals, the human accept or reject, the applied action and its outcome — which is why the stages diagram below shows it written to from several points rather than sitting at the end of a queue. Whether it does that by subscribing to the bus or by being written to directly at each step is an implementation choice T14 settles; either way it is not "the consumer of the action events".
+
+The three action events are therefore **terminal in the pipeline**: nothing downstream consumes them to do further pipeline work. They exist so that anything which wants to react — an audit sink, a notification provider, a future stage — can, without the Action stage knowing about it.
 
 ```mermaid
 ---

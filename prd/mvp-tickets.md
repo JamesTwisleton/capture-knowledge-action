@@ -301,13 +301,15 @@ Ownership: the earlier decision was that James hand-builds the Spring Boot and N
 - Reset and seed endpoints (see T19).
 - Prompt list, create and edit endpoints, versioned (see T11).
 
+**Open — decide when scoping this ticket:** T16 promises a *live* activity log and *live* provider status, but the front end is REST-only and never touches the event bus (see PRD [7.1](07-core-concepts-and-domain-model.md#71-stages)), so "live" has to be built out of something. Options: client-side polling on an interval (simplest, fits the MVP, and mirrors the folder watcher's own polling), server-sent events, or websockets. Polling is the obvious default; the point is that this is a decision, not something the word "live" supplies for free.
+
 **Acceptance criteria:** documented endpoints, each covered by tests, covering everything T16 needs.
 
 ## T16. Front end views
 
 **Scope**
 - **Connection tester / health dashboard:** live status of each provider (Meet, Obsidian vault, GitHub). Built as reusable scaffolding for the later setup wizard, not throwaway UI.
-- **Activity log:** live view of polling, "found something", processing, saved to knowledge store, actions taken, with distinct failed and unmatched-mention states alongside pending and done.
+- **Activity log:** live view of polling, "found something", processing, saved to knowledge store, actions taken, with distinct failed and unmatched-mention states alongside pending and done. "Live" means whatever refresh mechanism T15 settles on — the front end reads the REST API and is not a subscriber on the event bus.
 - **Stored documentation view:** open the note that was written to the vault.
 - **Triage list:** proposals with confidence, transcript excerpt, and which provider and model produced them. Two kinds, visually distinguishable at a glance: **proposed comments** (a mention below the confidence threshold — accepting posts the comment) and **proposed actions** (a mutating change — accepting applies it). Accept and reject individually, plus accept all. Accepting in triage is the gate; there is no second confirmation dialog.
 - Accept/reject history visible.
