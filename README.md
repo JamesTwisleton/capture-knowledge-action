@@ -1,6 +1,6 @@
 # Capture-Knowledge-Action
 
-**Product Requirements Document — Draft v0.9.6 for review**
+**Product Requirements Document — Draft v0.9.7 for review**
 
 | | |
 |---|---|
