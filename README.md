@@ -160,7 +160,7 @@ A team already has knowledge written down — hand-written meeting notes, decisi
 The wizard takes a user from an empty install to a running pipeline with as little manual admin work as possible.
 
 > [!NOTE]
-> **MVP:** the web wizard described here is the target design and is **deferred**. For the MVP it is replaced by a terminal wizard: `./setup.sh` checks prerequisites (Docker and so on), asks for each credential with inline instructions and the required scopes, and writes a `.env` file; `./start.sh` runs Docker Compose. There is no separate doctor script — requirements are listed in the README. See [`prd/mvp-tickets.md`](prd/mvp-tickets.md) T19.
+> **MVP:** the web wizard described here is the target design and is **deferred**. For the MVP it is replaced by a terminal wizard: `./setup.sh` checks prerequisites (Docker and so on), asks for each credential with inline instructions and the required scopes, and writes a `.env` file; `./start.sh` runs Docker Compose. There is no separate doctor script — requirements are listed in the README. See [`prd/mvp-tickets.md`](prd/mvp-tickets.md) T20.
 
 1. **Choose providers per category.** Meeting capture, knowledge (an offline vault or a hosted platform), work items, LLM (cloud or local), decision model, event bus, audit store, notifications, and optionally code hosting. Each category lists the available implementations.
 2. **Authorise.** "Log in with Google / Microsoft / Atlassian / GitHub". CKA requests only the scopes (permissions) it needs and obtains tokens so it can perform setup on the user's behalf. *In the MVP the user brings their own Google OAuth app, **published** rather than left in "Testing" status — an unpublished app's refresh tokens expire after 7 days. The client ID and secret go in `.env`; `./setup.sh` runs the consent flow once and stores the resulting refresh token, from which the core mints access tokens and refreshes them silently. The user creates and publishes the OAuth app and creates a GitHub personal access token by following README instructions, rather than the wizard doing it on their behalf. The public demo uses the author's own published OAuth app.*
@@ -280,5 +280,13 @@ Sections 1–6 above are the product statement and user journeys — the primary
 | 15 | [Decision log](prd/15-decision-log.md) | How we got here, in order |
 | 16–17 | [Open questions and next steps](prd/16-17-open-questions-and-next-steps.md) | What's still unresolved, what happens next |
 | — | [MVP ticket breakdown](prd/mvp-tickets.md) | The 21 tickets of the MVP, in order, with acceptance criteria — tracked as epic [#1](https://github.com/JamesTwisleton/capture-knowledge-action/issues/1). Delivery planning rather than a PRD section |
-| — | [MVP demo script](prd/demo-script.md) | The script for the demo recording, doubling as the MVP test plan (T20). Delivery material rather than a PRD section |
+| — | [MVP demo script](prd/demo-script.md) | The script for the demo recording, doubling as the MVP test plan (T21). Delivery material rather than a PRD section |
 | — | [Changelog](prd/changelog.md) | Version history of this document |
+
+## License
+
+Copyright 2026 James Twisleton.
+
+Licensed under the **Apache License, Version 2.0** — see [`LICENSE`](LICENSE) for the full text. In plain terms: you may use, modify and redistribute this, including inside paid closed-source products, provided you keep the copyright notice and state what you changed. Apache 2.0 also carries a patent grant from every contributor, which protects people who adopt the project. [Section 13](prd/13-open-source-and-business-model.md) explains the reasoning and what "open core" means here.
+
+The `LICENSE` file is the canonical Apache 2.0 text, unmodified — `md5 3b83ef96387f14655fc854ddc3c6bd57`.

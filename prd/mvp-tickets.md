@@ -375,7 +375,7 @@ MCP compatibility itself is a **specification/methodology**, published in the re
 - `./setup.sh`, a terminal wizard: checks prerequisites (Docker and so on), then asks for the Google OAuth client ID and secret and runs the one-time consent to capture a refresh token, the GitHub token, the LLM provider key, the optional Jev key and the trigger phrase, with inline instructions and required scopes for each, and writes `.env`.
 - `./start.sh` runs Docker Compose.
 - README: requirements (Docker, a Google account, and so on), how to create and **publish** a Google OAuth app, how to create a GitHub token, the config guide, and how to run the demo.
-- Add an **Apache License 2.0** `LICENSE` file at the repo root; README includes a short License section pointing to it.
+- ~~Add an **Apache License 2.0** `LICENSE` file at the repo root; README includes a short License section pointing to it.~~ **Done ahead of this ticket** — pulled forward because the repository is public and describes itself as open source, so every day without a licence was a day readers had no grant of rights. The README's License section and `LICENSE` are already in place.
 - No separate doctor script.
 
 **Acceptance criteria:** a fresh clone, `./setup.sh`, `./start.sh`, and the pipeline runs.

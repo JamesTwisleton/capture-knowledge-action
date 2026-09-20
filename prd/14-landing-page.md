@@ -12,7 +12,7 @@ Alongside the click-through prototype — which stays on fabricated data — the
 
 **The script is written:** [`demo-script.md`](demo-script.md). It opens on the lock-in problem and the composability answer before any software appears, which matches the landing page's own order (Section 2 before the product), and it closes by naming cost tracking as deferred rather than quietly omitting it.
 
-A **reset control in the front end** makes the demo repeatable: it calls a backend endpoint that undoes the GitHub actions taken, deletes the synthetic data and repopulates it, returning the repo and the app to their starting state. The action decision chain is what tells the reset which actions to undo. The endpoint is demo-configuration only and must not be reachable in a normal deployment. See [`mvp-tickets.md`](mvp-tickets.md) T18 and T20.
+A **reset control in the front end** makes the demo repeatable: it calls a backend endpoint that undoes the GitHub actions taken, deletes the synthetic data and repopulates it, returning the repo and the app to their starting state. The action decision chain is what tells the reset which actions to undo. The endpoint is demo-configuration only and must not be reachable in a normal deployment. See [`mvp-tickets.md`](mvp-tickets.md) T19 and T21.
 
 ---
 
