@@ -54,7 +54,7 @@ Ownership: the earlier decision was that James hand-builds the Spring Boot and N
 | T04 | Health check connectivity slice | [#5](https://github.com/JamesTwisleton/capture-knowledge-action/issues/5) |
 | T05 | Provider interface skeletons | [#6](https://github.com/JamesTwisleton/capture-knowledge-action/issues/6) |
 | T06 | Knowledge provider (Markdown vault) | [#7](https://github.com/JamesTwisleton/capture-knowledge-action/issues/7) |
-| T07 | Event bus implementation | [#8](https://github.com/JamesTwisleton/capture-knowledge-action/issues/8) |
+| T07 | Event bus implementation (RabbitMQ) | [#8](https://github.com/JamesTwisleton/capture-knowledge-action/issues/8) |
 | T08 | Decision layer (Jev, with LLM fallback) | [#9](https://github.com/JamesTwisleton/capture-knowledge-action/issues/9) |
 | T09 | Google Meet capture provider | [#10](https://github.com/JamesTwisleton/capture-knowledge-action/issues/10) |
 | T10 | SQL persistence layer | [#11](https://github.com/JamesTwisleton/capture-knowledge-action/issues/11) |
@@ -168,7 +168,7 @@ Ownership: the earlier decision was that James hand-builds the Spring Boot and N
 
 **Acceptance criteria:** publishing a content-summarised event produces a readable Markdown file in the vault and a knowledge-stored event on the bus, with no direct call from the publisher; the file opens correctly in Obsidian and in a plain text editor.
 
-## T07. Event bus implementation
+## T07. Event bus implementation (RabbitMQ)
 
 **Scope**
 - A real broker running locally in Docker Compose: **RabbitMQ**, not only in-memory.
@@ -370,6 +370,8 @@ MCP compatibility itself is a **specification/methodology**, published in the re
 **Acceptance criteria:** run the full flow, press reset, and the repo and app are back to the starting state.
 
 **Notes:** verify what the GitHub API permits. Comments can be deleted and issues reopened; deleting issues outright may need admin permission. Use a dedicated repo.
+
+**Safety:** the reset endpoint undoes real GitHub actions and deletes data, so it must be available only in a demo configuration and unreachable in a normal deployment — consider a demo-mode flag.
 
 ## T20. Setup and start scripts, README
 
