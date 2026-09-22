@@ -67,8 +67,11 @@ Ownership: the earlier decision was that James hand-builds the Spring Boot and N
 | T17 | Error handling | [#18](https://github.com/JamesTwisleton/capture-knowledge-action/issues/18) |
 | T18 | MCP compatibility: publish the spec, and expose the core through it | [#22](https://github.com/JamesTwisleton/capture-knowledge-action/issues/22) |
 | T19 | Test data, seed and reset | [#19](https://github.com/JamesTwisleton/capture-knowledge-action/issues/19) |
+| T22 | Meeting script for the recording that gets parsed | *not yet filed* |
 | T20 | Setup and start scripts, README | [#20](https://github.com/JamesTwisleton/capture-knowledge-action/issues/20) |
 | T21 | Demo script and recording | [#21](https://github.com/JamesTwisleton/capture-knowledge-action/issues/21) |
+
+Ticket numbers are stable identifiers, not positions: **T22 is built between T19 and T20**, where its row sits. It was added after T01–T21 were filed as GitHub issues, and renumbering to slot it in would have rewritten twenty-one live issues and every cross-reference to them for no gain.
 
 ## Credentials and config needed
 
@@ -395,6 +398,33 @@ MCP compatibility itself is a **specification/methodology**, published in the re
 
 **Depends on:** T13 (GitHub work item provider), T14 (audit log), T15 (backend endpoints), T16 (front end views).
 
+## T22. Meeting script for the recording that gets parsed
+
+**Goal:** a script for the Google Meet call that becomes the MVP's *input* — the conversation the pipeline actually reads. Distinct from T21, which scripts the screen recording of the demo. This one scripts the meeting inside it.
+
+**Why it needs writing rather than improvising:** the demo has to exercise four different outcomes of mention detection, one of which is a deliberate mistake. A meeting recorded off the cuff will not reliably produce a low-confidence mention or a misclassification, and re-recording a call with several people in it to get them is expensive. The dialogue is test input, so it gets designed like test input.
+
+**Scope**
+- A written dialogue script for a **Sprint Refinement** meeting: roughly five to ten minutes, two to four speakers, read aloud on a real Google Meet call with recording and transcription switched on.
+- It must sound like a meeting, not a list of commands. The product's claim is that it works on ordinary conversation, so the script has to read as ordinary conversation, with the ticket references falling out of it naturally.
+- **Every path the demo shows must be provoked deliberately:**
+  - Plain mentions of several seeded tickets, clearly enough to clear the mention threshold → automatic comments, no approval.
+  - At least one **deliberately vaguer** mention — a ticket referred to obliquely, or a number half-swallowed — to land below the threshold and produce a **proposed comment** in triage.
+  - At least one **trigger phrase plus an explicit ticket ID in the same sentence**, requesting a state change ("for the rubber duck, please close one-four-two") → a triage proposal.
+  - A **deliberately wrong but real ticket number**, so mention detection confidently matches an unrelated seeded issue and produces the misclassified proposal the demo rejects.
+  - Optionally, a reference matching no seeded issue at all, to show an **unmatched mention**.
+- Speaker labels and rough timings, so participants can rehearse and the recording is repeatable.
+- Recording-session notes: say the trigger phrase clearly, always put the ticket ID in the same sentence as the instruction, and use decent audio — the PRD documents garbled trigger phrases as a known limitation, and the demo should not accidentally demonstrate it.
+- Lives alongside the other delivery documents, as `prd/meeting-script.md`.
+
+**Acceptance criteria:** the script exists, names specific seeded ticket numbers, and covers all four outcomes above. Read aloud on a Meet call, it produces a transcript and summary that drive the entire demo end to end without needing a retake.
+
+**Depends on:** T19's **seed step** — the synthetic GitHub issues must exist before the script can name real ticket numbers. Write the script against placeholders if it helps, but it cannot be finished until the pool is seeded.
+
+**Blocks:** T19's **recording step**, and therefore T21's demo recording. Nothing can be captured until there is something scripted to say.
+
+**Note:** this splits T19, which currently carries both "seed the issues" and "make the recording" in one ticket. The two now sit either side of this one. Whether that argues for splitting T19 properly is a judgement call for whoever picks it up.
+
 ## T20. Setup and start scripts, README
 
 **Scope**
@@ -448,6 +478,7 @@ MCP compatibility itself is a **specification/methodology**, published in the re
 - **Event payload:** the message/data shape travelling on the event bus.
 - **Content summarised event:** published by the LLM provider once it has summarised (and transcribed first, if the capture platform supplied no transcript). The knowledge provider subscribes to it and performs the write; that write completing is what fires the knowledge-stored event. The LLM provider never calls the knowledge provider directly.
 - **Proposed comment:** a triage entry for a mention that scored below the mention threshold. Accepting it posts the comment on the work item; rejecting it posts nothing. Distinct from a **proposed action**, which is a mutating change, and from an **unmatched mention**, which has no candidate to act on and so is never proposed.
+- **Meeting script:** the dialogue spoken during the Google Meet call that the MVP parses (T22) — the pipeline's *input*. Not to be confused with the **demo script** (T21), which is the narration for the screen recording of the running system. One is what the software reads; the other is what the viewer hears.
 - **MCP compatibility spec:** a specification, published in the repo, defining the MCP tool/resource shapes for CKA's core capabilities and for each provider interface. It's a methodology any component can implement independently, not a single centralised server — CKA's own reference implementation (T18) is one conformant instance of it, not the only possible one.
 - **Trigger phrase:** the canonical term for the team's wake word (PRD 7.4). "Wake word" and "wake phrase" are plain-language glosses only — never identifiers, config keys or field names.
 - **Work item mapper:** interface converting a provider's native concept (for example a Jira epic or GitHub milestone) into the generic core work item and back; one implementation per provider, wired by Spring DI.
