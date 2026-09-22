@@ -1,6 +1,6 @@
 # Capture-Knowledge-Action
 
-**Product Requirements Document — Draft v0.9.7 for review**
+**Product Requirements Document — Draft v0.9.8 for review**
 
 | | |
 |---|---|
@@ -279,7 +279,7 @@ Sections 1–6 above are the product statement and user journeys — the primary
 | 14 | [Landing page](prd/14-landing-page.md) | The GitHub Pages product front door |
 | 15 | [Decision log](prd/15-decision-log.md) | How we got here, in order |
 | 16–17 | [Open questions and next steps](prd/16-17-open-questions-and-next-steps.md) | What's still unresolved, what happens next |
-| — | [MVP ticket breakdown](prd/mvp-tickets.md) | The 21 tickets of the MVP, in order, with acceptance criteria — tracked as epic [#1](https://github.com/JamesTwisleton/capture-knowledge-action/issues/1). Delivery planning rather than a PRD section |
+| — | [MVP ticket breakdown](prd/mvp-tickets.md) | The 22 tickets of the MVP, in order, with acceptance criteria — tracked as epic [#1](https://github.com/JamesTwisleton/capture-knowledge-action/issues/1). Delivery planning rather than a PRD section |
 | — | [MVP demo script](prd/demo-script.md) | The script for the demo recording, doubling as the MVP test plan (T21). Delivery material rather than a PRD section |
 | — | [Changelog](prd/changelog.md) | Version history of this document |
 

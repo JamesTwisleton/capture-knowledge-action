@@ -3,7 +3,7 @@
 # CKA MVP: ticket breakdown
 
 Source: scoping conversation on 18 September 2026, building on PRD v0.9.3; revised 19 September 2026 from the demo-script session (see [`demo-script.md`](demo-script.md)), which introduced the content-summarised event and the low-confidence proposed-comment path.
-Status: **filed as GitHub issues** — epic [#1](https://github.com/JamesTwisleton/capture-knowledge-action/issues/1) with T01–T21 attached as sub-issues. Acceptance criteria below are drawn from the discussion; anything not settled is listed under **Open questions** at the end and flagged inline. This page stays the canonical narrative version; the issues are the working tracker.
+Status: **filed as GitHub issues** — epic [#1](https://github.com/JamesTwisleton/capture-knowledge-action/issues/1) with T01–T22 attached as sub-issues. Acceptance criteria below are drawn from the discussion; anything not settled is listed under **Open questions** at the end and flagged inline. This page stays the canonical narrative version; the issues are the working tracker.
 
 > [!NOTE]
 > This page is delivery planning, not part of the PRD's numbered sections, so editing it does not require a PRD version bump. It is linked from [Section 17, Next steps](16-17-open-questions-and-next-steps.md#17-next-steps).
@@ -25,7 +25,7 @@ Not in the MVP: the full setup wizard (PRD J4), the cost dashboard (J7), other p
 
 ## Structure on GitHub
 
-GitHub has no native epic type. Of the options considered — an issue with a checklist of linked sub-issues, native sub-issues, or a Project with an "Epic" label — **native sub-issues** were chosen: one parent epic, [#1](https://github.com/JamesTwisleton/capture-knowledge-action/issues/1), with T01–T21 attached as real GitHub sub-issues. That gives a progress bar on the parent and a proper parent/child relationship rather than a markdown checklist.
+GitHub has no native epic type. Of the options considered — an issue with a checklist of linked sub-issues, native sub-issues, or a Project with an "Epic" label — **native sub-issues** were chosen: one parent epic, [#1](https://github.com/JamesTwisleton/capture-knowledge-action/issues/1), with T01–T22 attached as real GitHub sub-issues. That gives a progress bar on the parent and a proper parent/child relationship rather than a markdown checklist.
 
 Labels: every ticket carries `mvp`; the parent also carries `epic`. Area labels (`backend`, `frontend`, `infrastructure`, `provider`, `documentation`) are applied per ticket.
 
@@ -67,7 +67,7 @@ Ownership: the earlier decision was that James hand-builds the Spring Boot and N
 | T17 | Error handling | [#18](https://github.com/JamesTwisleton/capture-knowledge-action/issues/18) |
 | T18 | MCP compatibility: publish the spec, and expose the core through it | [#22](https://github.com/JamesTwisleton/capture-knowledge-action/issues/22) |
 | T19 | Test data, seed and reset | [#19](https://github.com/JamesTwisleton/capture-knowledge-action/issues/19) |
-| T22 | Meeting script for the recording that gets parsed | *not yet filed* |
+| T22 | Meeting script for the recording that gets parsed | [#25](https://github.com/JamesTwisleton/capture-knowledge-action/issues/25) |
 | T20 | Setup and start scripts, README | [#20](https://github.com/JamesTwisleton/capture-knowledge-action/issues/20) |
 | T21 | Demo script and recording | [#21](https://github.com/JamesTwisleton/capture-knowledge-action/issues/21) |
 
@@ -390,6 +390,8 @@ MCP compatibility itself is a **specification/methodology**, published in the re
 - A **reset button in the front end** calling a backend endpoint that undoes the GitHub actions taken, deletes the synthetic data, and repopulates it, so the demo can be run again from a clean slate.
 - The audit chain is what tells the reset which actions to undo.
 
+**Relationship to T22:** this ticket carries two separable things — **seeding** the synthetic issues, and **making the recording**. T22 sits between them: the seed must run first so the script can name real ticket numbers, and the recording cannot happen until the script exists.
+
 **Acceptance criteria:** run the full flow, press reset, and the repo and app are back to the starting state.
 
 **Notes:** verify what the GitHub API permits. Comments can be deleted and issues reopened; deleting issues outright may need admin permission. Use a dedicated repo.
@@ -460,7 +462,7 @@ MCP compatibility itself is a **specification/methodology**, published in the re
 
 **Decided:** the recording **mentions** MCP but does not show an external MCP client (T18) driving CKA live — settled when the script was written, to keep the recording independent of T18 being finished. See the MCP section in [`demo-script.md`](demo-script.md).
 
-**Depends on:** Everything above — this is the closing ticket.
+**Depends on:** Everything above — this is the closing ticket. In particular T22, the meeting script: the call has to be scripted and recorded before there is anything for the demo to process.
 
 ---
 
