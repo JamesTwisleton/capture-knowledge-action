@@ -136,6 +136,8 @@ Ownership: the earlier decision was that James hand-builds the Spring Boot and N
 
 **Note:** decide whether the browser calls the backend on its exposed host port or the Next.js server proxies the call, because the browser cannot resolve Docker service names.
 
+**Depends on:** T02 (Spring Boot skeleton), T03 (Next.js skeleton).
+
 ## T05. Provider interface skeletons
 
 **Goal:** the domain model's abstractions, defined before any implementation fills them in.
@@ -168,6 +170,8 @@ Ownership: the earlier decision was that James hand-builds the Spring Boot and N
 
 **Acceptance criteria:** publishing a content-summarised event produces a readable Markdown file in the vault and a knowledge-stored event on the bus, with no direct call from the publisher; the file opens correctly in Obsidian and in a plain text editor.
 
+**Depends on:** T05 (provider interface skeletons), T07 (event bus).
+
 ## T07. Event bus implementation (RabbitMQ)
 
 **Scope**
@@ -178,6 +182,8 @@ Ownership: the earlier decision was that James hand-builds the Spring Boot and N
 **Acceptance criteria:** a test publishes a fake event and a subscriber receives it via the real broker.
 
 **Why RabbitMQ:** simplest of the PRD's candidates (Kafka, RabbitMQ, Google Pub/Sub) to stand up locally — one container, no coordinator/cluster service to run alongside it (unlike Kafka), well-supported by Spring AMQP.
+
+**Depends on:** T01 (Docker Compose environment), T05 (provider interface skeletons).
 
 ## T08. Decision layer: Jev, with LLM fallback
 
@@ -201,6 +207,8 @@ Ownership: the earlier decision was that James hand-builds the Spring Boot and N
 
 **Notes:** Jev is early access (released 15 September 2026), so its API may move.
 
+**Depends on:** T05 (provider interface skeletons), T07 (event bus). Second pass depends on T12 and T13.
+
 ## T09. Google Meet capture provider
 
 **Scope**
@@ -213,6 +221,8 @@ Ownership: the earlier decision was that James hand-builds the Spring Boot and N
 - Connection/health check.
 
 **Acceptance criteria:** dropping a recording (with its Meet transcript and summary) into the watched folder produces a content-captured event within one poll interval.
+
+**Depends on:** T05 (provider interface skeletons), T07 (event bus).
 
 ## T10. SQL persistence layer
 
@@ -264,6 +274,8 @@ Ownership: the earlier decision was that James hand-builds the Spring Boot and N
 
 **Note:** this ticket no longer depends on T06. The LLM and knowledge providers are joined only by an event, so either can be built and tested without the other.
 
+**Depends on:** T07 (event bus), T11 (prompt storage). **No longer depends on T06** — see the note above.
+
 ## T13. GitHub work item provider
 
 **Scope**
@@ -274,6 +286,8 @@ Ownership: the earlier decision was that James hand-builds the Spring Boot and N
 - Personal access token via env var; connection/health check.
 
 **Acceptance criteria:** the provider can list candidates, comment on a real issue, close it, and correctly reports when a mentioned identifier has no match in the candidate pool.
+
+**Depends on:** T05 (provider interface skeletons, including the work item mapper).
 
 ## T14. Audit log: action decision chain
 
@@ -305,6 +319,8 @@ Ownership: the earlier decision was that James hand-builds the Spring Boot and N
 
 **Acceptance criteria:** documented endpoints, each covered by tests, covering everything T16 needs.
 
+**Depends on:** T14 (audit log), T11 (prompt storage).
+
 ## T16. Front end views
 
 **Scope**
@@ -319,6 +335,8 @@ Ownership: the earlier decision was that James hand-builds the Spring Boot and N
 
 **Acceptance criteria:** every beat of the demo script (T21) can be performed from the UI.
 
+**Depends on:** T03 (Next.js skeleton), T15 (backend endpoints).
+
 ## T17. Error handling
 
 **Scope**
@@ -331,6 +349,8 @@ Ownership: the earlier decision was that James hand-builds the Spring Boot and N
 **Acceptance criteria:** with an invalid token, accepting a proposal results in a clearly displayed error state and an audit entry; restoring the token allows the action to be retried, switched to another provider, or dismissed.
 
 **Note:** notification delivery (email, Slack and so on) is out of scope for the MVP — the visible failed state in the front end is the notification.
+
+**Depends on:** T13 (GitHub work item provider), T14 (audit log), T16 (front end views). Blocks T18 (MCP compatibility).
 
 ## T18. MCP compatibility: publish the spec, and expose the core through it
 
@@ -373,6 +393,8 @@ MCP compatibility itself is a **specification/methodology**, published in the re
 
 **Safety:** the reset endpoint undoes real GitHub actions and deletes data, so it must be available only in a demo configuration and unreachable in a normal deployment — consider a demo-mode flag.
 
+**Depends on:** T13 (GitHub work item provider), T14 (audit log), T15 (backend endpoints), T16 (front end views).
+
 ## T20. Setup and start scripts, README
 
 **Scope**
@@ -383,6 +405,8 @@ MCP compatibility itself is a **specification/methodology**, published in the re
 - No separate doctor script.
 
 **Acceptance criteria:** a fresh clone, `./setup.sh`, `./start.sh`, and the pipeline runs.
+
+**Depends on:** T09 (Google Meet capture provider, for the consent flow), T13 (GitHub work item provider).
 
 ## T21. Demo script and recording
 
@@ -401,6 +425,12 @@ MCP compatibility itself is a **specification/methodology**, published in the re
 8. Show the audit trail reflecting the accept and reject decisions.
 9. Break the GitHub token (set to nonsense) and show the error state in the front end.
 10. Reset from the front end and show the clean state.
+
+**Acceptance criteria:** the script is written and every beat is performed and captured in one screen recording of the real running system.
+
+**Decided:** the recording **mentions** MCP but does not show an external MCP client (T18) driving CKA live — settled when the script was written, to keep the recording independent of T18 being finished. See the MCP section in [`demo-script.md`](demo-script.md).
+
+**Depends on:** Everything above — this is the closing ticket.
 
 ---
 
