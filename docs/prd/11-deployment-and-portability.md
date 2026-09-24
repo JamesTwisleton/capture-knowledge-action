@@ -1,9 +1,9 @@
-[← Back to the CKA PRD](../README.md) · Previous: [10. Extensibility](10-extensibility.md)
+[← Back to the CKA PRD](../../README.md) · Previous: [10. Extensibility](10-extensibility.md)
 
 ## 11. Deployment and portability
 
 - A single Git repository. Run locally first (Docker Compose — which runs the whole stack on one machine in containers) to try providers before committing to anything. The local environment runs a **real RabbitMQ broker**, the offline Markdown vault and the SQLite audit store — not the in-memory event bus, which is kept for tests. Decoupling between the stages is only worth claiming if the local run exercises it against a real bus.
-- **Entry points:** `./setup.sh` (prerequisite checks, a terminal credential wizard, writes `.env`) and `./start.sh` (runs Docker Compose). See [J4](../README.md#j4--setup-wizard).
+- **Entry points:** `./setup.sh` (prerequisite checks, a terminal credential wizard, writes `.env`) and `./start.sh` (runs Docker Compose). See [J4](../../README.md#j4--setup-wizard).
 - **Developer experience**, treated as part of the deliverable rather than left to each contributor to rig up:
   - Debug ports exposed and mapped for the JVM, and for other services where applicable, so a debugger can attach to anything in the environment. The ports are listed in the documentation.
   - Backend hot reload: build output mounted as a volume, so `mvn compile` triggers an automatic app restart.
@@ -16,4 +16,4 @@
 
 ---
 
-← Back to the PRD: [README](../README.md) · Previous: [10. Extensibility](10-extensibility.md) · Next: [12. Known limitations and honest tradeoffs](12-known-limitations.md) →
+← Back to the PRD: [README](../../README.md) · Previous: [10. Extensibility](10-extensibility.md) · Next: [12. Known limitations and honest tradeoffs](12-known-limitations.md) →

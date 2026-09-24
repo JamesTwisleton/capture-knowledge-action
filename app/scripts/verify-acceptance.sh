@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Verifies T01's acceptance criteria against a running stack. CI runs this; so can you.
 #
-#     ./scripts/verify-acceptance.sh
+#     ./app/scripts/verify-acceptance.sh
 #
 # It brings the stack up, proves each criterion, and tears down. Every check asserts
 # behaviour rather than configuration: a port that is open is not a debugger, and a
 # container that is running is not a service that answers.
 set -euo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.."   # app/, where docker-compose.yml lives
 
 BACKEND_PORT="${BACKEND_PORT:-8080}"
 FRONTEND_PORT="${FRONTEND_PORT:-3000}"
@@ -51,10 +51,15 @@ for _ in $(seq 1 60); do
   if [ -z "$pending" ]; then break; fi
   sleep 5
 done
-if [ -n "$pending" ]; then echo "  not healthy yet:$pending"; fi
+if [ -n "$pending" ]; then echo "  never became healthy:$pending"; fi
 
 echo
 echo "AC1 — docker compose up brings up the stubbed environment"
+for svc in event-bus backend frontend; do
+  [ "$(health "$svc")" = "healthy" ] \
+    && pass "$svc reports healthy (its healthcheck actually works)" \
+    || fail "$svc never reported healthy — check its healthcheck command exists in the image"
+done
 for svc in backend frontend event-bus; do
   if [ "$(docker compose ps -q "$svc" | wc -l)" -gt 0 ] \
      && docker inspect -f '{{.State.Running}}' "$(docker compose ps -q "$svc")" 2>/dev/null | grep -q true; then
@@ -98,13 +103,13 @@ done
 
 echo
 echo "AC3 — documentation exists"
-for f in documentation/docker-environment.md documentation/AGENTS.md backend/AGENTS.md frontend/AGENTS.md; do
-  [ -s "$f" ] && pass "$f" || fail "$f missing or empty"
+for f in ../docs/docker-environment.md ../docs/AGENTS.md backend/AGENTS.md frontend/AGENTS.md; do
+  [ -s "$f" ] && pass "${f#../}" || fail "${f#../} missing or empty"
 done
 
 echo
 echo "Hygiene — secrets must not be committed"
-if git ls-files --error-unmatch .env >/dev/null 2>&1; then
+if git ls-files --error-unmatch .env >/dev/null 2>&1; then  # cwd is app/
   fail ".env is tracked by git — it holds credentials from T20 onwards"
 else
   pass ".env is not tracked"

@@ -1,7 +1,7 @@
 # AGENTS.md
 
-Instructions for AI agents working in this repository. (`CLAUDE.md` imports this file, so Claude Code picks
-up the same instructions — see https://agents.md for the convention this file follows.)
+Instructions for AI agents working in this repository. Claude Code reads this file directly, as do other
+agents following the [agents.md](https://agents.md) convention — no `CLAUDE.md` needed.
 
 ## Engineering conventions — read this before writing code
 
@@ -16,30 +16,32 @@ framework ships is code to maintain, plus a divergence waiting to happen. (This 
 "Ponytail" rule: does it need to exist, is it already here, does the platform do it.)
 
 **Every acceptance criterion gets a test that runs in CI.** Not a note saying it was checked by
-hand — a test. `scripts/verify-acceptance.sh` asserts the criteria for the environment itself and
-runs on every push via `.github/workflows/ci.yml`; extend it as tickets land. Assert behaviour,
+hand — a test. `app/scripts/verify-acceptance.sh` asserts the criteria for the environment itself
+and runs on every push via `.github/workflows/ci.yml`; extend it as tickets land. Assert behaviour,
 not configuration: an open port is not a debugger, and a running container is not a service that
 answers.
 
-**Documentation lives in `documentation/`.** Not in `docs/` — that is the published GitHub Pages
-site (`index.html`, the prototype under `app/`, and its assets), and engineering notes do not
-belong in a public marketing site. Link to `README.md` rather than restating it.
+**The repository has four places, and things belong in exactly one.** `app/` is everything
+runnable — backend, frontend, compose file, scripts, entry points; work from there, not the root.
+`docs/` is all documentation, the PRD included. `site/` is the published GitHub Pages site,
+deployed by a workflow. The root holds only `README.md`, `AGENTS.md` and `LICENSE`, and should
+stay that way. Link to `README.md` rather than restating it.
 
-**Secrets live in `.env`, which is gitignored.** `.env.example` is the committed template. From
-T20, `./setup.sh` writes real credentials into `.env` — never track it, never paste its contents
+**Secrets live in `app/.env`, which is gitignored.** `app/.env.example` is the committed template.
+From T20, `./setup.sh` writes real credentials into `app/.env` — never track it, never paste its contents
 into a commit, a comment or an issue.
 
 ## PRD versioning — read this before editing README.md or anything under prd/
 
-The PRD is `README.md` (Sections 1–6) plus the **numbered section pages** under [`prd/`](prd/) (Section 7 onward).
+The PRD is `README.md` (Sections 1–6) plus the **numbered section pages** under [`docs/prd/`](docs/prd/) (Section 7 onward).
 It carries a version line at the top of `README.md` — `**Product Requirements Document — Draft vX.Y(.Z) for
-review**` — and a matching top entry in [`prd/changelog.md`](prd/changelog.md).
+review**` — and a matching top entry in [`prd/changelog.md`](docs/prd/changelog.md).
 
 **Not everything under `prd/` is the PRD.** Two delivery documents live there because they belong with the
 documentation, but they are not numbered sections and **editing them does not require a version bump**:
 
-- [`prd/mvp-tickets.md`](prd/mvp-tickets.md) — the MVP ticket breakdown, tracked as GitHub epic #1.
-- [`prd/demo-script.md`](prd/demo-script.md) — the demo script, doubling as the MVP test plan (T21).
+- [`prd/mvp-tickets.md`](docs/prd/mvp-tickets.md) — the MVP ticket breakdown, tracked as GitHub epic #1.
+- [`prd/demo-script.md`](docs/prd/demo-script.md) — the demo script, doubling as the MVP test plan (T21).
 
 Each carries a note at the top saying so. If a change to one of them *also* changes a numbered section — say a
 new ticket introduces a concept Section 7 has to define — then the edit to the numbered section is what earns

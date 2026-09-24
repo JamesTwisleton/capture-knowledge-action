@@ -16,11 +16,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
-          java-version: "21"
+          java-version: "25"
           distribution: temurin
           cache: maven
       - run: mvn -B test
-        working-directory: backend
+        working-directory: app/backend
 
   frontend-build:
     name: Frontend build
@@ -31,16 +31,16 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: app/frontend/package-lock.json
       - run: npm ci
-        working-directory: frontend
+        working-directory: app/frontend
       - run: npm run build
-        working-directory: frontend
+        working-directory: app/frontend
 
   acceptance:
-    name: T01 acceptance criteria
+    name: Acceptance criteria (T01–T03)
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
-      - run: ./scripts/verify-acceptance.sh
+      - run: ./app/scripts/verify-acceptance.sh

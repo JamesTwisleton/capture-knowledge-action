@@ -1,4 +1,4 @@
-[← Back to the CKA PRD](../README.md) · Previous: [7. Core concepts and domain model](07-core-concepts-and-domain-model.md)
+[← Back to the CKA PRD](../../README.md) · Previous: [7. Core concepts and domain model](07-core-concepts-and-domain-model.md)
 
 ## 8. Architecture
 
@@ -89,4 +89,4 @@ The split between the last three rows and the second is deliberate and load-bear
 
 ---
 
-← Back to the PRD: [README](../README.md) · Previous: [7. Core concepts and domain model](07-core-concepts-and-domain-model.md) · Next: [9. Trust, safety and audit](09-trust-safety-and-audit.md) →
+← Back to the PRD: [README](../../README.md) · Previous: [7. Core concepts and domain model](07-core-concepts-and-domain-model.md) · Next: [9. Trust, safety and audit](09-trust-safety-and-audit.md) →

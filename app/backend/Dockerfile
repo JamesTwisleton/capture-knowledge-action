@@ -1,8 +1,7 @@
-# Maven 3.9.16 on Ubuntu noble. Scanned clean: 0 critical, 0 high.
-# For comparison when this was chosen, 3.9.9 on the same base carried 14 highs, and
-# the -alpine variant carried 5 criticals and 59 highs. Pinned to a concrete version
-# rather than the floating `3` tag so builds stay reproducible — re-scan before bumping.
-FROM maven:3.9.16-eclipse-temurin-21-noble
+# Maven 3.9.16 on Temurin 25 (the current Java LTS) on Ubuntu noble. Scanned clean:
+# 0 critical, 0 high. For comparison, the -alpine variant carried 5 criticals and 59
+# highs. Pinned to concrete versions so builds stay reproducible — re-scan before bumping.
+FROM maven:3.9.16-eclipse-temurin-25-noble
 
 # Run as a non-root user whose UID matches the host's first user, so files written to
 # bind mounts belong to you rather than to root.

@@ -21,7 +21,7 @@ dist/
 # Local configuration and secrets.
 # .env is generated from .env.example (and, from T20, by ./setup.sh) and holds real
 # credentials — Google OAuth secret, GitHub token, LLM and Jev keys. Never commit it.
-.env
+app/.env
 .env.local
 .env.*.local
 
@@ -30,4 +30,4 @@ next-env.d.ts
 *.tsbuildinfo
 
 # Runtime data: the knowledge vault (T06) and SQLite database (T10). Yours, not the repo's.
-data/
+app/data/

@@ -33,7 +33,8 @@ services:
       event-bus:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q UP"]
+      # curl, not wget: the Ubuntu-based backend image has curl and no wget.
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health | grep -q UP"]
       interval: 10s
       timeout: 5s
       retries: 12

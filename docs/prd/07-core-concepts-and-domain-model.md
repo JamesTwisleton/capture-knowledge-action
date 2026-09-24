@@ -1,4 +1,4 @@
-[← Back to the CKA PRD](../README.md)
+[← Back to the CKA PRD](../../README.md)
 
 ## 7. Core concepts and domain model
 
@@ -145,4 +145,4 @@ The core has its own generic work item, and no provider's concept reaches past t
 
 ---
 
-← Back to the PRD: [README](../README.md) · Next: [8. Architecture](08-architecture.md) →
+← Back to the PRD: [README](../../README.md) · Next: [8. Architecture](08-architecture.md) →

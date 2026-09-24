@@ -13,12 +13,16 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.3</version>
+        <version>4.1.1</version>
         <relativePath/>
     </parent>
 
     <properties>
-        <java.version>21</java.version>
+        <java.version>25</java.version>
+        <!-- Spring Boot 4.1.1 pins Tomcat 11.0.24, which still carries known CVEs fixed
+             in 11.0.25. Overriding the managed version is the supported way to get ahead
+             of a Boot release; drop this line once Boot catches up. -->
+        <tomcat.version>11.0.26</tomcat.version>
     </properties>
 
     <dependencies>
