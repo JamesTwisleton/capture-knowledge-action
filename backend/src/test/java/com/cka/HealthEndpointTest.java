@@ -10,18 +10,22 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * The health endpoint is Actuator's, not ours, so this asserts it is actually exposed
+ * rather than re-testing Spring's implementation of it. The container healthcheck and
+ * T04's connectivity slice both depend on this URL existing.
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
-public class HealthControllerTest {
+class HealthEndpointTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @Test
-    public void healthEndpointReturnsUpStatus() throws Exception {
-        mockMvc.perform(get("/api/health"))
+    void actuatorHealthIsExposedAndReportsUp() throws Exception {
+        mockMvc.perform(get("/actuator/health"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("UP"))
-                .andExpect(jsonPath("$.service").value("cka-backend"));
+                .andExpect(jsonPath("$.status").value("UP"));
     }
 }

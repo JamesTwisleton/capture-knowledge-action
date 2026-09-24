@@ -3,6 +3,32 @@
 Instructions for AI agents working in this repository. (`CLAUDE.md` imports this file, so Claude Code picks
 up the same instructions — see https://agents.md for the convention this file follows.)
 
+## Engineering conventions — read this before writing code
+
+**Check what already exists before building it.** Tickets are written in advance and go stale.
+Read the code first: the thing your ticket describes may already be there, half there, or there
+under a different name. Say so and adjust scope rather than building it twice. The same applies
+in reverse — if you find something a later ticket needs and it costs nothing now, leave it.
+
+**Prefer the platform to your own code.** Spring Actuator already serves health; Next already
+watches files; Compose already sequences startup. A hand-written version of something the
+framework ships is code to maintain, plus a divergence waiting to happen. (This is the standing
+"Ponytail" rule: does it need to exist, is it already here, does the platform do it.)
+
+**Every acceptance criterion gets a test that runs in CI.** Not a note saying it was checked by
+hand — a test. `scripts/verify-acceptance.sh` asserts the criteria for the environment itself and
+runs on every push via `.github/workflows/ci.yml`; extend it as tickets land. Assert behaviour,
+not configuration: an open port is not a debugger, and a running container is not a service that
+answers.
+
+**Documentation lives in `documentation/`.** Not in `docs/` — that is the published GitHub Pages
+site (`index.html`, the prototype under `app/`, and its assets), and engineering notes do not
+belong in a public marketing site. Link to `README.md` rather than restating it.
+
+**Secrets live in `.env`, which is gitignored.** `.env.example` is the committed template. From
+T20, `./setup.sh` writes real credentials into `.env` — never track it, never paste its contents
+into a commit, a comment or an issue.
+
 ## PRD versioning — read this before editing README.md or anything under prd/
 
 The PRD is `README.md` (Sections 1–6) plus linked pages under [`prd/`](prd/) (Section 7 onward). It carries a

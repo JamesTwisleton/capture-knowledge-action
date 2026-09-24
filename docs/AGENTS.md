@@ -1,11 +1,13 @@
-# Documentation (`docs/`)
+# Published site (`docs/`)
 
-Documentation and public landing pages for Capture-Knowledge-Action (CKA).
+This folder **is** the public GitHub Pages site at
+<https://jamestwisleton.github.io/capture-knowledge-action/>. Everything in it is served.
 
-## Overview
-- `docs/docker-environment.md`: Local Docker Compose architecture, debugging guide, and decisions log.
-- `docs/index.html` & `docs/app/`: Public landing page and interactive product prototype.
+- `index.html`, `landing.css`, `media/` — the landing page.
+- `app/` — the interactive click-through prototype (fabricated data, no backend).
 
-## Guidelines
-- Always link back to the main repository `README.md` rather than duplicating core PRD information.
-- Keep port mappings and configuration parameters up to date with `docker-compose.yml` and `.env`.
+## Before you add anything here
+
+Ask whether it should be public. Engineering documentation belongs in
+[`documentation/`](../documentation/AGENTS.md); product requirements belong in `prd/`. A stray
+Markdown file here is a page on the product's website.

@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --test"
+    "test": "node --test",
+    "dev:debug": "NODE_OPTIONS='--inspect=0.0.0.0:9229' next dev"
   },
   "dependencies": {
     "next": "15.1.7",
