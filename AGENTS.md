@@ -5,9 +5,19 @@ up the same instructions — see https://agents.md for the convention this file 
 
 ## PRD versioning — read this before editing README.md or anything under prd/
 
-The PRD is `README.md` (Sections 1–6) plus linked pages under [`prd/`](prd/) (Section 7 onward). It carries a
-version line at the top of `README.md` — `**Product Requirements Document — Draft vX.Y(.Z) for review**` — and a
-matching top entry in [`prd/changelog.md`](prd/changelog.md).
+The PRD is `README.md` (Sections 1–6) plus the **numbered section pages** under [`prd/`](prd/) (Section 7 onward).
+It carries a version line at the top of `README.md` — `**Product Requirements Document — Draft vX.Y(.Z) for
+review**` — and a matching top entry in [`prd/changelog.md`](prd/changelog.md).
+
+**Not everything under `prd/` is the PRD.** Two delivery documents live there because they belong with the
+documentation, but they are not numbered sections and **editing them does not require a version bump**:
+
+- [`prd/mvp-tickets.md`](prd/mvp-tickets.md) — the MVP ticket breakdown, tracked as GitHub epic #1.
+- [`prd/demo-script.md`](prd/demo-script.md) — the demo script, doubling as the MVP test plan (T21).
+
+Each carries a note at the top saying so. If a change to one of them *also* changes a numbered section — say a
+new ticket introduces a concept Section 7 has to define — then the edit to the numbered section is what earns
+the bump, not the edit to the ticket file.
 
 **Rule: never bump the version to v1.0 unless the user has explicitly said the draft is verified/approved.**
 `README.md`'s own "Status" line says feedback is still being sought (see `prd/changelog.md` v0.8) — the version
@@ -24,7 +34,8 @@ number must not contradict that by claiming a finished, approved 1.0.
   keep bumping the patch number.
 
 **When you make a content edit to the PRD that warrants a version bump** (the established pattern: most
-substantive edits to `README.md` or any file under `prd/` get one — see the changelog history for examples),
+substantive edits to `README.md` or any numbered section page under `prd/` get one, but see the two exceptions
+above — see the changelog history for examples),
 update both of these together:
 
 1. The version line at the top of `README.md`.
