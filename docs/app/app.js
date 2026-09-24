@@ -588,10 +588,13 @@ Full platform transcript stored below this section (elided in this prototype).
           ${pool.items.map(i => `<tr>
             <td class="mono">${i.id}</td><td>${i.title}</td>
             <td>${confBar(i.confidence, pool.threshold)}</td>
-            <td>${i.confidence >= pool.threshold ? '<span class="badge good">comment</span>' : '<span class="badge dim">ignored</span>'}</td>
+            <td>${i.confidence >= pool.threshold ? '<span class="badge good">comment</span>' : '<span class="badge warn">propose</span>'}</td>
           </tr>`).join("")}
         </table></div>
-        <p class="small muted">${pool.size - pool.items.length} further candidates below 10% not shown. Items outside
+        <p class="small muted">At or above ${pool.threshold}% CKA comments automatically. Below it, the comment is
+        <strong>proposed in the Triage Inbox</strong> for a human to confirm rather than dropped — and a reference
+        matching no candidate at all is recorded as an unmatched mention. Nothing is discarded silently.
+        ${pool.size - pool.items.length} further candidates below 10% not shown. Items outside
         the pool are not detected — a documented trade for precision and cost.</p>`
       },
       {

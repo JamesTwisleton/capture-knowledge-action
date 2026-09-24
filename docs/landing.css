@@ -261,6 +261,29 @@ nav.top .cta-small:hover { background: #2a78d6; }
 }
 .chip.local { color: #7ecb7e; border-color: rgba(126, 203, 126, 0.35); }
 
+/* MCP: composability beyond the provider grid. Sits between the grid and the
+   tagline banner, styled as a wider sibling of .provider-card so it reads as
+   part of the same idea rather than a new section. */
+.mcp-note {
+  margin-top: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+.mcp-note .mcp-head {
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.mcp-note .mcp-head .p-icon { font-size: 22px; margin: 0; display: inline; }
+.mcp-note p { color: var(--ink-2); margin: 0 0 10px; max-width: 72ch; }
+.mcp-note p:last-child { margin-bottom: 0; }
+.mcp-note .mcp-kicker { color: var(--blue); font-weight: 650; }
+
 .tagline-banner {
   margin-top: 44px;
   text-align: center;
