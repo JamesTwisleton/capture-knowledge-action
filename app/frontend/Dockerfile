@@ -1,6 +1,6 @@
-FROM node:22-alpine
+FROM node:24-alpine
 
-# node:22-alpine already ships a `node` user at UID 1000, so reuse it rather than
+# node:24-alpine already ships a `node` user at UID 1000, so reuse it rather than
 # creating one — `adduser -u 1000` would fail with "uid in use" and break the build.
 #
 # /app/node_modules and /app/.next are pre-created here on purpose. Compose mounts

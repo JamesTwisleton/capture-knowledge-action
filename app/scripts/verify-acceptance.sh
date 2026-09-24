@@ -102,6 +102,23 @@ done
   || fail "no restart detected after compile"
 
 echo
+echo "T03 — a frontend edit appears without rebuilding the image"
+PAGE=frontend/app/page.tsx
+cp "$PAGE" /tmp/cka-page.bak
+MARK="hot-reload-probe-$$"
+# Edit the static copy the server renders, then wait for it to appear over HTTP.
+sed -i.bak "s|Frontend stub|$MARK|" "$PAGE" && rm -f "$PAGE.bak"
+seen=0
+for _ in $(seq 1 24); do
+  if curl -fsS -m 10 "http://localhost:${FRONTEND_PORT}" 2>/dev/null | grep -q "$MARK"; then seen=1; break; fi
+  sleep 5
+done
+cp /tmp/cka-page.bak "$PAGE" && rm -f /tmp/cka-page.bak
+[ "$seen" = "1" ] \
+  && pass "edit to page.tsx served without an image rebuild" \
+  || fail "edit never appeared — polling watch (WATCHPACK_POLLING) is probably broken"
+
+echo
 echo "AC3 — documentation exists"
 for f in ../docs/docker-environment.md ../docs/AGENTS.md backend/AGENTS.md frontend/AGENTS.md; do
   [ -s "$f" ] && pass "${f#../}" || fail "${f#../} missing or empty"
