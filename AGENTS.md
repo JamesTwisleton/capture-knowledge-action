@@ -18,9 +18,8 @@ framework ships is code to maintain, plus a divergence waiting to happen. (This 
 **Every acceptance criterion gets a test that runs in CI.** Not a note saying it was checked by
 hand — a test. `app/scripts/verify-acceptance.sh` brings the environment up and runs every file in
 `app/scripts/tests/` — one per criterion — against it, on every push via `.github/workflows/ci.yml`;
-add a file there as tickets land. Assert behaviour,
-not configuration: an open port is not a debugger, and a running container is not a service that
-answers.
+add a file there as tickets land. Assert behaviour, not configuration: an open port is not a
+debugger, and a running container is not a service that answers.
 
 **The repository has four places, and things belong in exactly one.** `app/` is everything
 runnable — backend, frontend, compose file, scripts, entry points; work from there, not the root.
