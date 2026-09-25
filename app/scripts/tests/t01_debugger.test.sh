@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# AC2 — a debugger can attach to the backend.
+# T01 AC2 — a debugger can attach to the backend.
 set -euo pipefail
 cd "$(dirname "$0")/../.."   # app/
 source scripts/tests/lib.sh

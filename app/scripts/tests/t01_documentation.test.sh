@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# AC3 — the documentation exists.
+# T01 AC3 — the documentation exists.
 set -euo pipefail
 cd "$(dirname "$0")/../.."   # app/
 source scripts/tests/lib.sh

@@ -91,14 +91,14 @@ echo
 echo "Running acceptance checks…"
 
 # Phase 1: everything that only reads — safe to run together against the stack.
-run_phase scripts/tests/ac1-environment.test.sh scripts/tests/ac2-debugger.test.sh \
-          scripts/tests/ac3-documentation.test.sh scripts/tests/hygiene.test.sh
+run_phase scripts/tests/t01_environment.test.sh scripts/tests/t01_debugger.test.sh \
+          scripts/tests/t01_documentation.test.sh scripts/tests/hygiene.test.sh
 
 # Phase 2: each of these forces a real recompile (Maven, Turbopack). Running them
-# alongside phase 1's HTTP probes is what made ac1-environment see sustained 500s on
+# alongside phase 1's HTTP probes is what made t01_environment see sustained 500s on
 # CI's weaker CPU — genuine contention, not flakiness to hide behind a longer timeout.
 # They don't touch each other's files or services, so they still run together.
-run_phase scripts/tests/hot-reload-backend.test.sh scripts/tests/hot-reload-frontend.test.sh
+run_phase scripts/tests/t01_hot_reload_backend.test.sh scripts/tests/t03_hot_reload_frontend.test.sh
 
 echo
 [ "$FAILURES" -eq 0 ] && { echo "All acceptance criteria verified."; exit 0; }

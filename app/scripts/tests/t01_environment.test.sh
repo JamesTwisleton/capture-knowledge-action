@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# AC1 — the environment comes up and answers, including to a real browser.
+# T01 AC1 — the environment comes up and answers, including to a real browser.
 set -euo pipefail
 cd "$(dirname "$0")/../.."   # app/
 source scripts/tests/lib.sh
@@ -11,9 +11,9 @@ for svc in event-bus backend frontend; do
     || fail "$svc never became healthy — does its healthcheck command exist in the image?"
 done
 
-# Retried, not one-shot: this runs alongside hot-reload-backend.test.sh and
-# hot-reload-frontend.test.sh, which are busy recompiling and restarting these same two
-# services. Both are already confirmed "healthy" above, so a single request landing
+# Retried, not one-shot: this runs alongside t01_hot_reload_backend.test.sh and
+# t03_hot_reload_frontend.test.sh, which are busy recompiling and restarting these same
+# two services. Both are already confirmed "healthy" above, so a single request landing
 # mid-restart is a transient blip to ride out, not a real failure.
 backend_up() { curl -fsS -m 5 "http://localhost:${BACKEND_PORT}/actuator/health" | grep -q '"status":"UP"'; }
 wait_for 30 backend_up \
