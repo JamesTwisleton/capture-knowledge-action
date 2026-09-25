@@ -16,8 +16,9 @@ framework ships is code to maintain, plus a divergence waiting to happen. (This 
 "Ponytail" rule: does it need to exist, is it already here, does the platform do it.)
 
 **Every acceptance criterion gets a test that runs in CI.** Not a note saying it was checked by
-hand — a test. `app/scripts/verify-acceptance.sh` asserts the criteria for the environment itself
-and runs on every push via `.github/workflows/ci.yml`; extend it as tickets land. Assert behaviour,
+hand — a test. `app/scripts/verify-acceptance.sh` brings the environment up and runs every file in
+`app/scripts/tests/` — one per criterion — against it, on every push via `.github/workflows/ci.yml`;
+add a file there as tickets land. Assert behaviour,
 not configuration: an open port is not a debugger, and a running container is not a service that
 answers.
 

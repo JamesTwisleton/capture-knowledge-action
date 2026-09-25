@@ -111,9 +111,9 @@ overridden to 11.0.26. Delete that override once Boot catches up — tracked in 
 ./app/scripts/verify-acceptance.sh
 ```
 
-Brings the stack up, proves each acceptance criterion — including a real JDWP handshake and a full
-hot-reload cycle — tears it down, and fails loudly if anything regressed. CI runs the same script
-on every push.
+Brings the stack up, runs every check under `scripts/tests/` — one file per criterion, in parallel,
+including a real JDWP handshake and a full hot-reload cycle — tears it down, and fails loudly if
+anything regressed. CI runs the same script on every push.
 
 ## Everyday commands
 
