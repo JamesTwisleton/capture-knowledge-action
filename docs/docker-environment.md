@@ -89,6 +89,11 @@ which is not the same as a broker accepting connections. Every service has a hea
 backend waits for the event bus to pass its own, so T07 doesn't spend its first afternoon
 debugging a race.
 
+**The browser calls the backend directly, across origins, so Actuator needs CORS.** Port 3000
+and port 8080 are different origins as far as the browser is concerned; curl doesn't enforce
+that, so this only shows up as `fetch()` failing in a real tab. Actuator's own
+`management.endpoints.web.cors.*` properties handle it — no hand-written filter.
+
 **Data lives on the host** under `app/data`, so the vault and database survive
 `docker compose down` and open with ordinary tools. `node_modules` and `.next` get named volumes
 instead: disposable, and keeping them out of the bind mount stops host copies shadowing the

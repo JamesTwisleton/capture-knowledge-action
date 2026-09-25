@@ -20,6 +20,11 @@ services:
       - SPRING_DEVTOOLS_RESTART_ENABLED=true
       - EVENT_BUS_HOST=event-bus
       - EVENT_BUS_PORT=5672
+      # The browser calls this cross-origin (port 3000 -> 8080), so without CORS
+      # Actuator's response is opaque to fetch() even though curl sees it fine.
+      # Actuator's own CORS support, not a hand-written filter (T04 needs this too).
+      - MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWED_ORIGINS=http://localhost:${FRONTEND_PORT:-3000}
+      - MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWED_METHODS=GET
     volumes:
       - ./backend:/app
       # The knowledge vault (T06) and SQLite database (T10) live on the host so they

@@ -51,6 +51,13 @@ all_healthy() { for s in $SERVICES; do healthy "$s" || return 1; done; }
 # Compose needs a .env; it is gitignored, so CI starts from the committed template.
 [ -f .env ] || cp .env.example .env
 
+# Both containers run as UID 1000, matching a real developer's usual host UID — but CI
+# checks the repo out as the runner's own account, which isn't UID 1000 and leaves the
+# tree group/other read-only. Docker Desktop's mount layer doesn't enforce that, which
+# is why this never surfaces locally; a native Linux bind mount does. Without this the
+# backend can't create target/ and the frontend can't write next-env.d.ts.
+chmod -R o+rwX backend frontend
+
 echo "Building and starting the stack…"
 for attempt in 1 2 3; do
   docker compose up -d --build >/dev/null && break
