@@ -6,8 +6,10 @@
 #
 # Each criterion is its own file under scripts/tests/, named to match — find out why
 # one failed by opening one short file, not searching one long one. Once the stack is
-# healthy they don't depend on each other, so they run in parallel: the checks were
-# never what made this slow, the cold Docker build and Maven resolve were.
+# healthy they don't depend on each other, so they run in two parallel phases (read-only
+# checks, then the two that force a recompile — see run_phase below for why they're
+# split): the checks were never what made this slow, the cold Docker build and Maven
+# resolve were.
 set -euo pipefail
 cd "$(dirname "$0")/.."   # app/, where docker-compose.yml lives
 source scripts/tests/lib.sh
@@ -63,28 +65,40 @@ diagnose() {
 echo "Waiting for healthchecks…"
 wait_for 600 all_healthy || { echo "  not everything went healthy"; diagnose; }
 
+FAILURES=0
+
+# Runs the given test files in parallel and folds their results into $FAILURES.
+run_phase() {
+  local names=() files=() pids=()
+  local t name out
+  for t in "$@"; do
+    name=$(basename "$t" .test.sh)
+    out=$(mktemp)
+    "$t" >"$out" 2>&1 &
+    names+=("$name"); files+=("$out"); pids+=("$!")
+  done
+  local i
+  for i in "${!pids[@]}"; do
+    wait "${pids[$i]}" || FAILURES=$((FAILURES + 1))
+    echo
+    echo "${names[$i]}"
+    cat "${files[$i]}"
+  done
+  rm -f "${files[@]}"
+}
+
 echo
 echo "Running acceptance checks…"
-names=()
-files=()
-pids=()
-for t in scripts/tests/*.test.sh; do
-  name=$(basename "$t" .test.sh)
-  out=$(mktemp)
-  "$t" >"$out" 2>&1 &
-  names+=("$name")
-  files+=("$out")
-  pids+=("$!")
-done
 
-FAILURES=0
-for i in "${!pids[@]}"; do
-  wait "${pids[$i]}" || FAILURES=$((FAILURES + 1))
-  echo
-  echo "${names[$i]}"
-  cat "${files[$i]}"
-done
-rm -f "${files[@]}"
+# Phase 1: everything that only reads — safe to run together against the stack.
+run_phase scripts/tests/ac1-environment.test.sh scripts/tests/ac2-debugger.test.sh \
+          scripts/tests/ac3-documentation.test.sh scripts/tests/hygiene.test.sh
+
+# Phase 2: each of these forces a real recompile (Maven, Turbopack). Running them
+# alongside phase 1's HTTP probes is what made ac1-environment see sustained 500s on
+# CI's weaker CPU — genuine contention, not flakiness to hide behind a longer timeout.
+# They don't touch each other's files or services, so they still run together.
+run_phase scripts/tests/hot-reload-backend.test.sh scripts/tests/hot-reload-frontend.test.sh
 
 echo
 [ "$FAILURES" -eq 0 ] && { echo "All acceptance criteria verified."; exit 0; }
