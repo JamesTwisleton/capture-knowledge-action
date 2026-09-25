@@ -104,6 +104,15 @@ Java 25 — the current LTS — and scans at zero critical and zero high, where 
 carried 5 and 59. Spring Boot is on its latest release with Tomcat pinned ahead of it: Boot 4.1.1
 manages Tomcat 11.0.24, which still carries CVEs fixed in 11.0.25, so `tomcat.version` is
 overridden to 11.0.26. Delete that override once Boot catches up — tracked in [#26](https://github.com/JamesTwisleton/capture-knowledge-action/issues/26).
+Lombok gets the same treatment: Boot 4.1.1 manages 1.18.46, whose annotation processor silently
+does nothing under Java 25 (no error — generated members just don't appear), so `lombok.version`
+is overridden to 1.18.48. Delete that override once Boot catches up too.
+
+**Lombok needs an explicit processor path.** Separately from the version above: `javac` 25 dropped
+its fallback that discovered annotation processors from `-classpath` alone, so `pom.xml` configures
+`maven-compiler-plugin`'s `annotationProcessorPaths` explicitly rather than relying on Lombok being
+merely present as a dependency. Skip this and the symptom is identical to the version issue above —
+silent, error-free non-generation — which is exactly why both are called out here.
 
 ## Checking it still works
 

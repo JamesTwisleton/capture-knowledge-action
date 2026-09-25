@@ -23,6 +23,10 @@
              11.0.25. Overriding the managed version is the supported way to get ahead of a
              Boot release. Remove it once Boot catches up — see issue #26. -->
         <tomcat.version>11.0.26</tomcat.version>
+        <!-- Spring Boot 4.1.1 manages Lombok 1.18.46, whose annotation processor silently does
+             nothing under JDK 25 — no error, generated members just don't appear. 1.18.48 fixes
+             it. Same override mechanism as tomcat.version above; remove once Boot catches up. -->
+        <lombok.version>1.18.48</lombok.version>
     </properties>
 
     <dependencies>
@@ -45,6 +49,16 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Compile-time only: generates getters/setters/constructors/logging fields from
+             annotations, never ships in the jar. optional=true tells spring-boot-maven-plugin
+             to leave it out of the repackaged fat jar. Version comes from Spring Boot's own
+             dependency-management BOM, same as every other dependency here. -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -57,6 +71,23 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+
+            <!-- javac 25 dropped its fallback that discovered annotation processors from
+                 -classpath; without an explicit processor path, Lombok's annotations are
+                 silently ignored — no error, generated members just don't appear. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
             </plugin>
         </plugins>
     </build>
