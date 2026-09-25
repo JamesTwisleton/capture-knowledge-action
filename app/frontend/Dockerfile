@@ -22,8 +22,9 @@ RUN npm ci
 # Copy application source
 COPY --chown=node:node . .
 
-# 3000 application, 9229 Node inspector — the frontend equivalent of the backend's
-# 5005, so a debugger can attach to either half of the stack.
+# 3000 application, 9229 Node inspector. The inspector is always listening, exactly
+# like the backend's JDWP agent on 5005 — attach whenever, no restart, no extra flag.
+# This is a dev image; a deployable one would not run `next dev` at all.
 EXPOSE 3000 9229
 
 ENV PORT=3000

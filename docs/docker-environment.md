@@ -38,14 +38,33 @@ docker compose exec backend mvn -o compile
 for filesystem events, because those don't cross a bind mount reliably — hence
 `WATCHPACK_POLLING=true` in the compose file.
 
+**Changing `pom.xml` is different: restart the container.**
+
+```bash
+docker compose restart backend
+```
+
+Hot reload cannot pick up a dependency change, for two separate reasons. `refresh-backend.sh`
+compiles offline, so a dependency that isn't in the local repository yet fails to resolve at all.
+And even compiling online doesn't help: the JVM's classpath is fixed when it launches, and
+DevTools restarts the *application context*, not the JVM — so the new jar is downloaded, the code
+compiles, and the app then dies with `NoClassDefFoundError`. Restarting the container re-runs
+`spring-boot:run`, which recomputes the classpath.
+
+One consequence worth knowing: the dependency cache is baked into the image, not a volume, so a
+jar fetched at runtime is lost when the container is recreated and will be downloaded again.
+Rebuild the image to bake it in properly.
+
 ## Attaching a debugger
 
 **Backend** — the JVM listens on 5005 from startup, so attach whenever. IntelliJ: *Run → Edit
 Configurations → + → Remote JVM Debug*, host `localhost`, port `5005`. VS Code:
 `{"type": "java", "request": "attach", "hostName": "localhost", "port": 5005}`.
 
-**Frontend** — run the dev server with the inspector on (`npm run dev:debug` inside the container)
-and attach to `localhost:9229`, or open `chrome://inspect`.
+**Frontend** — the Node inspector is always listening on 9229, same as the backend's. Attach to
+`localhost:9229`, or open `chrome://inspect`. Next forks workers and gives each its own inspector
+on the next port up, so you may see a second one announced on 9230; 9229 is the main process and
+the one you want.
 
 ## Configuration
 
@@ -79,7 +98,7 @@ container's.
 Java 25 — the current LTS — and scans at zero critical and zero high, where the Alpine variant
 carried 5 and 59. Spring Boot is on its latest release with Tomcat pinned ahead of it: Boot 4.1.1
 manages Tomcat 11.0.24, which still carries CVEs fixed in 11.0.25, so `tomcat.version` is
-overridden to 11.0.26. Delete that override once Boot catches up.
+overridden to 11.0.26. Delete that override once Boot catches up — tracked in [#26](https://github.com/JamesTwisleton/capture-knowledge-action/issues/26).
 
 ## Checking it still works
 

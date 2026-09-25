@@ -19,9 +19,9 @@
 
     <properties>
         <java.version>25</java.version>
-        <!-- Spring Boot 4.1.1 pins Tomcat 11.0.24, which still carries known CVEs fixed
-             in 11.0.25. Overriding the managed version is the supported way to get ahead
-             of a Boot release; drop this line once Boot catches up. -->
+        <!-- Spring Boot 4.1.1 manages Tomcat 11.0.24, which still carries CVEs fixed in
+             11.0.25. Overriding the managed version is the supported way to get ahead of a
+             Boot release. Remove it once Boot catches up — see issue #26. -->
         <tomcat.version>11.0.26</tomcat.version>
     </properties>
 

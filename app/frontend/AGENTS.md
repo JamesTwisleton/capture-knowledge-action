@@ -7,7 +7,7 @@ The CKA web UI: Next.js 16, React 19, TypeScript 7, on Node 24 (current LTS).
 | Run the stack | `docker compose up -d` from `app/` |
 | Apply a code change | Just save — the dev server polls the mounted source and rebuilds |
 | Dependencies | `npm ci` against the committed lockfile; never `npm install` in the image |
-| Debugger | Node inspector on 9229 (`npm run dev:debug`), or `chrome://inspect` |
+| Debugger | Always listening on 9229 — just attach, or open `chrome://inspect` |
 
 ## Conventions
 
