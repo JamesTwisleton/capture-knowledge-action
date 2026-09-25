@@ -60,8 +60,23 @@ for attempt in 1 2 3; do
   sleep $(( attempt * 15 ))
 done
 
+# A harness that fails without saying why is half a harness — dump the evidence.
+diagnose() {
+  for s in $SERVICES; do
+    healthy "$s" && continue
+    local id; id=$(docker compose ps -q "$s" 2>/dev/null)
+    echo
+    echo "--- $s did not become healthy ---"
+    [ -n "$id" ] && docker inspect -f '  state={{.State.Status}} exit={{.State.ExitCode}} health={{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$id" 2>/dev/null
+    [ -n "$id" ] && docker inspect -f '{{if .State.Health}}  last probe: {{range .State.Health.Log}}{{.Output}}{{end}}{{end}}' "$id" 2>/dev/null | head -5
+    docker compose logs --tail=40 --no-color "$s" 2>&1 | sed 's/^/  /'
+  done
+  echo
+}
+
+# CI runners start cold: no image layer cache, no warm Maven repository. Be generous.
 echo "Waiting for healthchecks…"
-wait_for 300 all_healthy || echo "  not everything went healthy; checks below will say which"
+wait_for 600 all_healthy || { echo "  not everything went healthy"; diagnose; }
 
 echo
 echo "AC1 — the environment comes up and answers"
