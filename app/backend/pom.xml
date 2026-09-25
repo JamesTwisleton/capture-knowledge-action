@@ -25,7 +25,8 @@
         <tomcat.version>11.0.26</tomcat.version>
         <!-- Spring Boot 4.1.1 manages Lombok 1.18.46, whose annotation processor silently does
              nothing under JDK 25 — no error, generated members just don't appear. 1.18.48 fixes
-             it. Same override mechanism as tomcat.version above; remove once Boot catches up. -->
+             it. Same override mechanism as tomcat.version above; remove once Boot catches up —
+             see issue #27. -->
         <lombok.version>1.18.48</lombok.version>
     </properties>
 

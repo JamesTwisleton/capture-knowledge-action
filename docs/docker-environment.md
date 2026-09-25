@@ -106,7 +106,8 @@ manages Tomcat 11.0.24, which still carries CVEs fixed in 11.0.25, so `tomcat.ve
 overridden to 11.0.26. Delete that override once Boot catches up — tracked in [#26](https://github.com/JamesTwisleton/capture-knowledge-action/issues/26).
 Lombok gets the same treatment: Boot 4.1.1 manages 1.18.46, whose annotation processor silently
 does nothing under Java 25 (no error — generated members just don't appear), so `lombok.version`
-is overridden to 1.18.48. Delete that override once Boot catches up too.
+is overridden to 1.18.48. Delete that override once Boot catches up too — tracked in
+[#27](https://github.com/JamesTwisleton/capture-knowledge-action/issues/27).
 
 **Lombok needs an explicit processor path.** Separately from the version above: `javac` 25 dropped
 its fallback that discovered annotation processors from `-classpath` alone, so `pom.xml` configures
