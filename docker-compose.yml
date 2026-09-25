@@ -1,0 +1,80 @@
+name: capture-knowledge-action
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cka-backend
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+      - "${JVM_DEBUG_PORT:-5005}:5005"
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_DEVTOOLS_RESTART_ENABLED=true
+      - EVENT_BUS_HOST=event-bus
+      - EVENT_BUS_PORT=5672
+    volumes:
+      - ./backend:/app
+    networks:
+      - cka-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    depends_on:
+      event-bus:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: cka-frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:${BACKEND_PORT:-8080}
+    volumes:
+      - ./frontend:/app
+      - frontend-node-modules:/app/node_modules
+      - frontend-next:/app/.next
+    networks:
+      - cka-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000 || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  event-bus:
+    image: rabbitmq:3-management-alpine
+    container_name: cka-event-bus
+    ports:
+      - "${EVENT_BUS_PORT:-5672}:5672"
+      - "${EVENT_BUS_MGMT_PORT:-15672}:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS:-guest}
+    networks:
+      - cka-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+
+networks:
+  cka-network:
+    driver: bridge
+
+volumes:
+  frontend-node-modules:
+  frontend-next:
