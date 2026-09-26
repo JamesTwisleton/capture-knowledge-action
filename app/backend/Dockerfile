@@ -1,4 +1,5 @@
-# Maven 3.9.16 on Temurin 25 (the current Java LTS) on Ubuntu noble. Scanned clean:
+# Maven 3.9.16 on Temurin 25 (the current Java LTS as of 2026-09-25 — check before assuming it
+# still is) on Ubuntu noble. Scanned clean:
 # 0 critical, 0 high. For comparison, the -alpine variant carried 5 criticals and 59
 # highs. Pinned to concrete versions so builds stay reproducible — re-scan before bumping.
 FROM maven:3.9.16-eclipse-temurin-25-noble

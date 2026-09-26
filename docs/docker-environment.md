@@ -100,10 +100,11 @@ instead: disposable, and keeping them out of the bind mount stops host copies sh
 container's.
 
 **Versions are pinned and scanned, not assumed.** `maven:3.9.16-eclipse-temurin-25-noble` gives
-Java 25 — the current LTS — and scans at zero critical and zero high, where the Alpine variant
-carried 5 and 59. Spring Boot is on its latest release with Tomcat pinned ahead of it: Boot 4.1.1
-manages Tomcat 11.0.24, which still carries CVEs fixed in 11.0.25, so `tomcat.version` is
-overridden to 11.0.26. Delete that override once Boot catches up — tracked in [#26](https://github.com/JamesTwisleton/capture-knowledge-action/issues/26).
+Java 25 — the current LTS as of 2026-09-25, check before assuming it still is — and scans at
+zero critical and zero high, where the Alpine variant carried 5 and 59. Spring Boot is on its
+latest release with Tomcat pinned ahead of it: Boot 4.1.1 manages Tomcat 11.0.24, which still
+carries CVEs fixed in 11.0.25, so `tomcat.version` is overridden to 11.0.26. Delete that override
+once Boot catches up — tracked in [#26](https://github.com/JamesTwisleton/capture-knowledge-action/issues/26).
 Lombok gets the same treatment: Boot 4.1.1 manages 1.18.46, whose annotation processor silently
 does nothing under Java 25 (no error — generated members just don't appear), so `lombok.version`
 is overridden to 1.18.48. Delete that override once Boot catches up too — tracked in

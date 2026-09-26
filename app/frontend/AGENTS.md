@@ -1,6 +1,7 @@
 # Frontend (`app/frontend/`)
 
-The CKA web UI: Next.js 16, React 19, TypeScript 7, on Node 24 (current LTS).
+The CKA web UI: Next.js 16, React 19, TypeScript 7, on Node 24 (current LTS as of 2026-09-25 —
+check before assuming it still is).
 
 | | |
 |---|---|
