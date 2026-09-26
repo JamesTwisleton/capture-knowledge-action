@@ -10,10 +10,19 @@
 # checks, then the two that force a recompile — see run_phase below for why they're
 # split): the checks were never what made this slow, the cold Docker build and Maven
 # resolve were.
+#
+# New to bash? scripts/tests/lib.sh's header comment explains the idioms shared with
+# the test files this script calls; below are the ones specific to this file.
 set -euo pipefail
 cd "$(dirname "$0")/.."   # app/, where docker-compose.yml lives
 source scripts/tests/lib.sh
 
+# "${VAR:-default}" means "use $VAR if it's set and non-empty, otherwise use default"
+# — this is what lets you override a port by setting the environment variable
+# yourself before running this script, while still working with no setup at all.
+# `export` makes each of these visible not just to this script but to every process
+# it launches afterwards — including each test file, which is a separate script run
+# as its own process and so wouldn't otherwise see these values.
 export BACKEND_PORT="${BACKEND_PORT:-8080}"
 export FRONTEND_PORT="${FRONTEND_PORT:-3000}"
 export JVM_DEBUG_PORT="${JVM_DEBUG_PORT:-5005}"
@@ -24,6 +33,10 @@ cleanup() {
   echo "Tearing down…"
   docker compose down -v >/dev/null 2>&1 || true
 }
+# Same idea as the trap in t03_hot_reload_frontend.test.sh: run cleanup() automatically
+# whenever this script exits, for any reason, rather than only on the "everything
+# went fine" path — otherwise a failed or interrupted run would leave containers
+# running behind it.
 trap cleanup EXIT
 
 all_healthy() { for s in $SERVICES; do healthy "$s" || return 1; done; }
@@ -36,11 +49,21 @@ all_healthy() { for s in $SERVICES; do healthy "$s" || return 1; done; }
 # tree group/other read-only. Docker Desktop's mount layer doesn't enforce that, which
 # is why this never surfaces locally; a native Linux bind mount does. Without this the
 # backend can't create target/ and the frontend can't write next-env.d.ts.
+#
+# `chmod -R o+rwX backend frontend` recursively (-R) adds ("+") read and write for
+# "other" (o — anyone who isn't the owner or group, which is exactly the mismatched-UID
+# case above) to everything under both directories. The capital X, as opposed to a
+# lowercase x, adds the executable bit only to things that already have it for someone
+# (i.e. directories, so they stay traversable) — it deliberately does NOT make every
+# plain file spuriously executable the way a plain `+x` would.
 chmod -R o+rwX backend frontend
 
 echo "Building and starting the stack…"
+# Try up to three times: 1, then 2, then 3.
 for attempt in 1 2 3; do
   docker compose up -d --build >/dev/null && break
+  # `break` exits the loop immediately once a build succeeds — the retries below only
+  # happen when the line above actually failed.
   [ "$attempt" = 3 ] && { echo "compose up failed three times — giving up"; exit 1; }
   # Docker Hub resets connections on CI runners often enough to be worth retrying.
   echo "  registry hiccup, retrying…"
@@ -51,11 +74,26 @@ done
 diagnose() {
   for s in $SERVICES; do
     healthy "$s" && continue
+    # `continue` skips straight to the next loop iteration — this service is fine, so
+    # there's nothing to diagnose about it.
     local id; id=$(docker compose ps -q "$s" 2>/dev/null)
     echo
     echo "--- $s did not become healthy ---"
+    # docker inspect -f '{{ ... }}' again (see lib.sh's healthy() for the basics of
+    # this Go-template syntax). Reading these two left to right:
+    #   {{.State.Status}}                     → e.g. "running" or "exited"
+    #   {{.State.ExitCode}}                   → the process's exit code
+    #   {{if .State.Health}}...{{else}}...{{end}}
+    #                                          → print one thing if a healthcheck
+    #                                            exists, another if it doesn't
     [ -n "$id" ] && docker inspect -f '  state={{.State.Status}} exit={{.State.ExitCode}} health={{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$id" 2>/dev/null
+    # {{range .State.Health.Log}}...{{end}} loops over every recorded healthcheck
+    # probe and prints each one's output — the same "for x in list" idea Go templates
+    # borrow from, just with different syntax than bash's own for-loops above.
     [ -n "$id" ] && docker inspect -f '{{if .State.Health}}  last probe: {{range .State.Health.Log}}{{.Output}}{{end}}{{end}}' "$id" 2>/dev/null | head -5
+    # `sed 's/^/  /'` inserts two spaces at the start (^) of every line it's given —
+    # simple indentation, so this container's logs read as nested under its heading
+    # rather than blending into the rest of the script's own output.
     docker compose logs --tail=40 --no-color "$s" 2>&1 | sed 's/^/  /'
   done
   echo
@@ -68,23 +106,55 @@ wait_for 600 all_healthy || { echo "  not everything went healthy"; diagnose; }
 FAILURES=0
 
 # Runs the given test files in parallel and folds their results into $FAILURES.
+#
+# This is the one genuinely bash-specific trick in this folder: launching several
+# programs at once and then waiting for all of them, rather than running them one
+# after another. The pieces:
+#   - `names=() files=() pids=()` declares three empty arrays — ordered lists, each
+#     growing in step with the others so that index 0 in every array describes the
+#     same test file, index 1 describes the next, and so on.
+#   - Ending a command with `&` instead of running it normally starts it "in the
+#     background": bash immediately moves on to the next line rather than waiting for
+#     that command to finish.
+#   - `$!` immediately after a backgrounded command is that command's process ID
+#     (PID) — the only way to refer back to it later, since it's now running
+#     independently of this script.
+#   - `names+=("$name")` appends one element onto the end of an array.
 run_phase() {
   local names=() files=() pids=()
   local t name out
   for t in "$@"; do
     name=$(basename "$t" .test.sh)
+    # basename strips the directory part of a path, leaving just the filename;
+    # giving it a second argument also strips that exact suffix if the filename ends
+    # with it — so "scripts/tests/hygiene.test.sh" becomes plain "hygiene".
     out=$(mktemp)
     "$t" >"$out" 2>&1 &
+    # Run this one test file, sending both its normal and error output into its own
+    # temp file rather than straight to the terminal — with several of these running
+    # at once, letting them all print directly would interleave into an unreadable
+    # mess. Each one's output gets printed in full, in order, once it's finished.
     names+=("$name"); files+=("$out"); pids+=("$!")
   done
   local i
+  # "${!pids[@]}" — the ! here means "the INDICES of this array", i.e. 0, 1, 2, ...,
+  # not the process IDs themselves. Looping over indices, rather than over the PIDs
+  # directly, is what lets this line up each PID with the matching name and output
+  # file stored at that same position in the other two arrays.
   for i in "${!pids[@]}"; do
     wait "${pids[$i]}" || FAILURES=$((FAILURES + 1))
+    # `wait PID` blocks until that specific background process finishes, and then
+    # yields ITS exit code as if `wait` itself were that command — so this reports a
+    # failure for each test file that failed, without caring what order they actually
+    # finished in.
     echo
     echo "${names[$i]}"
     cat "${files[$i]}"
   done
   rm -f "${files[@]}"
+  # "${files[@]}" expands to every element of the array, each still separately
+  # quoted — the same "$@" idea mentioned in lib.sh, applied to an array instead of a
+  # function's arguments.
 }
 
 echo
