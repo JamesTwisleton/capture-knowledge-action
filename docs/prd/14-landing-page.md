@@ -1,4 +1,4 @@
-[← Back to the CKA PRD](../README.md) · Previous: [13. Open source and business model](13-open-source-and-business-model.md)
+[← Back to the CKA PRD](../../README.md) · Previous: [13. Open source and business model](13-open-source-and-business-model.md)
 
 ## 14. Landing page
 
@@ -16,4 +16,4 @@ A **reset control in the front end** makes the demo repeatable: it calls a backe
 
 ---
 
-← Back to the PRD: [README](../README.md) · Previous: [13. Open source and business model](13-open-source-and-business-model.md) · Next: [15. Decision log](15-decision-log.md) →
+← Back to the PRD: [README](../../README.md) · Previous: [13. Open source and business model](13-open-source-and-business-model.md) · Next: [15. Decision log](15-decision-log.md) →

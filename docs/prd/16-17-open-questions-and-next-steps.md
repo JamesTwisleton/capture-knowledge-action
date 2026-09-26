@@ -1,4 +1,4 @@
-[← Back to the CKA PRD](../README.md) · Previous: [15. Decision log](15-decision-log.md)
+[← Back to the CKA PRD](../../README.md) · Previous: [15. Decision log](15-decision-log.md)
 
 ## 16. Open questions
 
@@ -15,7 +15,7 @@
 - **Whether provider-side MCP adapters are ever built.** The spec covers them; whether CKA or the ecosystem around it implements one is a product call for later, not the MVP.
 - Initial notification provider list beyond email.
 
-**Closed in v0.9.4** (answered in the sections above, and kept here so the trail is visible): the licence is [Apache License 2.0](13-open-source-and-business-model.md#13-open-source-and-business-model); the public demo is hosted on [GCP](11-deployment-and-portability.md#11-deployment-and-portability); the demo's provider combination is Google Meet, a Markdown vault and GitHub Issues ([7.2](07-core-concepts-and-domain-model.md#72-providers)); and OAuth token handling for the MVP is a published OAuth app plus a refresh token captured once by `./setup.sh` ([J4](../README.md#j4--setup-wizard)).
+**Closed in v0.9.4** (answered in the sections above, and kept here so the trail is visible): the licence is [Apache License 2.0](13-open-source-and-business-model.md#13-open-source-and-business-model); the public demo is hosted on [GCP](11-deployment-and-portability.md#11-deployment-and-portability); the demo's provider combination is Google Meet, a Markdown vault and GitHub Issues ([7.2](07-core-concepts-and-domain-model.md#72-providers)); and OAuth token handling for the MVP is a published OAuth app plus a refresh token captured once by `./setup.sh` ([J4](../../README.md#j4--setup-wizard)).
 
 ## 17. Next steps
 
@@ -34,4 +34,4 @@
 
 ---
 
-← Back to the PRD: [README](../README.md) · Previous: [15. Decision log](15-decision-log.md) · Next: [Changelog](changelog.md) →
+← Back to the PRD: [README](../../README.md) · Previous: [15. Decision log](15-decision-log.md) · Next: [Changelog](changelog.md) →

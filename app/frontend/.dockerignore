@@ -1,0 +1,41 @@
+# This one matters more than the backend's, because the Dockerfile does `COPY . .`
+# rather than naming specific paths — so without this file, anything sitting in
+# ./frontend goes into the image.
+#
+# node_modules is the important entry twice over: it is large, and a host-built
+# tree can contain native modules compiled for the host's libc, which then fail
+# inside the container. Compose mounts a named volume over /app/node_modules
+# anyway, so a copied one would be masked at runtime — invisible waste plus a
+# confusing failure mode if the mount is ever removed.
+
+# Dependencies and build output
+node_modules/
+.next/
+out/
+build/
+dist/
+.turbo/
+
+# Secrets and local config — never bake these into an image
+.env
+.env.*
+*.pem
+*.key
+
+# IDE and OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Not needed inside the image
+AGENTS.md
+Dockerfile
+.dockerignore
+.gitignore

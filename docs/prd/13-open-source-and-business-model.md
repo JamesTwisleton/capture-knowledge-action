@@ -1,10 +1,10 @@
-[← Back to the CKA PRD](../README.md) · Previous: [12. Known limitations and honest tradeoffs](12-known-limitations.md)
+[← Back to the CKA PRD](../../README.md) · Previous: [12. Known limitations and honest tradeoffs](12-known-limitations.md)
 
 ## 13. Open source and business model
 
 *This section is a plain-language summary, not legal advice.*
 
-- **Licence: Apache License 2.0 — confirmed.** In plain terms: anyone may use, change and redistribute the code, including inside paid, closed-source products, as long as they keep the copyright notice and say what they changed. That is what makes the open-core model below work. **Both are now in place:** a `LICENSE` file at the repository root carrying the canonical, unmodified Apache 2.0 text, and a [License section](../README.md#license) in the README pointing to it. This was pulled forward out of T20 — the repository is public and describes itself as open source, so shipping without a licence meant readers had no grant of rights at all.
+- **Licence: Apache License 2.0 — confirmed.** In plain terms: anyone may use, change and redistribute the code, including inside paid, closed-source products, as long as they keep the copyright notice and say what they changed. That is what makes the open-core model below work. **Both are now in place:** a `LICENSE` file at the repository root carrying the canonical, unmodified Apache 2.0 text, and a [License section](../../README.md#license) in the README pointing to it. This was pulled forward out of T20 — the repository is public and describes itself as open source, so shipping without a licence meant readers had no grant of rights at all.
 - **What the "patent clause" means.** Apache 2.0 also contains a promise from everyone who contributes code: they will not sue users of the project over any patents they hold that their contribution happens to use. This is *not* about patenting CKA. It is protection for the people who adopt the project — including organisations that deploy it — against being sued later by a contributor. It matters here because the project integrates with many commercial platforms and may attract contributions from people at those vendors. The MIT licence is simpler and equally permissive but contains no such promise.
 - **Could the creator patent it?** Patents and licences are separate things. Patenting software is difficult in the UK and Europe, expensive everywhere, and at odds with running an open-source project, so patenting is not part of the plan. The creator's protection is copyright plus the licence terms above.
 - **Why copyright works by default.** Under UK law, and under the international Berne Convention that almost every country has signed, copyright in an original piece of writing — and source code counts as writing — arises automatically the moment it is written down. There is no form to fill in, no fee, and no need for a © notice: the person who wrote it owns it from that moment, unless they have agreed to hand that ownership to someone else (an employment contract is the usual example). The LICENSE file and copyright notice in the repository do not *create* the copyright; they tell everyone else what the owner permits them to do with the work.
@@ -13,4 +13,4 @@
 
 ---
 
-← Back to the PRD: [README](../README.md) · Previous: [12. Known limitations and honest tradeoffs](12-known-limitations.md) · Next: [14. Landing page](14-landing-page.md) →
+← Back to the PRD: [README](../../README.md) · Previous: [12. Known limitations and honest tradeoffs](12-known-limitations.md) · Next: [14. Landing page](14-landing-page.md) →

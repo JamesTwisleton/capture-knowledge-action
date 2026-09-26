@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.cka</groupId>
+    <artifactId>cka-backend</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <name>cka-backend</name>
+    <description>Capture-Knowledge-Action Core Backend Service</description>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.1.1</version>
+        <relativePath/>
+    </parent>
+
+    <properties>
+        <java.version>25</java.version>
+        <!-- Spring Boot 4.1.1 manages Tomcat 11.0.24, which still carries CVEs fixed in
+             11.0.25. Overriding the managed version is the supported way to get ahead of a
+             Boot release. Remove it once Boot catches up — see issue #26. -->
+        <tomcat.version>11.0.26</tomcat.version>
+        <!-- Spring Boot 4.1.1 manages Lombok 1.18.46, whose annotation processor silently does
+             nothing under JDK 25 — no error, generated members just don't appear. 1.18.48 fixes
+             it. Same override mechanism as tomcat.version above; remove once Boot catches up —
+             see issue #27. -->
+        <lombok.version>1.18.48</lombok.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Actuator gives us /actuator/health for free. T02 requires it; T04 builds
+             the connectivity slice on it. No hand-written health endpoint needed. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Compile-time only: generates getters/setters/constructors/logging fields from
+             annotations, never ships in the jar. optional=true tells spring-boot-maven-plugin
+             to leave it out of the repackaged fat jar. No explicit <version> here — same as
+             every other dependency in this file — but unlike the others, the version that
+             resolves to is NOT what Boot's BOM manages by default. It's the lombok.version
+             override above (see issue #27), because the BOM's own 1.18.46 doesn't work under
+             JDK 25. -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+
+            <!-- javac 25 dropped its fallback that discovered annotation processors from
+                 -classpath; without an explicit processor path, Lombok's annotations are
+                 silently ignored — no error, generated members just don't appear. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

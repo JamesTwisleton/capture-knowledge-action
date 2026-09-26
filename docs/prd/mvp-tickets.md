@@ -1,4 +1,4 @@
-[← Back to the CKA PRD](../README.md)
+[← Back to the CKA PRD](../../README.md)
 
 # CKA MVP: ticket breakdown
 
@@ -493,4 +493,4 @@ MCP compatibility itself is a **specification/methodology**, published in the re
 
 ---
 
-← Back to the PRD: [README](../README.md) · Related: [16–17. Open questions and next steps](16-17-open-questions-and-next-steps.md) · Epic: [#1](https://github.com/JamesTwisleton/capture-knowledge-action/issues/1)
+← Back to the PRD: [README](../../README.md) · Related: [16–17. Open questions and next steps](16-17-open-questions-and-next-steps.md) · Epic: [#1](https://github.com/JamesTwisleton/capture-knowledge-action/issues/1)
