@@ -52,8 +52,11 @@
 
         <!-- Compile-time only: generates getters/setters/constructors/logging fields from
              annotations, never ships in the jar. optional=true tells spring-boot-maven-plugin
-             to leave it out of the repackaged fat jar. Version comes from Spring Boot's own
-             dependency-management BOM, same as every other dependency here. -->
+             to leave it out of the repackaged fat jar. No explicit <version> here — same as
+             every other dependency in this file — but unlike the others, the version that
+             resolves to is NOT what Boot's BOM manages by default. It's the lombok.version
+             override above (see issue #27), because the BOM's own 1.18.46 doesn't work under
+             JDK 25. -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
