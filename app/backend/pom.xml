@@ -63,6 +63,16 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Time-ordered UUIDs (RFC 9562). The JDK only ships random v4, which makes an action
+             decision chain's id carry no information and scatter writes across a B-tree index.
+             JUG is the reference Java implementation: one small jar, no transitive dependencies,
+             Apache 2.0. Needs an explicit version — Spring Boot's BOM does not manage it. -->
+        <dependency>
+            <groupId>com.fasterxml.uuid</groupId>
+            <artifactId>java-uuid-generator</artifactId>
+            <version>5.2.0</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>

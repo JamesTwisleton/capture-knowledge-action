@@ -1,9 +1,9 @@
 package com.cka.pipeline;
 
+import com.cka.core.ChainId;
 import com.cka.core.event.ContentCaptured;
 import com.cka.provider.capture.ContentListener;
 import com.cka.provider.eventbus.EventBus;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -18,7 +18,7 @@ public class CaptureStage {
 
     public void start() {
         listener.listen(content -> bus.publish(ContentCaptured.builder()
-                .chainId(UUID.randomUUID())
+                .chainId(ChainId.next())
                 .content(content)
                 .build()));
     }
