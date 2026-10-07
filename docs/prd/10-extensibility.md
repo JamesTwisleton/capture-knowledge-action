@@ -1,4 +1,4 @@
-[← Back to the CKA PRD](../README.md) · Previous: [9. Trust, safety and audit](09-trust-safety-and-audit.md)
+[← Back to the CKA PRD](../../README.md) · Previous: [9. Trust, safety and audit](09-trust-safety-and-audit.md)
 
 ## 10. Extensibility
 
@@ -28,4 +28,4 @@ Contribution-friendliness is a product requirement, not an afterthought: clear i
 
 ---
 
-← Back to the PRD: [README](../README.md) · Previous: [9. Trust, safety and audit](09-trust-safety-and-audit.md) · Next: [11. Deployment and portability](11-deployment-and-portability.md) →
+← Back to the PRD: [README](../../README.md) · Previous: [9. Trust, safety and audit](09-trust-safety-and-audit.md) · Next: [11. Deployment and portability](11-deployment-and-portability.md) →

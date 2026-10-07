@@ -1,4 +1,4 @@
-[← Back to the CKA PRD](../README.md) · Previous: [14. Landing page](14-landing-page.md)
+[← Back to the CKA PRD](../../README.md) · Previous: [14. Landing page](14-landing-page.md)
 
 ## 15. Decision log
 
@@ -79,4 +79,4 @@ How we got here, in order. Each entry records the decision and the reasoning at 
 
 ---
 
-← Back to the PRD: [README](../README.md) · Previous: [14. Landing page](14-landing-page.md) · Next: [16–17. Open questions and next steps](16-17-open-questions-and-next-steps.md) →
+← Back to the PRD: [README](../../README.md) · Previous: [14. Landing page](14-landing-page.md) · Next: [16–17. Open questions and next steps](16-17-open-questions-and-next-steps.md) →

@@ -1,4 +1,4 @@
-[← Back to the CKA PRD](../README.md) · Previous: [8. Architecture](08-architecture.md)
+[← Back to the CKA PRD](../../README.md) · Previous: [8. Architecture](08-architecture.md)
 
 ## 9. Trust, safety and audit
 
@@ -58,4 +58,4 @@ Two generic terms are used throughout. An **action check** is a single check in 
 
 ---
 
-← Back to the PRD: [README](../README.md) · Previous: [8. Architecture](08-architecture.md) · Next: [10. Extensibility](10-extensibility.md) →
+← Back to the PRD: [README](../../README.md) · Previous: [8. Architecture](08-architecture.md) · Next: [10. Extensibility](10-extensibility.md) →

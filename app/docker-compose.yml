@@ -1,0 +1,109 @@
+name: capture-knowledge-action
+
+# Ports and credentials come from .env (copy .env.example). Compose reads that file
+# twice over: once to interpolate ${...} below, and once per service via env_file, so
+# the same values also land inside the containers where the app can read them.
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cka-backend
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+      - "${JVM_DEBUG_PORT:-5005}:5005"
+    env_file:
+      - .env
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_DEVTOOLS_RESTART_ENABLED=true
+      - EVENT_BUS_HOST=event-bus
+      - EVENT_BUS_PORT=5672
+      # The browser calls this cross-origin (port 3000 -> 8080), so without CORS
+      # Actuator's response is opaque to fetch() even though curl sees it fine.
+      # Actuator's own CORS support, not a hand-written filter (T04 needs this too).
+      - MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWED_ORIGINS=http://localhost:${FRONTEND_PORT:-3000}
+      - MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWED_METHODS=GET
+    volumes:
+      - ./backend:/app
+      # The knowledge vault (T06) and SQLite database (T10) live on the host so they
+      # outlive the container and can be opened directly — the vault in Obsidian, the
+      # database in any SQL client.
+      - ./data/vault:/data/vault
+      - ./data/db:/data/db
+    networks:
+      - cka-network
+    depends_on:
+      event-bus:
+        condition: service_healthy
+    healthcheck:
+      # curl, not wget: the Ubuntu-based backend image has curl and no wget.
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health | grep -q UP"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: cka-frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+      - "${NODE_DEBUG_PORT:-9229}:9229"
+    env_file:
+      - .env
+    environment:
+      # The browser resolves this, not the container, so it must be a host address:
+      # Docker service names mean nothing outside the network (T04).
+      - NEXT_PUBLIC_API_URL=http://localhost:${BACKEND_PORT:-8080}
+      # Native filesystem events don't cross a bind mount reliably, so the dev server
+      # polls instead. Without this, edits on the host never trigger a rebuild (T03).
+      - WATCHPACK_POLLING=true
+    volumes:
+      - ./frontend:/app
+      - frontend-node-modules:/app/node_modules
+      - frontend-next:/app/.next
+    networks:
+      - cka-network
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000 >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+
+  event-bus:
+    image: rabbitmq:3-management-alpine
+    container_name: cka-event-bus
+    ports:
+      - "${EVENT_BUS_PORT:-5672}:5672"
+      - "${EVENT_BUS_MGMT_PORT:-15672}:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS:-guest}
+    volumes:
+      - event-bus-data:/var/lib/rabbitmq
+    networks:
+      - cka-network
+    # RabbitMQ takes a few seconds to accept AMQP after the container starts. Without
+    # this the backend would connect too early and fail on boot once T07 lands.
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+networks:
+  cka-network:
+    driver: bridge
+
+volumes:
+  frontend-node-modules:
+  frontend-next:
+  event-bus-data:

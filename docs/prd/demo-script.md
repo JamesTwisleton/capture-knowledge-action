@@ -1,4 +1,4 @@
-[← Back to the CKA PRD](../README.md)
+[← Back to the CKA PRD](../../README.md)
 
 # CKA MVP: demo script
 
@@ -154,4 +154,4 @@ Recorded so the edits are reviewable rather than silently absorbed.
 
 ---
 
-← Back to the PRD: [README](../README.md) · Related: [14. Landing page](14-landing-page.md) · [MVP ticket breakdown](mvp-tickets.md) · Ticket: [#21](https://github.com/JamesTwisleton/capture-knowledge-action/issues/21)
+← Back to the PRD: [README](../../README.md) · Related: [14. Landing page](14-landing-page.md) · [MVP ticket breakdown](mvp-tickets.md) · Ticket: [#21](https://github.com/JamesTwisleton/capture-knowledge-action/issues/21)

@@ -1,4 +1,4 @@
-[← Back to the CKA PRD](../README.md) · Previous: [11. Deployment and portability](11-deployment-and-portability.md)
+[← Back to the CKA PRD](../../README.md) · Previous: [11. Deployment and portability](11-deployment-and-portability.md)
 
 ## 12. Known limitations and honest tradeoffs
 
@@ -11,7 +11,7 @@
 | Same-vendor pairings | Confluence + Jira (and equivalents) are deeply linked and may unlock integration bonuses a mixed-vendor stack lacks. All core functionality is vendor-agnostic; the wizard tells you when a chosen pairing has extra integration available. |
 | Messaging semantics | Kafka, Pub/Sub and RabbitMQ differ in delivery and ordering guarantees. The event bus interface stays basic; advanced guarantees are the extender's responsibility. |
 | Costs are ballpark | Token usage cannot be predicted exactly. Predicted and actual costs are both shown so the estimate's accuracy is visible. |
-| Data sensitivity | See the [data-sensitivity warning](../README.md) at the top of the PRD. The user is responsible for confirming their organisation permits the data flow; local models are the privacy-safe option. |
+| Data sensitivity | See the [data-sensitivity warning](../../README.md) at the top of the PRD. The user is responsible for confirming their organisation permits the data flow; local models are the privacy-safe option. |
 | Untested deploy paths | Only one cloud path is tested in v1. Others are clearly marked. |
 | Folder polling latency | Recordings are detected on the next poll, not instantly. Polling was chosen because push notifications need a publicly reachable webhook, which a local run does not have. |
 | Decision quality without Jev | With no Jev key configured, the LLM fallback makes the decisions. It works through the same interface and produces the same shape of result, but it is not calibrated, so its confidences mean less. Jev itself is early access (released 15 September 2026) and its API may change. |
@@ -23,4 +23,4 @@
 
 ---
 
-← Back to the PRD: [README](../README.md) · Previous: [11. Deployment and portability](11-deployment-and-portability.md) · Next: [13. Open source and business model](13-open-source-and-business-model.md) →
+← Back to the PRD: [README](../../README.md) · Previous: [11. Deployment and portability](11-deployment-and-portability.md) · Next: [13. Open source and business model](13-open-source-and-business-model.md) →

@@ -1,4 +1,4 @@
-[← Back to the CKA PRD](../README.md) · Previous: [16–17. Open questions and next steps](16-17-open-questions-and-next-steps.md)
+[← Back to the CKA PRD](../../README.md) · Previous: [16–17. Open questions and next steps](16-17-open-questions-and-next-steps.md)
 
 ## Changelog
 
@@ -22,4 +22,4 @@
 
 ---
 
-← Back to the PRD: [README](../README.md) · Previous: [16–17. Open questions and next steps](16-17-open-questions-and-next-steps.md)
+← Back to the PRD: [README](../../README.md) · Previous: [16–17. Open questions and next steps](16-17-open-questions-and-next-steps.md)
