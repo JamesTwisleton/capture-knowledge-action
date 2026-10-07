@@ -93,6 +93,31 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
+
+            <!-- Mockito attaches its byte-buddy agent to the running JVM by itself, which JDK 25
+                 warns about on every test run and a future JDK will refuse outright. Passing the
+                 agent on the command line instead is Mockito's own documented fix. The
+                 dependency plugin's properties goal sets ${org.mockito:mockito-core:jar} to that
+                 jar's path in the local repository, so the version stays Boot's to manage. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>properties</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>-javaagent:${org.mockito:mockito-core:jar}</argLine>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>

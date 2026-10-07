@@ -3,8 +3,9 @@
 Mirrors the main source tree package for package. A test for `com.cka.provider.knowledge.Foo`
 belongs in `com/cka/provider/knowledge/FooTest.java`, not in a parallel hierarchy of its own.
 
-The one exception is [`testdouble/`](testdouble/AGENTS.md): a double for every provider
-interface, shared by every test that wires a stage. Use those before writing your own.
+The one exception is [`testsupport/`](testsupport/AGENTS.md), which holds the few fixtures a
+mock cannot replace — the in-memory event bus above all. Mock the providers; see that file before
+adding anything to it.
 
 ## How to run them
 
@@ -28,7 +29,7 @@ interface, shared by every test that wires a stage. Use those before writing you
   `HttpClient` — the same thing the Docker healthcheck does. Mocks here would pass while the real
   endpoint 404s.
 - **Unit tests are not the acceptance criteria.** A ticket's criteria get a shell check under
-  [`app/scripts/tests/`](../../../../../scripts/tests/) that runs against the real running stack.
+  [`app/scripts/tests/`](../../../../../../scripts/tests/) that runs against the real running stack.
   Tests here prove the code; those prove the promise. Both, not either.
 
 ## Gotchas specific to this package
@@ -39,4 +40,4 @@ interface, shared by every test that wires a stage. Use those before writing you
   classpath before reaching for a slice annotation from a Boot 3 tutorial.
 - **Lombok in tests needs the same annotation processor path** as main (configured in `pom.xml`).
   If a `@Builder` on a test fixture appears to generate nothing, that is why — see
-  [`../../../main/java/com/cka/AGENTS.md`](../../../main/java/com/cka/AGENTS.md).
+  [`../../../../main/java/com/cka/AGENTS.md`](../../../../main/java/com/cka/AGENTS.md).

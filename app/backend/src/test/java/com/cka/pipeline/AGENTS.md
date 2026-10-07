@@ -1,10 +1,11 @@
 # `com.cka.pipeline` — stage tests
 
 Tests for [`main/.../pipeline`](../../../../../main/java/com/cka/pipeline/AGENTS.md), wired
-entirely from [`com.cka.testdouble`](../testdouble/AGENTS.md).
+with Mockito mocks for the providers and the real in-memory bus from
+[`com.cka.testsupport`](../testsupport/AGENTS.md).
 
-- **`PipelineWiringTest` is T05's acceptance criterion** — the core wired with a double for every
-  interface, running a fake event through the whole chain. It runs in CI's backend unit-test job.
+- **`PipelineWiringTest` is T05's acceptance criterion** — the core wired with a stand-in for
+  every provider interface, running a fake event through the whole chain. It runs in CI's backend unit-test job.
   It has no shell check under `app/scripts/tests/`, unlike T01–T04's criteria, because it is
   about the core running on doubles, which the live stack cannot show; T06 onward, whose
   criteria are about real providers, get their checks there.

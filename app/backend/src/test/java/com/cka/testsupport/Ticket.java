@@ -1,4 +1,4 @@
-package com.cka.testdouble;
+package com.cka.testsupport;
 
 /**
  * A stand-in for a tracker's native work item — deliberately not shaped like

@@ -1,4 +1,4 @@
-package com.cka.testdouble;
+package com.cka.testsupport;
 
 import com.cka.core.event.PipelineEvent;
 import com.cka.provider.ProviderHealth;

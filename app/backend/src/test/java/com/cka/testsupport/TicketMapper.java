@@ -1,4 +1,4 @@
-package com.cka.testdouble;
+package com.cka.testsupport;
 
 import com.cka.core.WorkItem;
 import com.cka.core.WorkItemType;

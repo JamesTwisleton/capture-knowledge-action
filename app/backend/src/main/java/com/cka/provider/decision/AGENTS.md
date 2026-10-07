@@ -7,8 +7,8 @@ implementations: the Jev adapter, and an LLM fallback ported from TypeSafe's off
 
 - **A mention can only match an item in the pool it was given.** There is no id-extraction step
   (PRD 8.2), so a provider that "matches" an id it invented breaks the design's central promise.
-  The test double `ScriptedDecisionProvider` enforces this; a real implementation needs a test
-  that does too.
+  A real implementation needs a test that proves it, scoring against a pool that deliberately
+  excludes the item the text names.
 - **Return unmatched references, don't drop them.** They become unmatched mentions in the audit
   chain (PRD 9.1).
 - **Thresholds are not this interface's job.** It reports confidences; `ActionStage` compares them

@@ -13,8 +13,8 @@ tickets, its implementations (PRD 7.2):
 | [`eventbus`](eventbus/AGENTS.md) | `EventBus` | RabbitMQ (T07) |
 | [`audit`](audit/AGENTS.md) | `AuditStore` | SQL (T10, T14) |
 
-Test doubles for every interface are in the test tree, under
-[`com.cka.testdouble`](../../../../../test/java/com/cka/testdouble/AGENTS.md).
+Tests mock these interfaces directly; the fixtures a mock cannot replace live in
+[`com.cka.testsupport`](../../../../../test/java/com/cka/testsupport/AGENTS.md).
 
 ## Conventions specific to this package
 

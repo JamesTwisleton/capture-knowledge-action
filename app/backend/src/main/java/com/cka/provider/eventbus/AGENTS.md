@@ -2,7 +2,7 @@
 
 `EventBus`: publish a `PipelineEvent`, subscribe by event type. T07 adds RabbitMQ here. An
 in-memory implementation exists for tests only, in
-[`com.cka.testdouble`](../../../../../../test/java/com/cka/testdouble/AGENTS.md).
+[`com.cka.testsupport`](../../../../../../test/java/com/cka/testsupport/AGENTS.md).
 
 - **Subscribing to a type receives its subtypes.** `subscribe(PipelineEvent.class, …)` gets every
   event — `AuditTrail` relies on it. A broker implementation must keep that, for example with a
