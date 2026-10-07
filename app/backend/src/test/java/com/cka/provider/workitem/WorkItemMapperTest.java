@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.cka.core.WorkItemType;
 import com.cka.testsupport.Ticket;
 import com.cka.testsupport.TicketMapper;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -16,11 +17,13 @@ import org.junit.jupiter.api.Test;
  * is what makes the extension point testable at all, and it is the worked example T13's GitHub
  * mapper follows.
  */
+@DisplayName("A work item mapper keeps the tracker's meaning (PRD 7.9)")
 class WorkItemMapperTest {
 
     private final WorkItemMapper<Ticket> mapper = new TicketMapper();
 
     @Test
+    @DisplayName("Maps the tracker's own type label alongside the generic type")
     void mapsTheTrackersOwnTypeLabelAlongsideTheGenericType() {
         var workItem = mapper.toWorkItem(Ticket.builder()
                 .key("CKA-7")
@@ -34,6 +37,7 @@ class WorkItemMapperTest {
     }
 
     @Test
+    @DisplayName("Keeps the tracker's label even when no generic type fits")
     void keepsTheTrackersLabelEvenWhenNoGenericTypeFits() {
         // The case the model exists to protect: a milestone is not an epic, and the core must not
         // be told it is. OTHER plus the real label, never a convenient near-match.
@@ -48,6 +52,7 @@ class WorkItemMapperTest {
     }
 
     @Test
+    @DisplayName("Nests child items under their parent")
     void nestsChildItemsUnderTheirParent() {
         var child = Ticket.builder()
                 .key("CKA-7")
@@ -66,6 +71,7 @@ class WorkItemMapperTest {
     }
 
     @Test
+    @DisplayName("Round-trips back to the tracker's own shape")
     void roundTripsBackToTheTrackersOwnShape() {
         var ticket = Ticket.builder()
                 .key("CKA-7")

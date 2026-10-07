@@ -7,6 +7,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -21,12 +22,14 @@ import org.springframework.boot.test.web.server.LocalServerPort;
  * which Spring Boot 4 rearranged.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@DisplayName("Actuator health endpoint")
 class HealthEndpointTest {
 
     @LocalServerPort
     private int port;
 
     @Test
+    @DisplayName("/actuator/health is exposed and reports UP")
     void actuatorHealthIsExposedAndReportsUp() throws Exception {
         HttpResponse<String> response = HttpClient.newHttpClient()
                 .send(

@@ -8,15 +8,18 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
  * The two properties T10 and T14 will rely on: chain ids sort into the order they were minted,
  * and the time they were minted can be read back out of them.
  */
+@DisplayName("Chain ids are time-ordered UUIDv7")
 class ChainIdTest {
 
     @Test
+    @DisplayName("Ids sort into the order they were minted")
     void idsSortIntoTheOrderTheyWereMinted() {
         var minted = new ArrayList<UUID>();
         for (var i = 0; i < 1_000; i++) {
@@ -35,6 +38,7 @@ class ChainIdTest {
     }
 
     @Test
+    @DisplayName("The minting time can be read back out of an id")
     void theMintingTimeCanBeReadBackOutOfTheId() {
         var before = Instant.now().toEpochMilli();
         var chainId = ChainId.next();
@@ -44,6 +48,7 @@ class ChainIdTest {
     }
 
     @Test
+    @DisplayName("Ids are UUIDv7, and still unique")
     void idsAreVersion7AndStillUnique() {
         var ids = List.of(ChainId.next(), ChainId.next(), ChainId.next());
 

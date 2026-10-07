@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -55,6 +56,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
  * lets the second test drive the Action stage alone by publishing the event it listens for.
  */
 @ExtendWith(MockitoExtension.class)
+@DisplayName("The core runs a fake event through every stage (T05)")
 class PipelineWiringTest {
 
     private static final Provenance LLM =
@@ -142,6 +144,7 @@ class PipelineWiringTest {
     private ArgumentCaptor<AuditEntry> auditEntries;
 
     @Test
+    @DisplayName("Captured content runs through every stage and is audited as one chain")
     void capturedContentRunsThroughEveryStageAndIsAuditedAsOneChain() {
         when(llm.summarise(REFINEMENT)).thenReturn(SUMMARY);
         when(knowledge.store(REFINEMENT, SUMMARY)).thenReturn(PAGE);
@@ -183,6 +186,7 @@ class PipelineWiringTest {
     }
 
     @Test
+    @DisplayName("The Action stage runs alone, on a knowledge-stored event from anywhere")
     void theActionStageRunsAloneOnAKnowledgeStoredEventFromAnywhere() {
         when(workItems.candidatePool()).thenReturn(POOL);
         when(decision.detectMentions(KNOWLEDGE, POOL)).thenReturn(List.of(LOGIN_BUG_MENTION));
@@ -201,6 +205,7 @@ class PipelineWiringTest {
     }
 
     @Test
+    @DisplayName("A mention matching no candidate is audited, and never proposed")
     void aMentionMatchingNoCandidateIsAuditedAndNeverProposed() {
         when(workItems.candidatePool()).thenReturn(POOL);
         when(decision.detectMentions(KNOWLEDGE, POOL)).thenReturn(List.of(PAYMENTS_MENTION));

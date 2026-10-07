@@ -17,6 +17,14 @@ adding anything to it.
 
 ## Conventions
 
+- **Every test class and test method carries a `@DisplayName`.** It is JUnit's own annotation —
+  there is no `@Description` in Jupiter, that is TestNG and Allure. Write a sentence that says what
+  the behaviour is, not a restatement of the method name, and use the punctuation a method name
+  cannot have: `/actuator/health is exposed and reports UP`, `Round-trips back to the tracker's own
+  shape`. `pom.xml` configures Surefire to report by display name, so these are what the XML the
+  Actions UI renders contains. (Surefire still prints the raw method identifier on the console's
+  failure line; that one is not configurable, which is another reason method names stay readable
+  in their own right.)
 - **Tests before code.** Red-green-refactor, properly: write the failing test, watch it fail for
   the right reason, then make it pass. This is a standing repository rule, and T02's acceptance
   criteria name it explicitly.
