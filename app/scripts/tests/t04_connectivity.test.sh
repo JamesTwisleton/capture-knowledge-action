@@ -134,14 +134,25 @@ diagnose() {
   # Proves whether the problem is the browser or the stack underneath it. If curl can read
   # a healthy backend and the frontend serves a page, the fault is in the render.
   #
-  # Assigned first rather than inlined into the echo, because curl still writes its -w
-  # output on failure — inlining produces "000" glued to the error text instead of a
-  # clean verdict.
-  local be fe
-  be=$(curl -fsS -m 5 "http://localhost:${BACKEND_PORT}/actuator/health" 2>/dev/null | head -c 120) \
-    && echo "  curl backend:  $be" || echo "  curl backend:  unreachable"
-  fe=$(curl -fsS -m 5 -o /dev/null -w '%{http_code}' "http://localhost:${FRONTEND_PORT}" 2>/dev/null) \
-    && echo "  curl frontend: HTTP $fe" || echo "  curl frontend: unreachable"
+  # Reports the HTTP status rather than a pass/fail verdict, and deliberately without
+  # curl's -f: a service answering 500 and a service refusing the connection are very
+  # different diagnoses, and -f collapses both into "failed". Conflating them is what sent
+  # the first investigation of this check looking at the browser when the frontend was
+  # actually serving errors. curl prints 000 when it never got a response at all.
+  local be_code fe_code be_body
+  be_code=$(curl -sS -m 5 -o /dev/null -w '%{http_code}' "http://localhost:${BACKEND_PORT}/actuator/health" 2>/dev/null || true)
+  fe_code=$(curl -sS -m 5 -o /dev/null -w '%{http_code}' "http://localhost:${FRONTEND_PORT}" 2>/dev/null || true)
+  be_body=$(curl -sS -m 5 "http://localhost:${BACKEND_PORT}/actuator/health" 2>/dev/null | head -c 120 || true)
+  if [ "${be_code:-000}" = "000" ]; then
+    echo "  curl backend:  no connection (expected while this check has it stopped)"
+  else
+    echo "  curl backend:  HTTP $be_code  $be_body"
+  fi
+  if [ "${fe_code:-000}" = "000" ]; then
+    echo "  curl frontend: no connection — the container is down, not merely erroring"
+  else
+    echo "  curl frontend: HTTP $fe_code"
+  fi
   echo "  ------------------------------------"
 }
 
