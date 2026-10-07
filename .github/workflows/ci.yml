@@ -58,6 +58,11 @@ jobs:
           path: app/backend/target/surefire-reports/*.xml
           reporter: java-junit
           fail-on-error: false
+          # Defaults to true, which writes the report to the Actions job summary and creates no
+          # check run at all — the results then live two clicks away under the Actions tab, and
+          # nothing annotates the diff. false puts "Backend test results" in the PR's own check
+          # list and marks failing assertions on the lines that caused them, which is the point.
+          use-actions-summary: false
 
   frontend-build:
     name: Frontend build
