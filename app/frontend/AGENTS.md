@@ -26,7 +26,10 @@ check before assuming it still is).
 
 ## Layout
 
-- `app/` — App Router pages. `page.tsx` is a stub proving the backend is reachable.
+- `app/` — App Router pages, with [their own `AGENTS.md`](app/AGENTS.md). `page.tsx` is the
+  connectivity indicator (T04): it polls the backend's health endpoint and renders green or red.
+  Read that file's "two couplings" section before editing it — two acceptance checks depend on
+  specifics of its markup.
 - `Dockerfile` — dev image running `next dev` as the base image's `node` user (UID 1000).
   `node_modules` and `.next` are named volumes so host copies never shadow the container's.
   Alpine, deliberately: for Node it scans far cleaner than the Debian variants.

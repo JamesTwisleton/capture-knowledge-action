@@ -27,8 +27,11 @@ The CKA core: Spring Boot 4, Java 25, Maven.
 - **Tests before code**, and every acceptance criterion gets one that runs in CI.
 - **Check before you build** — read the existing source before implementing a ticket, since an
   earlier one may already have covered part of it.
-- An `AGENTS.md` belongs in each package as real structure appears; right now there is only
-  `com.cka`, and a file per empty folder would be noise.
+- **An `AGENTS.md` belongs in each package**, and must earn its place: say where new code goes,
+  what the local conventions are, and which gotchas bite in that package specifically. See
+  [`src/main/java/com/cka/AGENTS.md`](src/main/java/com/cka/AGENTS.md) and
+  [`src/test/java/com/cka/AGENTS.md`](src/test/java/com/cka/AGENTS.md). Add one as you add a
+  package — but write content, not a placeholder restating the folder's name.
 
 ## Layout
 
