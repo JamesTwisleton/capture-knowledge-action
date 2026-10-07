@@ -34,6 +34,27 @@ The board is a **GitHub Project**, not a repo-level project and not Trello:
   holds a placeholder the proxy swaps for real credentials, so the status output is wrong and the
   repo-scoped commands above work regardless. Don't spend time "fixing" it.
 
+## Formatting — run this once per clone
+
+```sh
+git config core.hooksPath .githooks
+```
+
+Java is formatted by [Spotless](https://github.com/diffplug/spotless) using Palantir's style
+(four-space indents, 120 columns), and `.githooks/pre-commit` applies it to staged Java before a
+commit is written. Hooks are not cloned with a repository, so that one command is the install
+step; without it nothing breaks locally, but CI will reject the formatting.
+
+- **CI is the guarantee, the hook is the convenience.** The `Java formatting (Spotless)` job runs
+  `mvn spotless:check` on every push and is a required check on `main`, so `--no-verify` or a
+  missing hook is caught before a PR can merge.
+- **Fix a failure with `./mvnw spotless:apply`** in `app/backend`. Never hand-reformat to satisfy
+  it, and never add `// @formatter:off`.
+- **Only Java is formatted.** The plugin declares a `<java>` section and nothing else, so the
+  front end is untouched — it has no formatter of its own yet.
+- The hook refuses to reformat a **partially staged** file rather than sweeping unstaged edits
+  into the commit. Stage the rest, or run `spotless:apply` yourself.
+
 ## Engineering conventions — read this before writing code
 
 **Check what already exists before building it.** Tickets are written in advance and go stale.

@@ -118,6 +118,27 @@
                     <argLine>-javaagent:${org.mockito:mockito-core:jar}</argLine>
                 </configuration>
             </plugin>
+
+            <!-- One canonical layout, applied by the pre-commit hook in .githooks/ and checked in
+                 CI, so formatting never costs anyone a review comment. Palantir's formatter is the
+                 closest of the opinionated ones to what this codebase was already written in —
+                 four-space indents, 120 columns. Google's would have reflowed every file to
+                 two-space indents to no benefit. Deliberately not bound to a lifecycle phase: a
+                 formatter that fails `mvn test` interrupts work mid-change, and the hook plus CI
+                 already catch it at the two moments that matter. -->
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>2.44.5</version>
+                <configuration>
+                    <java>
+                        <removeUnusedImports/>
+                        <palantirJavaFormat>
+                            <version>2.102.0</version>
+                        </palantirJavaFormat>
+                    </java>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>

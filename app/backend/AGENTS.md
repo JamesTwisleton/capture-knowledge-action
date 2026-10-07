@@ -8,6 +8,7 @@ The CKA core: Spring Boot 4, Java 25, Maven.
 | Apply a code change | `./refresh-backend.sh` — compiles in the container, DevTools restarts |
 | Apply a **`pom.xml`** change | `docker compose restart backend` — hot reload cannot add a jar to a running JVM |
 | Tests | `docker compose exec backend mvn test`, or `mvn test` here if you have a local JDK 25 |
+| Format | `./mvnw spotless:apply` — Palantir style, enforced by CI and the pre-commit hook |
 | Health | `/actuator/health` on port 8080 |
 | Debugger | JDWP on 5005, listening from startup |
 

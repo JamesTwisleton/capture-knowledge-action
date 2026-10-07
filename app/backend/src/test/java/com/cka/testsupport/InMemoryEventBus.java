@@ -3,7 +3,6 @@ package com.cka.testsupport;
 import com.cka.core.event.PipelineEvent;
 import com.cka.provider.ProviderHealth;
 import com.cka.provider.eventbus.EventBus;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;

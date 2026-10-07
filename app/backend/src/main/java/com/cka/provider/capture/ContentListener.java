@@ -2,7 +2,6 @@ package com.cka.provider.capture;
 
 import com.cka.core.CapturedContent;
 import com.cka.provider.Provider;
-
 import java.util.function.Consumer;
 
 /**

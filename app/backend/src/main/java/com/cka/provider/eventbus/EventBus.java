@@ -2,7 +2,6 @@ package com.cka.provider.eventbus;
 
 import com.cka.core.event.PipelineEvent;
 import com.cka.provider.Provider;
-
 import java.util.function.Consumer;
 
 /**

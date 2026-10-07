@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Formats staged Java with Spotless so unformatted code never reaches a commit.
+#
+# Install it once per clone — hooks are not cloned with the repository:
+#
+#     git config core.hooksPath .githooks
+#
+# CI runs `spotless:check` regardless, so a commit made with --no-verify, or by someone who
+# never ran that command, still gets caught before the PR can merge. This hook is the
+# convenience; the CI job is the guarantee.
+#
+# New to bash? app/scripts/tests/lib.sh's header explains the shared idioms (set -euo pipefail,
+# $(...) command substitution, and so on).
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+# --diff-filter=ACMR: added, copied, modified or renamed. Deleted files are excluded, since
+# formatting a file that is being removed would fail on a path that no longer exists.
+staged_java() { git diff --cached --name-only --diff-filter=ACMR -- 'app/backend/*.java'; }
+
+# Nothing Java staged — nothing for Spotless to do. Documentation-only commits, which are most
+# of them in this repository, skip the Maven startup cost entirely.
+[ -z "$(staged_java)" ] && exit 0
+
+# A file that is staged *and* has further unstaged edits is only partially in this commit
+# (git add -p). Formatting it and re-adding it would sweep those unstaged edits in, silently
+# committing work that was deliberately held back. Refuse instead, and say why.
+#
+# comm -12 prints lines common to both sorted inputs; <(...) feeds each command in as a file.
+partial=$(comm -12 <(staged_java | sort -u) <(git diff --name-only -- 'app/backend/*.java' | sort -u))
+if [ -n "$partial" ]; then
+  echo "pre-commit: these files are only partially staged, so I won't reformat them for you:"
+  echo "$partial" | sed 's/^/  /'
+  echo "Run './mvnw spotless:apply' in app/backend, stage what you want, and commit again."
+  exit 1
+fi
+
+echo "pre-commit: formatting staged Java with Spotless…"
+(cd app/backend && ./mvnw -q spotless:apply)
+
+# Re-stage only the Java files this commit already contained. Every one is fully staged, as
+# checked above, so this adds formatting changes and nothing else.
+staged_java | xargs git add

@@ -4,7 +4,6 @@ import com.cka.core.Knowledge;
 import com.cka.core.Mention;
 import com.cka.core.WorkItem;
 import com.cka.provider.Provider;
-
 import java.util.List;
 
 /**

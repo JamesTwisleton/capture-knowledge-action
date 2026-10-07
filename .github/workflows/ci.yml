@@ -9,6 +9,23 @@ on:
   pull_request:
 
 jobs:
+  formatting:
+    name: Java formatting (Spotless)
+    runs-on: ubuntu-latest
+    # Deliberately no `paths:` filter. This is a required check for merging, and GitHub leaves a
+    # required check that never runs sitting as "expected" forever — a docs-only PR would be
+    # unmergeable. Running it always costs a few seconds, and Spotless is scoped to Java by its
+    # own configuration (the plugin declares only a <java> section), so nothing else is touched.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "25"
+          distribution: temurin
+          cache: maven
+      - run: mvn -B spotless:check
+        working-directory: app/backend
+
   backend-tests:
     name: Backend unit tests
     runs-on: ubuntu-latest

@@ -2,7 +2,6 @@ package com.cka.provider.audit;
 
 import com.cka.core.AuditEntry;
 import com.cka.provider.Provider;
-
 import java.util.List;
 import java.util.UUID;
 

@@ -2,7 +2,6 @@ package com.cka.provider.workitem;
 
 import com.cka.core.WorkItem;
 import com.cka.provider.Provider;
-
 import java.util.List;
 
 /**
