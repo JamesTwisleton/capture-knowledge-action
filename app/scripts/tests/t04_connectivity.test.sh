@@ -42,6 +42,11 @@ done
 # tooling is absent would let CI report green without ever having verified the criterion.
 [ -n "$BROWSER" ] || { fail "no Chrome/Chromium found — this criterion cannot be checked without one"; exit 1; }
 
+# Printed unconditionally, not only on failure. Browser version is the single most useful
+# fact when this check behaves differently on a runner than on a laptop, and by the time
+# it has failed the cheap opportunity to record it has passed.
+echo "  browser: $BROWSER ($("$BROWSER" --version 2>/dev/null || echo 'version unavailable'))"
+
 # The backend gets stopped halfway through this script, so it has to be put back however
 # this script ends — an assertion failure under set -e, or a Ctrl-C partway through, must
 # not leave the stack broken for the next run (or for KEEP_UP=1's "leave it up for me").
@@ -52,14 +57,17 @@ restore_backend() { docker compose start backend >/dev/null 2>&1 || true; }
 # path. `trap COMMAND EXIT` registers COMMAND to run when this script exits for ANY
 # reason, which is what makes the restore above reliable rather than best-effort.
 PROFILE=$(mktemp -d)
+BROWSER_ERR="$PROFILE/browser.stderr"
+LAST_DUMP="$PROFILE/last-dump.html"
 trap 'restore_backend; rm -rf "$PROFILE"' EXIT
 
 # --dump-dom prints the DOM *after* scripts have run, which is the whole point here: this
 # page sets its state in a useEffect, so the server-rendered HTML always says "checking".
 # --virtual-time-budget makes Chrome fast-forward timers rather than wait in real time, so
 # the page's fetch resolves before the dump instead of racing it. The rest simply stop
-# Chrome behaving like a desktop app: no GPU, no sandbox (it needs privileges CI containers
-# don't grant), no first-run wizard, and its own throwaway profile.
+# Chrome behaving like a desktop app: no GPU, no sandbox and no /dev/shm reliance (both
+# need privileges or space CI runners don't reliably grant), no first-run wizard, and its
+# own throwaway profile.
 #
 # The awkward part: Chrome writes the finished DOM and then **never exits**, because the
 # Next dev server's hot-reload websocket means the page never goes network-idle and the
@@ -68,20 +76,23 @@ trap 'restore_backend; rm -rf "$PROFILE"' EXIT
 # itself is correct and complete, it is only the shutdown that hangs. (Verified: without
 # --virtual-time-budget Chrome exits cleanly but dumps at the load event, which is always
 # before the fetch resolves, so the page still reads "Checking…". The budget is required.)
+#
+# stderr is kept rather than discarded, in $BROWSER_ERR, so diagnose() below can explain a
+# browser that failed to start instead of just reporting an empty page.
 render() {
-  local out pid deadline
-  out=$(mktemp)
-  "$BROWSER" --headless --disable-gpu --no-sandbox --no-first-run \
-             --no-default-browser-check --disable-extensions \
+  local pid deadline
+  : >"$LAST_DUMP"
+  "$BROWSER" --headless --disable-gpu --no-sandbox --disable-dev-shm-usage \
+             --no-first-run --no-default-browser-check --disable-extensions \
              --user-data-dir="$PROFILE" --virtual-time-budget=4000 \
-             --dump-dom "http://localhost:${FRONTEND_PORT}" >"$out" 2>/dev/null &
+             --dump-dom "http://localhost:${FRONTEND_PORT}" >"$LAST_DUMP" 2>"$BROWSER_ERR" &
   pid=$!
   # Wait for a *complete* document rather than merely a non-empty file: stdout arrives in
   # chunks, so a closing </html> is the signal that the dump finished rather than that it
   # merely started. Not coupled to anything this test asserts, deliberately.
-  deadline=$(( SECONDS + 30 ))
+  deadline=$(( SECONDS + 45 ))
   while [ "$SECONDS" -lt "$deadline" ]; do
-    [ -s "$out" ] && grep -q '</html>' "$out" 2>/dev/null && break
+    [ -s "$LAST_DUMP" ] && grep -q '</html>' "$LAST_DUMP" 2>/dev/null && break
     sleep 1
   done
   # `|| true` on both: the process is expected to be killed rather than to finish, and
@@ -92,15 +103,58 @@ render() {
   # throwaway profile path appears in every one of their command lines, which makes it an
   # exact match for "this test's Chrome processes and nothing else on the machine".
   pkill -9 -f "$PROFILE" 2>/dev/null || true
-  cat "$out"
-  rm -f "$out"
+  cat "$LAST_DUMP"
+}
+
+# A check that fails without saying why is half a check — the same reasoning as
+# verify-acceptance.sh's own diagnose(). Everything here is a question someone would
+# otherwise have to re-run CI to answer.
+diagnose() {
+  echo "  --- diagnosing the browser render ---"
+  echo "  dump size: $(wc -c <"$LAST_DUMP" 2>/dev/null || echo 0) bytes"
+  if [ -s "$LAST_DUMP" ]; then
+    grep -q '</html>' "$LAST_DUMP" 2>/dev/null \
+      && echo "  dump looks complete (has a closing </html>)" \
+      || echo "  dump is INCOMPLETE — no closing </html>, so Chrome was killed mid-write"
+    # The indicator element if it is there at all, else whatever the page says about the
+    # backend, else the page's first heading — in that order of usefulness.
+    grep -o '<[^>]*data-connection-state="[^"]*"[^>]*>' "$LAST_DUMP" | head -1 \
+      || grep -o 'Backend:.\{0,80\}' "$LAST_DUMP" | head -1 \
+      || grep -o '<h1[^>]*>[^<]*' "$LAST_DUMP" | head -1 \
+      || echo "  no indicator, no status line and no heading in the dump"
+  else
+    echo "  dump is EMPTY — Chrome produced nothing at all"
+  fi
+  if [ -s "$BROWSER_ERR" ]; then
+    echo "  browser stderr (last 15 lines):"
+    tail -15 "$BROWSER_ERR" | sed 's/^/    /'
+  else
+    echo "  browser wrote nothing to stderr"
+  fi
+  # Proves whether the problem is the browser or the stack underneath it. If curl can read
+  # a healthy backend and the frontend serves a page, the fault is in the render.
+  #
+  # Assigned first rather than inlined into the echo, because curl still writes its -w
+  # output on failure — inlining produces "000" glued to the error text instead of a
+  # clean verdict.
+  local be fe
+  be=$(curl -fsS -m 5 "http://localhost:${BACKEND_PORT}/actuator/health" 2>/dev/null | head -c 120) \
+    && echo "  curl backend:  $be" || echo "  curl backend:  unreachable"
+  fe=$(curl -fsS -m 5 -o /dev/null -w '%{http_code}' "http://localhost:${FRONTEND_PORT}" 2>/dev/null) \
+    && echo "  curl frontend: HTTP $fe" || echo "  curl frontend: unreachable"
+  echo "  ------------------------------------"
 }
 
 # Pull out just the one element the page marks with data-connection-state. grep -o prints
 # only the matched text rather than the whole line, and the pattern runs from that
 # element's opening "<" through to its ">" — so the state attribute and the inline style
 # carrying the colour both come back together, in one string.
-indicator() { render | grep -o '<[^>]*data-connection-state="[^"]*"[^>]*>' | head -1; }
+#
+# `|| true` matters: grep exits non-zero when it matches nothing, and with `set -o
+# pipefail` that would propagate out of the enclosing $(...) and kill the script under
+# `set -e` — which is exactly what hid every assertion after the first one on the initial
+# CI run. "No match" is an expected answer here, not a script error.
+indicator() { render | grep -o '<[^>]*data-connection-state="[^"]*"[^>]*>' | head -1 || true; }
 
 # Named so it reads as a sentence at the call sites below: `in_state connected`.
 in_state() { indicator | grep -q "data-connection-state=\"$1\""; }
@@ -108,13 +162,23 @@ in_state() { indicator | grep -q "data-connection-state=\"$1\""; }
 # Extract whatever colour the indicator is currently painted. Deliberately returns the
 # value rather than comparing it to a hard-coded green or red: the test asserts that the
 # two states *differ*, so the page stays free to restyle itself without editing this file.
-colour_of() { printf '%s' "$1" | grep -o 'color: rgb([0-9, ]*)' | head -1; }
+# Same `|| true` reasoning as indicator() above.
+colour_of() { printf '%s' "$1" | grep -o 'color: rgb([0-9, ]*)' | head -1 || true; }
+
+# Compile the page before the browser ever sees it. The dev server builds a route on first
+# request, and letting that happen inside a timed browser render would charge Turbopack's
+# cold compile to the browser's budget — slow enough on a cold CI runner to look like a
+# failure to connect rather than what it is.
+curl -fsS -m 60 -o /dev/null "http://localhost:${FRONTEND_PORT}" 2>/dev/null || true
 
 # --- green while the backend is up ------------------------------------------------------
 
-wait_for 90 in_state connected \
-  && pass "page reports connected while the backend is up" \
-  || fail "page never reported connected — a real browser cannot read /actuator/health"
+if wait_for 180 in_state connected; then
+  pass "page reports connected while the backend is up"
+else
+  fail "page never reported connected — a real browser cannot read /actuator/health"
+  diagnose
+fi
 
 UP_COLOUR=$(colour_of "$(indicator)")
 [ -n "$UP_COLOUR" ] \
@@ -126,9 +190,12 @@ UP_COLOUR=$(colour_of "$(indicator)")
 echo "  stopping the backend container…"
 docker compose stop backend >/dev/null 2>&1
 
-wait_for 90 in_state disconnected \
-  && pass "stopping the backend turns the page to its cannot-connect state" \
-  || fail "page still did not report disconnected after the backend was stopped"
+if wait_for 120 in_state disconnected; then
+  pass "stopping the backend turns the page to its cannot-connect state"
+else
+  fail "page still did not report disconnected after the backend was stopped"
+  diagnose
+fi
 
 DOWN_COLOUR=$(colour_of "$(indicator)")
 [ -n "$DOWN_COLOUR" ] \
