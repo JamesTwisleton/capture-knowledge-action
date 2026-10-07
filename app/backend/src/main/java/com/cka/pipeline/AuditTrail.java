@@ -32,18 +32,47 @@ public class AuditTrail {
 
     private static AuditEntry entryFor(PipelineEvent event) {
         return switch (event) {
-            case ContentCaptured e -> new AuditEntry(e.chainId(), AuditStep.CONTENT_CAPTURED,
-                    "Captured \"" + e.content().title() + "\" from " + e.content().sourceUri());
-            case ContentSummarised e -> new AuditEntry(e.chainId(), AuditStep.CONTENT_SUMMARISED,
-                    "Summarised by " + e.summary().producedBy().provider() + "/" + e.summary().producedBy().model());
-            case KnowledgeStored e -> new AuditEntry(e.chainId(), AuditStep.KNOWLEDGE_STORED,
-                    "Stored at " + e.knowledge().page().location());
-            case ActionProposed e -> new AuditEntry(e.chainId(), AuditStep.ACTION_PROPOSED,
-                    "Proposed " + e.action().type() + " on " + e.action().workItemId());
-            case ActionApplied e -> new AuditEntry(e.chainId(), AuditStep.ACTION_APPLIED,
-                    "Applied " + e.action().type() + " on " + e.action().workItemId());
-            case ActionFailed e -> new AuditEntry(e.chainId(), AuditStep.ACTION_FAILED,
-                    "Failed " + e.action().type() + " on " + e.action().workItemId() + ": " + e.error());
+            case ContentCaptured e ->
+                AuditEntry.builder()
+                        .chainId(e.chainId())
+                        .step(AuditStep.CONTENT_CAPTURED)
+                        .detail("Captured \"" + e.content().title() + "\" from "
+                                + e.content().sourceUri())
+                        .build();
+            case ContentSummarised e ->
+                AuditEntry.builder()
+                        .chainId(e.chainId())
+                        .step(AuditStep.CONTENT_SUMMARISED)
+                        .detail("Summarised by " + e.summary().producedBy().provider() + "/"
+                                + e.summary().producedBy().model())
+                        .build();
+            case KnowledgeStored e ->
+                AuditEntry.builder()
+                        .chainId(e.chainId())
+                        .step(AuditStep.KNOWLEDGE_STORED)
+                        .detail("Stored at " + e.knowledge().page().location())
+                        .build();
+            case ActionProposed e ->
+                AuditEntry.builder()
+                        .chainId(e.chainId())
+                        .step(AuditStep.ACTION_PROPOSED)
+                        .detail("Proposed " + e.action().type() + " on "
+                                + e.action().workItemId())
+                        .build();
+            case ActionApplied e ->
+                AuditEntry.builder()
+                        .chainId(e.chainId())
+                        .step(AuditStep.ACTION_APPLIED)
+                        .detail("Applied " + e.action().type() + " on "
+                                + e.action().workItemId())
+                        .build();
+            case ActionFailed e ->
+                AuditEntry.builder()
+                        .chainId(e.chainId())
+                        .step(AuditStep.ACTION_FAILED)
+                        .detail("Failed " + e.action().type() + " on "
+                                + e.action().workItemId() + ": " + e.error())
+                        .build();
         };
     }
 }

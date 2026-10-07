@@ -1,11 +1,11 @@
 package com.cka.provider.workitem;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.cka.core.WorkItemType;
 import com.cka.testsupport.Ticket;
 import com.cka.testsupport.TicketMapper;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * The mapping contract every work item provider's mapper must keep (PRD 7.9), stated as a test
@@ -22,7 +22,12 @@ class WorkItemMapperTest {
 
     @Test
     void mapsTheTrackersOwnTypeLabelAlongsideTheGenericType() {
-        var workItem = mapper.toWorkItem(new Ticket("CKA-7", "Login fails on Safari", "Defect", "CKA-1"));
+        var workItem = mapper.toWorkItem(Ticket.builder()
+                .key("CKA-7")
+                .headline("Login fails on Safari")
+                .kind("Defect")
+                .epicKey("CKA-1")
+                .build());
 
         assertThat(workItem.type()).isEqualTo(WorkItemType.BUG);
         assertThat(workItem.providerTypeName()).isEqualTo("Defect");
@@ -32,7 +37,11 @@ class WorkItemMapperTest {
     void keepsTheTrackersLabelEvenWhenNoGenericTypeFits() {
         // The case the model exists to protect: a milestone is not an epic, and the core must not
         // be told it is. OTHER plus the real label, never a convenient near-match.
-        var workItem = mapper.toWorkItem(new Ticket("CKA-9", "v2 launch", "Milestone", null));
+        var workItem = mapper.toWorkItem(Ticket.builder()
+                .key("CKA-9")
+                .headline("v2 launch")
+                .kind("Milestone")
+                .build());
 
         assertThat(workItem.type()).isEqualTo(WorkItemType.OTHER);
         assertThat(workItem.providerTypeName()).isEqualTo("Milestone");
@@ -40,15 +49,30 @@ class WorkItemMapperTest {
 
     @Test
     void nestsChildItemsUnderTheirParent() {
-        assertThat(mapper.toWorkItem(new Ticket("CKA-7", "Login fails", "Defect", "CKA-1")).parentId())
-                .isEqualTo("CKA-1");
-        assertThat(mapper.toWorkItem(new Ticket("CKA-1", "Authentication", "Epic", null)).parentId())
-                .isNull();
+        var child = Ticket.builder()
+                .key("CKA-7")
+                .headline("Login fails")
+                .kind("Defect")
+                .epicKey("CKA-1")
+                .build();
+        var topLevel = Ticket.builder()
+                .key("CKA-1")
+                .headline("Authentication")
+                .kind("Epic")
+                .build();
+
+        assertThat(mapper.toWorkItem(child).parentId()).isEqualTo("CKA-1");
+        assertThat(mapper.toWorkItem(topLevel).parentId()).isNull();
     }
 
     @Test
     void roundTripsBackToTheTrackersOwnShape() {
-        var ticket = new Ticket("CKA-7", "Login fails on Safari", "Defect", "CKA-1");
+        var ticket = Ticket.builder()
+                .key("CKA-7")
+                .headline("Login fails on Safari")
+                .kind("Defect")
+                .epicKey("CKA-1")
+                .build();
 
         // Back out through the provider's label, not the generic type — mapping to the core and
         // back must not quietly rewrite "Defect" as "Bug".

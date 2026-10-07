@@ -1,5 +1,8 @@
 package com.cka.core;
 
+import lombok.Builder;
+import lombok.NonNull;
+
 /**
  * One reference to a work item that the decision provider found in some knowledge.
  *
@@ -13,7 +16,12 @@ package com.cka.core;
  *                   meaningless for an unmatched mention
  * @param scoredBy   the decision provider and model that scored it
  */
-public record Mention(String excerpt, String workItemId, double confidence, Provenance scoredBy) {
+@Builder
+public record Mention(
+        @NonNull String excerpt,
+        String workItemId,
+        double confidence,
+        @NonNull Provenance scoredBy) {
 
     public boolean matched() {
         return workItemId != null;

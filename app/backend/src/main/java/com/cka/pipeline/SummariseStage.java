@@ -14,7 +14,12 @@ public class SummariseStage {
     private final EventBus bus;
 
     public void start() {
-        bus.subscribe(ContentCaptured.class, captured -> bus.publish(new ContentSummarised(
-                captured.chainId(), captured.content(), llm.summarise(captured.content()))));
+        bus.subscribe(
+                ContentCaptured.class,
+                captured -> bus.publish(ContentSummarised.builder()
+                        .chainId(captured.chainId())
+                        .content(captured.content())
+                        .summary(llm.summarise(captured.content()))
+                        .build()));
     }
 }

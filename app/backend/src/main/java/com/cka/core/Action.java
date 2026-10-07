@@ -1,5 +1,8 @@
 package com.cka.core;
 
+import lombok.Builder;
+import lombok.NonNull;
+
 /**
  * Something the Action stage proposes, applies or fails to apply to a work item.
  *
@@ -13,5 +16,10 @@ package com.cka.core;
  * @param confidence the decision provider's confidence, from 0 to 1
  * @param decidedBy  the decision provider and model that produced it
  */
-public record Action(ActionType type, String workItemId, String excerpt, double confidence, Provenance decidedBy) {
-}
+@Builder
+public record Action(
+        @NonNull ActionType type,
+        @NonNull String workItemId,
+        @NonNull String excerpt,
+        double confidence,
+        @NonNull Provenance decidedBy) {}

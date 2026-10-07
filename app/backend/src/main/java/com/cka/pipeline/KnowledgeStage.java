@@ -20,8 +20,14 @@ public class KnowledgeStage {
     public void start() {
         bus.subscribe(ContentSummarised.class, summarised -> {
             var page = knowledge.store(summarised.content(), summarised.summary());
-            bus.publish(new KnowledgeStored(summarised.chainId(),
-                    new Knowledge(page, summarised.content(), summarised.summary())));
+            bus.publish(KnowledgeStored.builder()
+                    .chainId(summarised.chainId())
+                    .knowledge(Knowledge.builder()
+                            .page(page)
+                            .content(summarised.content())
+                            .summary(summarised.summary())
+                            .build())
+                    .build());
         });
     }
 }

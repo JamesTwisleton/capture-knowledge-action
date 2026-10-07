@@ -1,5 +1,8 @@
 package com.cka.core;
 
+import lombok.Builder;
+import lombok.NonNull;
+
 /**
  * The core's generic work item. No provider's own concept reaches past the provider layer:
  * each work item provider's {@code WorkItemMapper} converts to and from this (PRD 7.9).
@@ -14,11 +17,11 @@ package com.cka.core;
  *                         this is what makes work items nestable (Jira epics, Azure DevOps
  *                         hierarchy, GitHub sub-issues)
  */
+@Builder
 public record WorkItem(
-        String id,
-        String title,
+        @NonNull String id,
+        @NonNull String title,
         String description,
-        WorkItemType type,
-        String providerTypeName,
-        String parentId) {
-}
+        @NonNull WorkItemType type,
+        @NonNull String providerTypeName,
+        String parentId) {}

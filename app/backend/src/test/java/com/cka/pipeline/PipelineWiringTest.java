@@ -1,5 +1,11 @@
 package com.cka.pipeline;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.cka.core.Action;
 import com.cka.core.ActionType;
 import com.cka.core.AuditEntry;
@@ -25,23 +31,16 @@ import com.cka.provider.workitem.WorkItemProvider;
 import com.cka.testsupport.InMemoryEventBus;
 import com.cka.testsupport.Ticket;
 import com.cka.testsupport.TicketMapper;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.UUID;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  * T05's acceptance criterion: the core wired with a stand-in for every provider interface,
@@ -58,51 +57,87 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class PipelineWiringTest {
 
-    private static final Provenance LLM = new Provenance("test-llm", "test-model");
-    private static final Provenance DECIDER = new Provenance("test-decision", "test-model");
+    private static final Provenance LLM =
+            Provenance.builder().provider("test-llm").model("test-model").build();
+    private static final Provenance DECIDER =
+            Provenance.builder().provider("test-decision").model("test-model").build();
 
-    private static final CapturedContent REFINEMENT = new CapturedContent(
-            "memory://recordings/refinement.mp4",
-            "Sprint Refinement 2026-10-07",
-            "Sprint Refinement",
-            "We agreed the login bug is a duplicate. Someone mentioned the old payments ticket.",
-            "Login bug closed as duplicate.");
-    private static final Summary SUMMARY =
-            new Summary("Decided: the login bug is a duplicate of an older report.", LLM);
-    private static final PageReference PAGE =
-            new PageReference("Sprint Refinement 2026-10-07.md", "memory://vault/refinement.md");
-    private static final Knowledge KNOWLEDGE = new Knowledge(PAGE, REFINEMENT, SUMMARY);
+    private static final CapturedContent REFINEMENT = CapturedContent.builder()
+            .sourceUri("memory://recordings/refinement.mp4")
+            .title("Sprint Refinement 2026-10-07")
+            .contentType("Sprint Refinement")
+            .transcript("We agreed the login bug is a duplicate. Someone mentioned the old payments ticket.")
+            .platformSummary("Login bug closed as duplicate.")
+            .build();
+    private static final Summary SUMMARY = Summary.builder()
+            .text("Decided: the login bug is a duplicate of an older report.")
+            .producedBy(LLM)
+            .build();
+    private static final PageReference PAGE = PageReference.builder()
+            .id("Sprint Refinement 2026-10-07.md")
+            .location("memory://vault/refinement.md")
+            .build();
+    private static final Knowledge KNOWLEDGE =
+            Knowledge.builder().page(PAGE).content(REFINEMENT).summary(SUMMARY).build();
 
     /** Native tracker items, mapped into the pool the way a real work item provider does. */
     private static final List<WorkItem> POOL = Stream.of(
-                    new Ticket("CKA-1", "Authentication", "Epic", null),
-                    new Ticket("CKA-7", "Login fails on Safari", "Defect", "CKA-1"))
+                    Ticket.builder()
+                            .key("CKA-1")
+                            .headline("Authentication")
+                            .kind("Epic")
+                            .build(),
+                    Ticket.builder()
+                            .key("CKA-7")
+                            .headline("Login fails on Safari")
+                            .kind("Defect")
+                            .epicKey("CKA-1")
+                            .build())
             .map(new TicketMapper()::toWorkItem)
             .toList();
 
-    private static final Mention LOGIN_BUG_MENTION =
-            new Mention("the login bug is a duplicate", "CKA-7", 0.72, DECIDER);
-    private static final Mention PAYMENTS_MENTION =
-            new Mention("the old payments ticket", null, 0, DECIDER);
-    private static final Action PROPOSED_COMMENT =
-            new Action(ActionType.COMMENT, "CKA-7", "the login bug is a duplicate", 0.72, DECIDER);
+    private static final Mention LOGIN_BUG_MENTION = Mention.builder()
+            .excerpt("the login bug is a duplicate")
+            .workItemId("CKA-7")
+            .confidence(0.72)
+            .scoredBy(DECIDER)
+            .build();
+    private static final Mention PAYMENTS_MENTION = Mention.builder()
+            .excerpt("the old payments ticket")
+            .confidence(0)
+            .scoredBy(DECIDER)
+            .build();
+    private static final Action PROPOSED_COMMENT = Action.builder()
+            .type(ActionType.COMMENT)
+            .workItemId("CKA-7")
+            .excerpt("the login bug is a duplicate")
+            .confidence(0.72)
+            .decidedBy(DECIDER)
+            .build();
 
     private final InMemoryEventBus bus = new InMemoryEventBus();
 
     @Mock
     private ContentListener listener;
+
     @Mock
     private LlmProvider llm;
+
     @Mock
     private KnowledgeProvider knowledge;
+
     @Mock
     private DecisionProvider decision;
+
     @Mock
     private WorkItemProvider workItems;
+
     @Mock
     private AuditStore audit;
+
     @Captor
     private ArgumentCaptor<Consumer<CapturedContent>> onContent;
+
     @Captor
     private ArgumentCaptor<AuditEntry> auditEntries;
 
@@ -126,11 +161,16 @@ class PipelineWiringTest {
         verify(listener).listen(onContent.capture());
         onContent.getValue().accept(REFINEMENT);
 
-        assertThat(bus.published()).hasExactlyElementsOfTypes(
-                ContentCaptured.class, ContentSummarised.class, KnowledgeStored.class, ActionProposed.class);
+        assertThat(bus.published())
+                .hasExactlyElementsOfTypes(
+                        ContentCaptured.class, ContentSummarised.class, KnowledgeStored.class, ActionProposed.class);
         var chainId = bus.published().getFirst().chainId();
         assertThat(bus.published()).extracting(PipelineEvent::chainId).containsOnly(chainId);
-        assertThat(bus.published().getLast()).isEqualTo(new ActionProposed(chainId, PROPOSED_COMMENT));
+        assertThat(bus.published().getLast())
+                .isEqualTo(ActionProposed.builder()
+                        .chainId(chainId)
+                        .action(PROPOSED_COMMENT)
+                        .build());
 
         verify(audit, times(4)).record(auditEntries.capture());
         assertThat(auditEntries.getAllValues())
@@ -149,9 +189,15 @@ class PipelineWiringTest {
         new ActionStage(decision, workItems, bus, audit).start();
         var chainId = UUID.randomUUID();
 
-        bus.publish(new KnowledgeStored(chainId, KNOWLEDGE));
+        bus.publish(
+                KnowledgeStored.builder().chainId(chainId).knowledge(KNOWLEDGE).build());
 
-        assertThat(bus.published()).last().isEqualTo(new ActionProposed(chainId, PROPOSED_COMMENT));
+        assertThat(bus.published())
+                .last()
+                .isEqualTo(ActionProposed.builder()
+                        .chainId(chainId)
+                        .action(PROPOSED_COMMENT)
+                        .build());
     }
 
     @Test
@@ -161,12 +207,16 @@ class PipelineWiringTest {
         new ActionStage(decision, workItems, bus, audit).start();
         var chainId = UUID.randomUUID();
 
-        bus.publish(new KnowledgeStored(chainId, KNOWLEDGE));
+        bus.publish(
+                KnowledgeStored.builder().chainId(chainId).knowledge(KNOWLEDGE).build());
 
         assertThat(bus.published()).noneMatch(ActionProposed.class::isInstance);
         verify(audit).record(auditEntries.capture());
         assertThat(auditEntries.getValue())
-                .isEqualTo(new AuditEntry(chainId, AuditStep.MENTION_UNMATCHED,
-                        "No candidate matched \"the old payments ticket\""));
+                .isEqualTo(AuditEntry.builder()
+                        .chainId(chainId)
+                        .step(AuditStep.MENTION_UNMATCHED)
+                        .detail("No candidate matched \"the old payments ticket\"")
+                        .build());
     }
 }

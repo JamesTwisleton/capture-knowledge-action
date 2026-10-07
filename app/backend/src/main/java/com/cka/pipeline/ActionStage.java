@@ -11,9 +11,8 @@ import com.cka.provider.audit.AuditStore;
 import com.cka.provider.decision.DecisionProvider;
 import com.cka.provider.eventbus.EventBus;
 import com.cka.provider.workitem.WorkItemProvider;
-import lombok.RequiredArgsConstructor;
-
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Action: knowledge stored in; a proposed comment out for each matched mention, and an audit
@@ -32,18 +31,30 @@ public class ActionStage {
     private final AuditStore audit;
 
     public void start() {
-        bus.subscribe(KnowledgeStored.class, stored -> decision
-                .detectMentions(stored.knowledge(), workItems.candidatePool())
-                .forEach(mention -> handle(stored.chainId(), mention)));
+        bus.subscribe(
+                KnowledgeStored.class,
+                stored -> decision.detectMentions(stored.knowledge(), workItems.candidatePool())
+                        .forEach(mention -> handle(stored.chainId(), mention)));
     }
 
     private void handle(UUID chainId, Mention mention) {
         if (!mention.matched()) {
-            audit.record(new AuditEntry(chainId, AuditStep.MENTION_UNMATCHED,
-                    "No candidate matched \"" + mention.excerpt() + "\""));
+            audit.record(AuditEntry.builder()
+                    .chainId(chainId)
+                    .step(AuditStep.MENTION_UNMATCHED)
+                    .detail("No candidate matched \"" + mention.excerpt() + "\"")
+                    .build());
             return;
         }
-        bus.publish(new ActionProposed(chainId, new Action(ActionType.COMMENT, mention.workItemId(),
-                mention.excerpt(), mention.confidence(), mention.scoredBy())));
+        bus.publish(ActionProposed.builder()
+                .chainId(chainId)
+                .action(Action.builder()
+                        .type(ActionType.COMMENT)
+                        .workItemId(mention.workItemId())
+                        .excerpt(mention.excerpt())
+                        .confidence(mention.confidence())
+                        .decidedBy(mention.scoredBy())
+                        .build())
+                .build());
     }
 }

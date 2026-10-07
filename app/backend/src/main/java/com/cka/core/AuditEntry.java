@@ -1,6 +1,8 @@
 package com.cka.core;
 
 import java.util.UUID;
+import lombok.Builder;
+import lombok.NonNull;
 
 /**
  * One step in an action decision chain. The minimum the pipeline needs to trace a chain end
@@ -10,5 +12,8 @@ import java.util.UUID;
  * @param step    which step it records
  * @param detail  a human-readable description of what happened
  */
-public record AuditEntry(UUID chainId, AuditStep step, String detail) {
-}
+@Builder
+public record AuditEntry(
+        @NonNull UUID chainId,
+        @NonNull AuditStep step,
+        @NonNull String detail) {}

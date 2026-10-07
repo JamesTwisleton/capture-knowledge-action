@@ -1,5 +1,8 @@
 package com.cka.core;
 
+import lombok.Builder;
+import lombok.NonNull;
+
 /**
  * Where the knowledge provider stored something, so it can be linked to and opened again.
  *
@@ -7,5 +10,5 @@ package com.cka.core;
  *                 vault-relative file path
  * @param location how to open it, for example a file or web URL
  */
-public record PageReference(String id, String location) {
-}
+@Builder
+public record PageReference(@NonNull String id, @NonNull String location) {}

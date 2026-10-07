@@ -15,12 +15,23 @@ public class TicketMapper implements WorkItemMapper<Ticket> {
             case "Task" -> WorkItemType.TASK;
             default -> WorkItemType.OTHER;
         };
-        return new WorkItem(ticket.key(), ticket.headline(), null, type, ticket.kind(), ticket.epicKey());
+        return WorkItem.builder()
+                .id(ticket.key())
+                .title(ticket.headline())
+                .type(type)
+                .providerTypeName(ticket.kind())
+                .parentId(ticket.epicKey())
+                .build();
     }
 
     @Override
     public Ticket toNative(WorkItem workItem) {
         // The provider's own label is the round trip's source of truth, not the generic type.
-        return new Ticket(workItem.id(), workItem.title(), workItem.providerTypeName(), workItem.parentId());
+        return Ticket.builder()
+                .key(workItem.id())
+                .headline(workItem.title())
+                .kind(workItem.providerTypeName())
+                .epicKey(workItem.parentId())
+                .build();
     }
 }
