@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# Proves the acceptance criteria for T01–T03 against a real running stack.
+# Proves the acceptance criteria for T01–T04 against a real running stack.
 # CI runs this on every push; so can you:
 #
 #     ./app/scripts/verify-acceptance.sh        KEEP_UP=1 to leave the stack running
 #
 # Each criterion is its own file under scripts/tests/, named to match — find out why
 # one failed by opening one short file, not searching one long one. Once the stack is
-# healthy they don't depend on each other, so they run in two parallel phases (read-only
-# checks, then the two that force a recompile — see run_phase below for why they're
-# split): the checks were never what made this slow, the cold Docker build and Maven
-# resolve were.
+# healthy most of them don't depend on each other, so they run in three phases (read-only
+# checks together, then the two that force a recompile — see run_phase below for why
+# those are split — then t04 alone, because it stops the backend): the checks were never
+# what made this slow, the cold Docker build and Maven resolve were.
 #
 # New to bash? scripts/tests/lib.sh's header comment explains the idioms shared with
 # the test files this script calls; below are the ones specific to this file.
@@ -169,6 +169,12 @@ run_phase scripts/tests/t01_environment.test.sh scripts/tests/t01_debugger.test.
 # CI's weaker CPU — genuine contention, not flakiness to hide behind a longer timeout.
 # They don't touch each other's files or services, so they still run together.
 run_phase scripts/tests/t01_hot_reload_backend.test.sh scripts/tests/t03_hot_reload_frontend.test.sh
+
+# Phase 3: destructive, and therefore alone and last. t04 stops the backend container to
+# prove the page goes red, which would fail every other check in the suite if it ran
+# alongside them. It restores the backend on its way out, including on failure, so a
+# KEEP_UP=1 run still leaves a working stack behind.
+run_phase scripts/tests/t04_connectivity.test.sh
 
 echo
 [ "$FAILURES" -eq 0 ] && { echo "All acceptance criteria verified."; exit 0; }

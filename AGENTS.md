@@ -3,6 +3,27 @@
 Instructions for AI agents working in this repository. Claude Code reads this file directly, as do other
 agents following the [agents.md](https://agents.md) convention — no `CLAUDE.md` needed.
 
+## Where the work is tracked
+
+The board is a **GitHub Project**, not a repo-level project and not Trello:
+
+- **CKA - Capture Knowledge Action** — <https://github.com/users/JamesTwisleton/projects/5>
+- From the CLI: `gh project item-list 5 --owner JamesTwisleton --format json`. Status is a
+  single-select field; move cards with `gh project item-edit --id <itemID> --field-id <fieldID>
+  --project-id <projectID> --single-select-option-id <optionID>`, reading all four IDs from
+  `gh project field-list 5 --owner JamesTwisleton --format json` and the `item-list` output rather
+  than hardcoding them.
+- Columns are `Backlog`, `Ready`, `In progress`, `In review`, `Done`. **`Ready` means pickable
+  right now** — every dependency landed. A ticket whose `Depends on` line names unlanded work
+  belongs in `Backlog`, however desirable it is. Dependencies are recorded per ticket in
+  [`prd/mvp-tickets.md`](docs/prd/mvp-tickets.md), which is the canonical narrative; the issues are
+  the working tracker.
+- Issues are GitHub sub-issues of epic [#1](https://github.com/JamesTwisleton/capture-knowledge-action/issues/1).
+  Ticket IDs (T01–T22) are stable identifiers and do **not** match issue numbers — T18 is issue #22,
+  T22 is issue #25. Always map via the table in `prd/mvp-tickets.md`.
+- When you move a card, comment on the issue saying why, citing the specific evidence (a merged PR,
+  a file, a failing dependency). A status change with no reasoning is not reviewable.
+
 ## Engineering conventions — read this before writing code
 
 **Check what already exists before building it.** Tickets are written in advance and go stale.

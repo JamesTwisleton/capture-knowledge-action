@@ -17,7 +17,17 @@ cp "$PAGE" "$PAGE_BACKUP"
 # `trap COMMAND EXIT` registers COMMAND to run automatically when this script exits,
 # for ANY reason — normal completion, an error under set -e, or being interrupted —
 # so the real source file gets its original content back no matter how this ends.
-trap 'mv -f "$PAGE_BACKUP" "$PAGE"' EXIT
+#
+# `cp` into the existing file, deliberately NOT `mv` over it. mv replaces the file
+# itself, so the page inherits the backup's identity: mktemp creates mode 600 owned by
+# whoever ran the script, which leaves page.tsx readable only by that user. The
+# container's dev server runs as UID 1000, so on CI — where a native bind mount really
+# does enforce the UID mismatch, unlike Docker Desktop's mount layer — Turbopack then
+# cannot read the page it is serving, and the frontend starts answering 500 to
+# everything. cp writes through to the original file instead, so its mode and owner
+# survive. (This is the same class of bug as the chmod in verify-acceptance.sh, and it
+# was invisible until a check ran *after* this one.)
+trap 'cp -f "$PAGE_BACKUP" "$PAGE"; rm -f "$PAGE_BACKUP"' EXIT
 
 # $$ is this running script's own process ID — a cheap, always-available way to make
 # the marker text unique, so a stale probe from a previous run couldn't be mistaken

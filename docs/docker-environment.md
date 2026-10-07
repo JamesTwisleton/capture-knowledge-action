@@ -122,9 +122,15 @@ silent, error-free non-generation — which is exactly why both are called out h
 ./app/scripts/verify-acceptance.sh
 ```
 
-Brings the stack up, runs every check under `scripts/tests/` — one file per criterion, in parallel,
-including a real JDWP handshake and a full hot-reload cycle — tears it down, and fails loudly if
-anything regressed. CI runs the same script on every push.
+Brings the stack up, runs every check under `scripts/tests/` — one file per criterion — tears it
+down, and fails loudly if anything regressed. CI runs the same script on every push.
+
+The checks run in three phases, because they are not all equally safe to run together: the
+read-only ones in parallel, then the two that force a real recompile (Maven, Turbopack) in
+parallel, then `t04_connectivity` on its own. That last one is destructive — it stops the backend
+container to prove the page really does turn red, and restores it afterwards — so it cannot share
+the stack with anything else. It is also the only check that needs a browser: the connectivity
+indicator is set in client-side JavaScript, so curl only ever sees the placeholder.
 
 ## Everyday commands
 
