@@ -3,6 +3,9 @@
 Mirrors the main source tree package for package. A test for `com.cka.provider.knowledge.Foo`
 belongs in `com/cka/provider/knowledge/FooTest.java`, not in a parallel hierarchy of its own.
 
+The one exception is [`testdouble/`](testdouble/AGENTS.md): a double for every provider
+interface, shared by every test that wires a stage. Use those before writing your own.
+
 ## How to run them
 
 | | |
