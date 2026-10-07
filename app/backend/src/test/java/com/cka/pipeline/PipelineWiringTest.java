@@ -126,10 +126,8 @@ class PipelineWiringTest {
         verify(listener).listen(onContent.capture());
         onContent.getValue().accept(REFINEMENT);
 
-        assertThat(bus.published())
-                .extracting(PipelineEvent::getClass)
-                .containsExactly(ContentCaptured.class, ContentSummarised.class, KnowledgeStored.class,
-                        ActionProposed.class);
+        assertThat(bus.published()).hasExactlyElementsOfTypes(
+                ContentCaptured.class, ContentSummarised.class, KnowledgeStored.class, ActionProposed.class);
         var chainId = bus.published().getFirst().chainId();
         assertThat(bus.published()).extracting(PipelineEvent::chainId).containsOnly(chainId);
         assertThat(bus.published().getLast()).isEqualTo(new ActionProposed(chainId, PROPOSED_COMMENT));
