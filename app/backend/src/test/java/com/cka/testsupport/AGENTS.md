@@ -15,9 +15,7 @@ declared in the test itself.
   call a stage makes and hands on, with no behaviour to fake — only a value to return. Mockito
   and AssertJ already arrive with `spring-boot-starter-test`, so a hand-written stub is code to
   maintain in place of an installed dependency, which is exactly what the Ponytail rule in the
-  root [`AGENTS.md`](../../../../../../../../AGENTS.md) asks you not to do. An earlier draft of T05
-  had one stub class per interface: 292 lines of near-identical shells supporting a 112-line
-  test, each with its own `checkHealth()` returning the same thing.
+  root [`AGENTS.md`](../../../../../../../../AGENTS.md) asks you not to do.
 - **Something belongs here only when a mock genuinely cannot do it** — real behaviour under test,
   or a type a mock would make vacuous. Both exceptions above are one of those. Add a fourth class
   only with that argument in hand, and write it in the table.

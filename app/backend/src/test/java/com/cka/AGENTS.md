@@ -17,8 +17,7 @@ adding anything to it.
 
 ## Conventions
 
-- **Every test class and test method carries a `@DisplayName`.** It is JUnit's own annotation —
-  there is no `@Description` in Jupiter, that is TestNG and Allure. Write a sentence that says what
+- **Every test class and test method carries a `@DisplayName`.** Write a sentence that says what
   the behaviour is, not a restatement of the method name, and use the punctuation a method name
   cannot have: `/actuator/health is exposed and reports UP`, `Round-trips back to the tracker's own
   shape`. `pom.xml` configures Surefire to report by display name, so these are what the XML the
