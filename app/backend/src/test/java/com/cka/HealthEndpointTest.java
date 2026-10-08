@@ -1,16 +1,16 @@
 package com.cka;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
 /**
  * The health endpoint is Actuator's, not ours, so this asserts it is actually exposed
@@ -22,16 +22,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * which Spring Boot 4 rearranged.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@DisplayName("Actuator health endpoint")
 class HealthEndpointTest {
 
     @LocalServerPort
     private int port;
 
     @Test
+    @DisplayName("/actuator/health is exposed and reports UP")
     void actuatorHealthIsExposedAndReportsUp() throws Exception {
-        HttpResponse<String> response = HttpClient.newHttpClient().send(
-                HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/actuator/health")).build(),
-                HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = HttpClient.newHttpClient()
+                .send(
+                        HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/actuator/health"))
+                                .build(),
+                        HttpResponse.BodyHandlers.ofString());
 
         assertEquals(200, response.statusCode());
         assertTrue(response.body().contains("\"status\":\"UP\""), response.body());

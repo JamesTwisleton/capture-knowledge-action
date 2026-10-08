@@ -2,24 +2,18 @@
 
 The root package of the CKA core. Everything the backend runs lives here or below.
 
-Right now it holds one class, `CaptureKnowledgeActionApplication`, and that is deliberate: T01–T04
-only need the app to boot, serve health and restart on compile. The structure below arrives with
-T05.
+T05 laid out the packages. Each has its own `AGENTS.md`; start there rather than here when
+working inside one.
 
 ## Where new code goes
 
-T05 defines the provider abstractions, and it is the first ticket to add packages here. Expected
-shape, from [`prd/mvp-tickets.md`](../../../../../../../docs/prd/mvp-tickets.md) and
-[Section 8](../../../../../../../docs/prd/08-architecture.md):
-
 | Package | Holds |
 |---|---|
-| `com.cka.core` | The domain model — work item, event payload, page reference. No framework types. |
-| `com.cka.provider` | One sub-package per capability (`knowledge`, `eventbus`, `llm`, `decision`, `workitem`, `audit`), each an interface plus its implementations. |
-| `com.cka.config` | Spring `@Configuration` that selects provider implementations from env vars. |
-| `com.cka.api` | The REST surface (T15). |
-
-Add an `AGENTS.md` to each as you create it, saying what belongs there and what does not.
+| [`core`](core/AGENTS.md) | The domain model — work item, captured content, summary, action, audit entry — and, in [`core.event`](core/event/AGENTS.md), the event payloads that travel on the bus. Plain records and enums; no framework types. |
+| [`provider`](provider/AGENTS.md) | One sub-package per capability (`capture`, `llm`, `knowledge`, `decision`, `workitem`, `eventbus`, `audit`), each an interface plus, from later tickets, its implementations. |
+| [`pipeline`](pipeline/AGENTS.md) | The stages that connect providers to the bus, and the audit trail. |
+| `config` | *Not created yet.* Spring `@Configuration` that wires the pipeline stages from whichever provider beans are configured. Arrives with the first real provider — see [`provider/AGENTS.md`](provider/AGENTS.md#selecting-an-implementation). |
+| `api` | *Not created yet.* The REST surface (T15). |
 
 ## Conventions
 
@@ -34,7 +28,7 @@ Add an `AGENTS.md` to each as you create it, saying what belongs there and what 
   tested on its own.
 - **Health is Actuator's.** Do not hand-roll a health endpoint; `/actuator/health` is what the
   container healthcheck, T04's connectivity slice and CI all read. See the parent
-  [`backend/AGENTS.md`](../../../../AGENTS.md) for the rest of the backend-wide conventions
+  [`backend/AGENTS.md`](../../../../../AGENTS.md) for the rest of the backend-wide conventions
   (`var` usage, Lombok, the dev Dockerfile).
 
 ## Gotchas specific to this package

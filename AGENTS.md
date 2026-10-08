@@ -23,6 +23,37 @@ The board is a **GitHub Project**, not a repo-level project and not Trello:
   T22 is issue #25. Always map via the table in `prd/mvp-tickets.md`.
 - When you move a card, comment on the issue saying why, citing the specific evidence (a merged PR,
   a file, a failing dependency). A status change with no reasoning is not reviewable.
+- **Card moves need a local session; a Claude Code cloud session cannot do them.** `gh project`
+  talks to GitHub's GraphQL API, which the cloud session proxy blocks, and the account-level REST
+  paths for Projects v2 are blocked too because those sessions are scoped to this repository.
+  Repo-scoped work — `gh pr create`, `gh issue comment`, `gh api repos/...` — is unaffected, so an
+  agent in the cloud should open the PR and comment on the issue, then say plainly that the card
+  still needs moving rather than reporting the ticket as fully tracked. Locally, `gh` needs the
+  `project` scope: `gh auth refresh -s project`.
+- **In a cloud session `gh auth status` reports the token as invalid. Ignore it.** `GH_TOKEN` there
+  holds a placeholder the proxy swaps for real credentials, so the status output is wrong and the
+  repo-scoped commands above work regardless. Don't spend time "fixing" it.
+
+## Formatting — run this once per clone
+
+```sh
+git config core.hooksPath .githooks
+```
+
+Java is formatted by [Spotless](https://github.com/diffplug/spotless) using Palantir's style
+(four-space indents, 120 columns), and `.githooks/pre-commit` applies it to staged Java before a
+commit is written. Hooks are not cloned with a repository, so that one command is the install
+step; without it nothing breaks locally, but CI will reject the formatting.
+
+- **CI is the guarantee, the hook is the convenience.** The `Java formatting (Spotless)` job runs
+  `mvn spotless:check` on every push and is a required check on `main`, so `--no-verify` or a
+  missing hook is caught before a PR can merge.
+- **Fix a failure with `./mvnw spotless:apply`** in `app/backend`. Never hand-reformat to satisfy
+  it, and never add `// @formatter:off`.
+- **Only Java is formatted.** The plugin declares a `<java>` section and nothing else, so the
+  front end is untouched — it has no formatter of its own yet.
+- The hook refuses to reformat a **partially staged** file rather than sweeping unstaged edits
+  into the commit. Stage the rest, or run `spotless:apply` yourself.
 
 ## Engineering conventions — read this before writing code
 

@@ -3,6 +3,10 @@
 Mirrors the main source tree package for package. A test for `com.cka.provider.knowledge.Foo`
 belongs in `com/cka/provider/knowledge/FooTest.java`, not in a parallel hierarchy of its own.
 
+The one exception is [`testsupport/`](testsupport/AGENTS.md), which holds the few fixtures a
+mock cannot replace — the in-memory event bus above all. Mock the providers; see that file before
+adding anything to it.
+
 ## How to run them
 
 | | |
@@ -13,6 +17,13 @@ belongs in `com/cka/provider/knowledge/FooTest.java`, not in a parallel hierarch
 
 ## Conventions
 
+- **Every test class and test method carries a `@DisplayName`.** Write a sentence that says what
+  the behaviour is, not a restatement of the method name, and use the punctuation a method name
+  cannot have: `/actuator/health is exposed and reports UP`, `Round-trips back to the tracker's own
+  shape`. `pom.xml` configures Surefire to report by display name, so these are what the XML the
+  Actions UI renders contains. (Surefire still prints the raw method identifier on the console's
+  failure line; that one is not configurable, which is another reason method names stay readable
+  in their own right.)
 - **Tests before code.** Red-green-refactor, properly: write the failing test, watch it fail for
   the right reason, then make it pass. This is a standing repository rule, and T02's acceptance
   criteria name it explicitly.
@@ -25,7 +36,7 @@ belongs in `com/cka/provider/knowledge/FooTest.java`, not in a parallel hierarch
   `HttpClient` — the same thing the Docker healthcheck does. Mocks here would pass while the real
   endpoint 404s.
 - **Unit tests are not the acceptance criteria.** A ticket's criteria get a shell check under
-  [`app/scripts/tests/`](../../../../../scripts/tests/) that runs against the real running stack.
+  [`app/scripts/tests/`](../../../../../../scripts/tests/) that runs against the real running stack.
   Tests here prove the code; those prove the promise. Both, not either.
 
 ## Gotchas specific to this package
@@ -36,4 +47,4 @@ belongs in `com/cka/provider/knowledge/FooTest.java`, not in a parallel hierarch
   classpath before reaching for a slice annotation from a Boot 3 tutorial.
 - **Lombok in tests needs the same annotation processor path** as main (configured in `pom.xml`).
   If a `@Builder` on a test fixture appears to generate nothing, that is why — see
-  [`../../../main/java/com/cka/AGENTS.md`](../../../main/java/com/cka/AGENTS.md).
+  [`../../../../main/java/com/cka/AGENTS.md`](../../../../main/java/com/cka/AGENTS.md).

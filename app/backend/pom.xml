@@ -63,6 +63,16 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Time-ordered UUIDs (RFC 9562). The JDK only ships random v4, which makes an action
+             decision chain's id carry no information and scatter writes across a B-tree index.
+             JUG is the reference Java implementation: one small jar, no transitive dependencies,
+             Apache 2.0. Needs an explicit version — Spring Boot's BOM does not manage it. -->
+        <dependency>
+            <groupId>com.fasterxml.uuid</groupId>
+            <artifactId>java-uuid-generator</artifactId>
+            <version>5.2.0</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -91,6 +101,70 @@
                             <version>${lombok.version}</version>
                         </path>
                     </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+
+            <!-- Mockito attaches its byte-buddy agent to the running JVM by itself, which JDK 25
+                 warns about on every test run and a future JDK will refuse outright. Passing the
+                 agent on the command line instead is Mockito's own documented fix. The
+                 dependency plugin's properties goal sets ${org.mockito:mockito-core:jar} to that
+                 jar's path in the local repository, so the version stays Boot's to manage. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>properties</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>-javaagent:${org.mockito:mockito-core:jar}</argLine>
+                    <!-- Report each test by its @DisplayName instead of its method identifier, so
+                         a CI failure reads as the sentence describing what broke rather than as
+                         aMentionMatchingNoCandidateIsAuditedAndNeverProposed. Surefire needs
+                         telling twice: once for the console, once for the XML the Actions UI
+                         renders. Report *filenames* stay the class name on purpose — display
+                         names here contain slashes and apostrophes. -->
+                    <statelessTestsetInfoReporter
+                            implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5StatelessTestsetInfoReporter">
+                        <usePhrasedClassNameInRunning>true</usePhrasedClassNameInRunning>
+                        <usePhrasedClassNameInTestCaseSummary>true</usePhrasedClassNameInTestCaseSummary>
+                    </statelessTestsetInfoReporter>
+                    <statelessTestsetReporter
+                            implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5Xml30StatelessReporter">
+                        <usePhrasedFileName>false</usePhrasedFileName>
+                        <usePhrasedTestSuiteClassName>true</usePhrasedTestSuiteClassName>
+                        <usePhrasedTestCaseClassName>true</usePhrasedTestCaseClassName>
+                        <usePhrasedTestCaseMethodName>true</usePhrasedTestCaseMethodName>
+                    </statelessTestsetReporter>
+                </configuration>
+            </plugin>
+
+            <!-- One canonical layout, applied by the pre-commit hook in .githooks/ and checked in
+                 CI, so formatting never costs anyone a review comment. Palantir's formatter is the
+                 closest of the opinionated ones to what this codebase was already written in —
+                 four-space indents, 120 columns. Google's would have reflowed every file to
+                 two-space indents to no benefit. Deliberately not bound to a lifecycle phase: a
+                 formatter that fails `mvn test` interrupts work mid-change, and the hook plus CI
+                 already catch it at the two moments that matter. -->
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>2.44.5</version>
+                <configuration>
+                    <java>
+                        <removeUnusedImports/>
+                        <palantirJavaFormat>
+                            <version>2.102.0</version>
+                        </palantirJavaFormat>
+                    </java>
                 </configuration>
             </plugin>
         </plugins>
