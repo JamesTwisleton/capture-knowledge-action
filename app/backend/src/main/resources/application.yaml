@@ -1,0 +1,28 @@
+# Connection settings come from the environment, with defaults that work for a developer
+# running the broker on their own machine. Compose sets EVENT_BUS_HOST to the service name
+# and passes RABBITMQ_USER/RABBITMQ_PASS through from app/.env.
+spring:
+  rabbitmq:
+    host: ${EVENT_BUS_HOST:localhost}
+    port: ${EVENT_BUS_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASS:guest}
+
+# /actuator/health answers one question — is the backend itself up — because that is what the
+# Compose healthcheck and T04's connectivity slice read it as. Boot would otherwise fold the
+# broker's reachability into it, so a RabbitMQ hiccup would fail the container healthcheck,
+# have Docker restart a perfectly healthy backend, and turn T04's page red for a dependency
+# outage. A provider being unreachable is reported through EventBus.checkHealth() instead, which
+# is what the front end's provider status view (T16) is built on. The same rule applies to every
+# provider added later — see provider/AGENTS.md.
+management:
+  health:
+    rabbit:
+      enabled: false
+
+# Which implementation satisfies each provider interface. One key per capability, matching
+# the convention in provider/AGENTS.md, so a new implementation is selected by configuration
+# rather than by editing the core. Override with CKA_PROVIDER_EVENTBUS.
+cka:
+  provider:
+    eventbus: rabbitmq
