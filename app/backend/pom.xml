@@ -43,6 +43,14 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
+        <!-- Spring AMQP: the RabbitMQ client, connection management and listener containers
+             behind the EventBus provider (T07). Publishing and subscribing are the whole of
+             PRD 8.1's interface, so nothing here is wrapped or re-abstracted. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
@@ -76,6 +84,27 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- A real broker for the event bus tests, started and thrown away per run. T07's
+             acceptance criterion is explicitly "via the real broker", and an in-memory fake
+             would prove nothing about serialisation, routing or asynchrony — the three things
+             that can actually differ between the test double and RabbitMQ. Needs a working
+             Docker daemon, which this project already requires of everyone. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-rabbitmq</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
