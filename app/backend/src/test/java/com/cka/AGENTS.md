@@ -38,6 +38,11 @@ adding anything to it.
 - **Unit tests are not the acceptance criteria.** A ticket's criteria get a shell check under
   [`app/scripts/tests/`](../../../../../../scripts/tests/) that runs against the real running stack.
   Tests here prove the code; those prove the promise. Both, not either.
+- **Where a criterion names the real thing, prove it here and don't repeat it in the shell.**
+  T07's criterion is "via the real broker", and `RabbitEventBusTest` satisfies it with a
+  Testcontainers RabbitMQ. Its shell check deliberately asserts something different — that the
+  *composed* stack is wired up, which Testcontainers cannot see, since Boot hands it the broker's
+  address. Two checks asserting the same thing are one check and some noise.
 
 ## Gotchas specific to this package
 

@@ -2,6 +2,7 @@ package com.cka.provider.eventbus;
 
 import com.cka.core.event.PipelineEvent;
 import com.cka.provider.ProviderHealth;
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -53,6 +54,27 @@ public class RabbitEventBus implements EventBus {
         this.connectionFactory = connectionFactory;
         this.messageConverter = messageConverter;
         this.exchange = exchange;
+    }
+
+    /**
+     * Declares the exchange at startup rather than waiting for the first subscriber.
+     *
+     * <p>Two reasons. An event published before anything has subscribed would otherwise go to an
+     * exchange that does not exist yet, and AMQP drops that silently — no error at the publisher,
+     * no message. And a broker that is unreachable, or credentials that are wrong, should be
+     * visible at boot rather than at whatever hour the first recording lands.
+     *
+     * <p>Failure is logged, not thrown. The backend stays up and reports the problem through
+     * {@link #checkHealth()}; taking the whole application down because one provider is
+     * unreachable is the same mistake as letting it fail the container healthcheck.
+     */
+    @PostConstruct
+    void declareExchange() {
+        try {
+            amqpAdmin.declareExchange(exchange);
+        } catch (Exception e) {
+            log.warn("Could not declare the {} exchange at startup: {}", EXCHANGE, e.getMessage());
+        }
     }
 
     @Override

@@ -7,7 +7,8 @@ The CKA core: Spring Boot 4, Java 25, Maven.
 | Run the stack | `docker compose up -d` (from the repo root) |
 | Apply a code change | `./refresh-backend.sh` — compiles in the container, DevTools restarts |
 | Apply a **`pom.xml`** change | `docker compose restart backend` — hot reload cannot add a jar to a running JVM |
-| Tests | `docker compose exec backend mvn test`, or `mvn test` here if you have a local JDK 25 |
+| Tests | `./mvnw test` here — needs a running Docker daemon, see below |
+| Tests, in the container | `docker compose exec backend mvn test` |
 | Format | `./mvnw spotless:apply` — Palantir style, enforced by CI and the pre-commit hook |
 | Health | `/actuator/health` on port 8080 |
 | Debugger | JDWP on 5005, listening from startup |
@@ -25,6 +26,10 @@ The CKA core: Spring Boot 4, Java 25, Maven.
   for the annotation before hand-writing what it already generates. Nothing in this package needs
   it yet (a `@SpringBootApplication` main class and a test have no boilerplate to remove), but
   domain and provider classes from T05 onward should default to it.
+- **Some tests start a real broker.** `RabbitEventBusTest` runs RabbitMQ through
+  Testcontainers, so `mvn test` needs a Docker daemon it can reach. Running Maven *inside* a
+  container will not do unless that container can reach the host's Docker socket — use
+  `./mvnw` on the host, which is why the Maven wrapper is committed.
 - **Tests before code**, and every acceptance criterion gets one that runs in CI.
 - **Check before you build** — read the existing source before implementing a ticket, since an
   earlier one may already have covered part of it.
