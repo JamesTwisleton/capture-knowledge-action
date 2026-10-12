@@ -80,7 +80,7 @@ jobs:
         working-directory: app/frontend
 
   acceptance:
-    name: Acceptance criteria (T01–T04)
+    name: Acceptance criteria (T01–T07)
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:

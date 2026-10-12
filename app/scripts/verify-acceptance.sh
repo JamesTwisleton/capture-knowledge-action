@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Proves the acceptance criteria for T01–T04 against a real running stack.
+# Proves the acceptance criteria for T01–T07 against a real running stack.
 # CI runs this on every push; so can you:
 #
 #     ./app/scripts/verify-acceptance.sh        KEEP_UP=1 to leave the stack running
@@ -26,6 +26,8 @@ source scripts/tests/lib.sh
 export BACKEND_PORT="${BACKEND_PORT:-8080}"
 export FRONTEND_PORT="${FRONTEND_PORT:-3000}"
 export JVM_DEBUG_PORT="${JVM_DEBUG_PORT:-5005}"
+# The broker's management API, which t07 queries to see what the backend declared.
+export EVENT_BUS_MGMT_PORT="${EVENT_BUS_MGMT_PORT:-15672}"
 SERVICES="event-bus backend frontend"
 
 cleanup() {
@@ -162,7 +164,8 @@ echo "Running acceptance checks…"
 
 # Phase 1: everything that only reads — safe to run together against the stack.
 run_phase scripts/tests/t01_environment.test.sh scripts/tests/t01_debugger.test.sh \
-          scripts/tests/t01_documentation.test.sh scripts/tests/hygiene.test.sh
+          scripts/tests/t01_documentation.test.sh scripts/tests/hygiene.test.sh \
+          scripts/tests/t07_event_bus.test.sh
 
 # Phase 2: each of these forces a real recompile (Maven, Turbopack). Running them
 # alongside phase 1's HTTP probes is what made t01_environment see sustained 500s on
