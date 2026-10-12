@@ -3,13 +3,19 @@ name: Publish site
 # Branch-based Pages can only serve the repo root or /docs. We want /docs for
 # documentation, so the site is published from site/ by this workflow instead.
 #
-# One-time repo setting: Settings → Pages → Source → "GitHub Actions".
-# Published URLs are unchanged: site/index.html → /, site/app/ → /app/.
+# This needs Settings → Pages → Source set to "GitHub Actions". If it is ever
+# switched back to a branch, Pages serves /docs — which has no index.html — and
+# the site 404s until the setting is restored.
+#
+# Published URLs: site/index.html → /, site/app/ → /app/.
+#
+# Every push to main redeploys, not just ones touching site/, so a deployment
+# lost to a settings change comes back on the next push rather than waiting for
+# the next site/ edit.
 
 on:
   push:
     branches: [main]
-    paths: ["site/**", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:
