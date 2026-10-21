@@ -55,19 +55,26 @@ class RabbitEventBusConfiguration {
      * <p>This is also why {@code com.cka.core.event} needs no Jackson annotations: the type is
      * recorded by the adapter that does the serialising, leaving the records compiling against
      * nothing but the JDK.
+     *
+     * <p>A bean in its own right, rather than a local inside the converter below, so that Spring
+     * runs its {@code afterPropertiesSet()}. That is where the name-to-class map set here is
+     * inverted into the class-to-name one publishing consults, and a mapper built as a local
+     * never gets that call: nothing registers it, so nothing runs its lifecycle. Publishing then
+     * falls back to the fully-qualified class name and the consumer rejects it as an untrusted
+     * package — a failure that surfaces on the far side of the broker, nowhere near its cause.
      */
     @Bean
-    MessageConverter pipelineEventMessageConverter() {
+    DefaultClassMapper pipelineEventClassMapper() {
         Map<String, Class<?>> byName = Arrays.stream(PipelineEvent.class.getPermittedSubclasses())
                 .collect(Collectors.toMap(Class::getSimpleName, Function.identity()));
         var classMapper = new DefaultClassMapper();
         classMapper.setIdClassMapping(byName);
-        // Built by hand, so nothing calls afterPropertiesSet() for us — and that is where
-        // DefaultClassMapper inverts the map above into the one it consults when writing a
-        // header. Skip it and publishing silently falls back to the fully-qualified class
-        // name, which the consumer then rejects as an untrusted package. The failure shows up
-        // as a listener exception on the far side, nowhere near this line.
-        classMapper.afterPropertiesSet();
+        return classMapper;
+    }
+
+    /** Carries an event as JSON, tagged with the type id that {@link #pipelineEventClassMapper} assigns. */
+    @Bean
+    MessageConverter pipelineEventMessageConverter(DefaultClassMapper classMapper) {
         var converter = new JacksonJsonMessageConverter();
         converter.setClassMapper(classMapper);
         return converter;

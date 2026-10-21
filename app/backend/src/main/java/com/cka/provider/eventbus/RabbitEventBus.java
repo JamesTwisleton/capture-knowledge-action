@@ -111,9 +111,8 @@ public class RabbitEventBus implements EventBus {
                 log.warn("Ignoring {} delivered to a {} subscriber", event.getClass(), type);
             }
         });
-        // Built by hand rather than by the container, so its own initialisation has to be
-        // invoked explicitly; start() alone leaves it without the plumbing it sets up here.
-        container.afterPropertiesSet();
+        // start() runs afterPropertiesSet() itself if it has not already run, so there is no
+        // manual initialisation to make here.
         container.start();
         containers.add(container);
     }

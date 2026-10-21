@@ -7,6 +7,10 @@ import java.util.function.Consumer;
 /**
  * Publish and subscribe, deliberately simple (PRD 8.1). Every handoff in the pipeline goes
  * through here: no stage, and no provider, calls the next one directly.
+ *
+ * <p>Delivery and ordering guarantees beyond the basics stay out of this interface. Don't add
+ * acknowledgements or partitions to it to suit one broker: every implementation then has to
+ * honour them, the in-memory one used by tests included.
  */
 public interface EventBus extends Provider {
 
