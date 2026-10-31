@@ -54,7 +54,7 @@ class SqlitePersistenceConfiguration {
      */
     @Bean
     FlywayConfigurationCustomizer sqliteDatabaseDirectory(Environment environment) {
-        return configuration -> createDatabaseDirectory(environment.getProperty("spring.datasource.url", ""));
+        return _ -> createDatabaseDirectory(environment.getProperty("spring.datasource.url", ""));
     }
 
     /** Does nothing for any other database: a server URL names a host, not a path to create. */
