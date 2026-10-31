@@ -73,6 +73,18 @@ hand — a test. `app/scripts/verify-acceptance.sh` brings the environment up an
 add a file there as tickets land. Assert behaviour, not configuration: an open port is not a
 debugger, and a running container is not a service that answers.
 
+- **Adding a check is three edits, not one.** The new file under `app/scripts/tests/`, a line
+  registering it in the right phase of `verify-acceptance.sh`, and the upper bound of the
+  `acceptance` job's name in `ci.yml` — `Acceptance criteria (T01–T10)`. That name is the only
+  place a reader sees how far the suite reaches, so it goes stale the moment a ticket adds a check
+  and leaves it alone. Bump it in the same commit as the test, and say so in the PR.
+- **Rename that job freely, but never the Spotless one.** The single required status check on
+  `main` is `Java formatting (Spotless)`, matched by its exact name: renaming it would leave the
+  requirement waiting on a context that never reports again, and block every PR. The acceptance
+  job is not a required check, which is what makes bumping its range safe. Verify with
+  `gh api repos/:owner/:repo/branches/main/protection --jq '.required_status_checks.contexts'`
+  before renaming any job.
+
 **The repository has four places, and things belong in exactly one.** `app/` is everything
 runnable — backend, frontend, compose file, scripts, entry points; work from there, not the root.
 `docs/` is all documentation, the PRD included. `site/` is the published GitHub Pages site,
