@@ -51,6 +51,35 @@
             <artifactId>spring-boot-starter-amqp</artifactId>
         </dependency>
 
+        <!-- Spring Data JDBC for the SQL persistence layer (T10), the shared foundation prompt
+             storage (T11) and the audit chain (T14) both build on. JDBC rather than JPA: the
+             mapping here is rows to records with no lazy loading, dirty checking or session to
+             reason about, and Spring Data JDBC writes exactly the SQL you would have written. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jdbc</artifactId>
+        </dependency>
+
+        <!-- Versioned schema migrations, applied at startup and checked in beside the schema they
+             create. The starter, not flyway-core on its own: Boot 4 splits auto-configuration into
+             a module per technology, so flyway-core alone puts Flyway on the classpath without
+             anything that runs it, and migrations are silently never applied. SQLite support is
+             inside flyway-core, so no database module is needed on top — the only SQLite artifact
+             Flyway publishes is for its native-connectors path, which this does not use. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway</artifactId>
+        </dependency>
+
+        <!-- SQLite: the default database, and the only one the MVP tests (T10). A single file,
+             so there is no server to run and no credentials to configure. Runtime scope — nothing
+             compiles against the driver, Boot resolves it from the jdbc:sqlite: URL. -->
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
