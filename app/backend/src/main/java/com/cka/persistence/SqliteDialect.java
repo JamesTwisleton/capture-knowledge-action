@@ -4,6 +4,7 @@ import org.springframework.data.jdbc.core.dialect.JdbcDialect;
 import org.springframework.data.relational.core.dialect.AbstractDialect;
 import org.springframework.data.relational.core.dialect.LimitClause;
 import org.springframework.data.relational.core.dialect.LockClause;
+import org.springframework.data.relational.core.sql.LockOptions;
 
 /**
  * Teaches Spring Data JDBC to speak SQLite, which it does not ship a dialect for (T10).
@@ -67,7 +68,7 @@ public final class SqliteDialect extends AbstractDialect implements JdbcDialect 
     private static final LockClause LOCK_CLAUSE = new LockClause() {
 
         @Override
-        public String getLock(org.springframework.data.relational.core.sql.LockOptions lockOptions) {
+        public String getLock(LockOptions lockOptions) {
             return "";
         }
 
@@ -90,9 +91,14 @@ public final class SqliteDialect extends AbstractDialect implements JdbcDialect 
     }
 
     /**
-     * Off, because it needs the window functions and {@code FOR UPDATE} semantics the single
-     * query loading optimisation is built on. Spring Data falls back to one query per aggregate,
-     * which is what HsqlDb does too.
+     * Off, matching {@code H2Dialect} and {@code HsqlDbDialect} — the two other dialects for
+     * embedded, file-backed databases, and the only shipped ones that turn it off at all. Spring
+     * Data then loads an aggregate with one query per table instead of one query in total.
+     *
+     * <p>Neither those dialects nor the {@code Dialect} interface records <em>why</em> they
+     * disable it, so this is a conservative match rather than a reasoned one: the optimisation is
+     * untested against SQLite, and nothing here loads a nested aggregate to benefit from it.
+     * Worth revisiting with a measurement if a later ticket's reads get deep enough to care.
      */
     @Override
     public boolean supportsSingleQueryLoading() {
