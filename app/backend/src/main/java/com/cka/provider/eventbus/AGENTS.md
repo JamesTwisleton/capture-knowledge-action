@@ -25,10 +25,17 @@ tests only, in [`com.cka.testsupport`](../../../../../../test/java/com/cka/tests
   nothing but the JDK on the classpath, so the mapping from event to wire identity lives in
   `RabbitEventBusConfiguration` and is derived from the sealed interface's permitted subclasses —
   a seventh event needs no edit.
-- **`DefaultClassMapper` and the `RabbitTemplate` are beans here on purpose**, rather than locals
-  or Boot's own. Changing either puts fully-qualified Java class names on the wire, which the
-  consumer rejects as an untrusted package — a failure that surfaces on the far side of the
-  broker, nowhere near its cause. Both carry the reason in their javadoc.
+- **`DefaultClassMapper` is a bean here on purpose**, not a local inside the converter. Spring
+  runs `afterPropertiesSet()` only on something it registers, and that call is what inverts the id
+  map into the class-to-name direction publishing needs. As a local the step is skipped in
+  silence, fully-qualified Java class names go on the wire, and the consumer rejects them as an
+  untrusted package — a failure that surfaces on the far side of the broker, nowhere near its
+  cause. The javadoc carries the reason.
+- **The `RabbitTemplate` is Boot's, not one declared here.** Auto-configuration applies the
+  `MessageConverter` bean to it, and the `spring.rabbitmq.template.*` properties besides, which a
+  hand-declared template would silently ignore. It resolves the converter with `getIfUnique()`,
+  so keep this package to exactly one `MessageConverter` bean: a second one makes that return
+  nothing, and publishing drops back to Java serialisation without a word.
 
 ## Gotchas
 

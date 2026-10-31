@@ -16,15 +16,19 @@ source scripts/tests/lib.sh
 FAILURES=0
 
 MGMT_PORT="${EVENT_BUS_MGMT_PORT:-15672}"
-USER="${RABBITMQ_USER:-guest}"
-PASS="${RABBITMQ_PASS:-guest}"
+# MGMT_USER, not USER: that one already means the logged-in account, and overwriting it is a
+# trap for whoever adds a line below that expects it to still say who is running this.
+# verify-acceptance.sh exports both of these from .env; the defaults are for running this file
+# on its own against a stack started by hand.
+MGMT_USER="${RABBITMQ_USER:-guest}"
+MGMT_PASS="${RABBITMQ_PASS:-guest}"
 # %2F is "/" percent-encoded — RabbitMQ's default virtual host is literally named "/", and it
 # appears as a path segment in these URLs, so it has to be escaped or the path breaks.
 API="http://localhost:${MGMT_PORT}/api"
 
 # -u sends HTTP basic auth credentials. The management API is a separate HTTP interface on
 # its own port, unrelated to the AMQP port the application connects on.
-mgmt() { curl -fsS -m 5 -u "${USER}:${PASS}" "$@"; }
+mgmt() { curl -fsS -m 5 -u "${MGMT_USER}:${MGMT_PASS}" "$@"; }
 
 healthy event-bus \
   && pass "event-bus is healthy" \

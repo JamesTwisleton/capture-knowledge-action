@@ -41,6 +41,13 @@ public class RabbitEventBus implements EventBus {
     private final ConnectionFactory connectionFactory;
     private final MessageConverter messageConverter;
     private final TopicExchange exchange;
+    // Added by subscribe(), iterated by stopListening() on the shutdown thread. Spring's own
+    // lifecycle orders those two today, but nothing here says so: let a subscriber ever be wired
+    // lazily and a plain ArrayList's add has no happens-before edge to that iteration, leaving a
+    // container the shutdown thread never sees still consuming while the beans its listener calls
+    // into are destroyed. Writes are one per subscriber at startup against a single iteration at
+    // shutdown, so the copy per write costs nothing, and the snapshot iterator cannot throw the
+    // way a synchronizedList iterated without holding its lock can.
     private final List<SimpleMessageListenerContainer> containers = new CopyOnWriteArrayList<>();
 
     RabbitEventBus(

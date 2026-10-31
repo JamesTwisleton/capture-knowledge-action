@@ -6,8 +6,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.amqp.core.TopicExchange;
-import org.springframework.amqp.rabbit.connection.ConnectionFactory;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.DefaultClassMapper;
 import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
@@ -72,27 +70,20 @@ class RabbitEventBusConfiguration {
         return classMapper;
     }
 
-    /** Carries an event as JSON, tagged with the type id that {@link #pipelineEventClassMapper} assigns. */
+    /**
+     * Carries an event as JSON, tagged with the type id that {@link #pipelineEventClassMapper}
+     * assigns.
+     *
+     * <p>Boot's auto-configured {@code RabbitTemplate} picks this up by type, which is why no
+     * template is declared here — doing so would also drop every {@code spring.rabbitmq.template.*}
+     * property on the floor. It resolves it with {@code getIfUnique()}, though, so this must stay
+     * the only {@code MessageConverter} bean in the context: a second one and publishing falls
+     * back to Java serialisation with nothing said about it.
+     */
     @Bean
     MessageConverter pipelineEventMessageConverter(DefaultClassMapper classMapper) {
         var converter = new JacksonJsonMessageConverter();
         converter.setClassMapper(classMapper);
         return converter;
-    }
-
-    /**
-     * Declared here rather than left to auto-configuration so that publishing is guaranteed to
-     * use the converter above. Boot will set a {@code MessageConverter} bean on the template it
-     * builds, but only if the bean exists by the time that auto-configuration runs — and this
-     * one is behind a {@code @ConditionalOnProperty}. When it loses that race the template
-     * falls back to writing the fully-qualified Java class name into {@code __TypeId__}, which
-     * the receiving side then rejects as an untrusted package: a failure that surfaces as a
-     * listener exception at runtime, long after the publish looked like it worked.
-     */
-    @Bean
-    RabbitTemplate pipelineEventRabbitTemplate(ConnectionFactory connectionFactory, MessageConverter converter) {
-        var template = new RabbitTemplate(connectionFactory);
-        template.setMessageConverter(converter);
-        return template;
     }
 }

@@ -46,6 +46,15 @@ all_healthy() { for s in $SERVICES; do healthy "$s" || return 1; done; }
 # Compose needs a .env; it is gitignored, so CI starts from the committed template.
 [ -f .env ] || cp .env.example .env
 
+# The broker credentials t07 authenticates to the management API with. Read back out of .env
+# rather than defaulted, because .env is the pair Compose gives the broker: hard-coding guest
+# here would fail a correctly configured stack the moment .env holds anything else — and the
+# whole point of that check is to prove these credentials are the ones the broker accepts.
+# An explicit environment override still wins, as it does for the ports above.
+env_value() { sed -n "s/^$1=//p" .env | tail -1; }
+export RABBITMQ_USER="${RABBITMQ_USER:-$(env_value RABBITMQ_USER)}"
+export RABBITMQ_PASS="${RABBITMQ_PASS:-$(env_value RABBITMQ_PASS)}"
+
 # Both containers run as UID 1000, matching a real developer's usual host UID — but CI
 # checks the repo out as the runner's own account, which isn't UID 1000 and leaves the
 # tree group/other read-only. Docker Desktop's mount layer doesn't enforce that, which
