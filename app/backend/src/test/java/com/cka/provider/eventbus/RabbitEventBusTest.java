@@ -169,7 +169,7 @@ class RabbitEventBusTest {
         // In publish order, which one publishing thread, one channel, one queue and one consumer
         // is the arrangement AMQP guarantees.
         var received = new ArrayList<PipelineEvent>();
-        for (var ignored : EVERY_KIND_OF_EVENT) {
+        for (var _ : EVERY_KIND_OF_EVENT) {
             received.add(next(inbox));
         }
         assertThat(received).containsExactlyElementsOf(EVERY_KIND_OF_EVENT);

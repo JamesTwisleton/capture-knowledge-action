@@ -174,7 +174,7 @@ echo "Running acceptance checks…"
 # Phase 1: everything that only reads — safe to run together against the stack.
 run_phase scripts/tests/t01_environment.test.sh scripts/tests/t01_debugger.test.sh \
           scripts/tests/t01_documentation.test.sh scripts/tests/hygiene.test.sh \
-          scripts/tests/t07_event_bus.test.sh
+          scripts/tests/t07_event_bus.test.sh scripts/tests/t10_sql_persistence.test.sh
 
 # Phase 2: each of these forces a real recompile (Maven, Turbopack). Running them
 # alongside phase 1's HTTP probes is what made t01_environment see sustained 500s on
