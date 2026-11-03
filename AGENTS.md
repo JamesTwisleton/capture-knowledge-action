@@ -75,7 +75,7 @@ debugger, and a running container is not a service that answers.
 
 - **Adding a check is three edits, not one.** The new file under `app/scripts/tests/`, a line
   registering it in the right phase of `verify-acceptance.sh`, and the upper bound of the
-  `acceptance` job's name in `ci.yml` — `Acceptance criteria (T01–T10)`. That name is the only
+  `acceptance` job's name in `ci.yml` — `Acceptance criteria (T01–T11, T14)` as of T11. That name is the only
   place a reader sees how far the suite reaches, so it goes stale the moment a ticket adds a check
   and leaves it alone. Bump it in the same commit as the test, and say so in the PR.
 - **Rename that job freely, but never the Spotless one.** The single required status check on
@@ -94,6 +94,27 @@ stay that way. Link to `README.md` rather than restating it.
 **Secrets live in `app/.env`, which is gitignored.** `app/.env.example` is the committed template.
 From T20, `./setup.sh` writes real credentials into `app/.env` — never track it, never paste its contents
 into a commit, a comment or an issue.
+
+## Before you raise a PR, review it adversarially
+
+Once the work is green and before `gh pr create`, run a separate pass over the whole diff as a
+hostile reviewer who holds the conventions above and wants the change to be **smaller**. Not a
+summary of what you built — a hunt for what should not survive. Findings go in the PR, including
+the ones you decided not to act on and why.
+
+- **Brevity is the goal.** Every field, method, test, comment, column and config key earns its
+  place or goes. The usual catches: a field nothing populates, a method with one caller that
+  duplicates what the caller already has, a second check asserting what another check already
+  proves, a comment restating the line below it, an index column that changes no query plan.
+- **Verify the claims, do not re-read them.** A comment saying an index serves a sort gets an
+  `EXPLAIN QUERY PLAN`; one saying a check catches something gets that something broken on
+  purpose to watch it fail. A justification nobody tested is a guess in a confident voice.
+- **Check the standing traps.** An applied migration is immutable, comments included. A new
+  folder holding source needs an `AGENTS.md`. A new acceptance check is three edits. An ordering
+  guarantee needs a column, not a hope. A `@NonNull` field added to a core record breaks every
+  fixture that builds one — find them all, including the ones in unrelated tests.
+- **Re-run everything afterwards**, because an adversarial pass that changes nothing was not a
+  review, and one that changes something invalidates the green run that preceded it.
 
 ## PRD versioning — read this before editing README.md or anything under prd/
 
