@@ -1,7 +1,7 @@
 # `com.cka.persistence` — the SQL foundation
 
-The shared database layer (T10) that the audit store uses today and that prompt storage (T11)
-and the widened audit chain (T14) build on. **Spring Data JDBC**, **Flyway**, **SQLite by
+The shared database layer (T10) that the audit store and its widened action decision chain (T14)
+use today, and that prompt storage (T11) builds on next. **Spring Data JDBC**, **Flyway**, **SQLite by
 default**. No repository or table lives here — those belong to whichever capability owns the
 data, under [`com.cka.provider`](../provider/AGENTS.md).
 
@@ -14,10 +14,17 @@ data, under [`com.cka.provider`](../provider/AGENTS.md).
 
 ## Conventions specific to this package
 
-- **A new table is a new migration file, never an edit to an existing one.** Flyway checksums
-  what it has applied, so changing `V1__audit_entry.sql` breaks every database that already ran
-  it. T11 and T14 add `V2…`, `V3…` beside it. `LaterMigrationTest` is what proves that works
-  against a database already holding rows.
+- **A new table or column is a new migration file, never an edit to an existing one.** Flyway
+  checksums what it has applied, so changing `V1__audit_entry.sql` breaks every database that
+  already ran it. T14 widened `audit_entry` by adding `V2…` beside it; T11 adds `V3…`.
+  `LaterMigrationTest` is what proves that works against a database already holding rows — and
+  its stand-in migration is renumbered past the real ones each time one lands, because Flyway
+  refuses two migrations claiming the same version.
+- **Adding a `NOT NULL` column needs a default, on every engine worth substituting.** SQLite,
+  Postgres and MySQL all refuse one without, since the rows already there have to be given
+  something. Pick the value that is true of those rows rather than a convenient one — `V2`
+  backfills `decider_kind` as `SYSTEM` because every entry written before it was the pipeline's
+  own work.
 - **Prefer a derived query to SQL.** Spring Data JDBC renders them *through the dialect*, so
   `findByChainIdOrderByIdAsc` is correct SQL for whichever database is configured. A hand-written
   string is frozen SQL, and it is where a SQLite-ism would quietly leak in and break the
@@ -26,7 +33,10 @@ data, under [`com.cka.provider`](../provider/AGENTS.md).
   surrogate key — a row type next to the repository does that, and converts at the boundary.
   `AuditEntryRow` is the pattern.
 - **Column types are the ones every SQL database has.** A UUID is `TEXT`, an enum is its name
-  (not its ordinal, which reordering the enum would silently reinterpret).
+  (not its ordinal, which reordering the enum would silently reinterpret), and an instant is
+  `INTEGER` epoch milliseconds. Both of the last two are portable, but only the integer compares
+  correctly: as ISO-8601 text, `09:15:00Z` sorts *after* `09:15:00.500Z`, because the fraction's
+  `.` is below `Z` — so two entries in the same second can fall either side of a window's bound.
 
 ## Gotchas
 

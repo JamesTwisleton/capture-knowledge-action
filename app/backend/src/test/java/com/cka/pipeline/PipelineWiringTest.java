@@ -31,6 +31,9 @@ import com.cka.provider.workitem.WorkItemProvider;
 import com.cka.testsupport.InMemoryEventBus;
 import com.cka.testsupport.Ticket;
 import com.cka.testsupport.TicketMapper;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -153,11 +156,11 @@ class PipelineWiringTest {
 
         // The audit trail subscribes first so that, on this synchronous bus, it records each
         // event before the stage reacting to it publishes the next one.
-        new AuditTrail(audit, bus).start();
+        new AuditTrail(audit, bus, clock()).start();
         new CaptureStage(listener, bus).start();
         new SummariseStage(llm, bus).start();
         new KnowledgeStage(knowledge, bus).start();
-        new ActionStage(decision, workItems, bus, audit).start();
+        new ActionStage(decision, workItems, bus, auditTrail()).start();
 
         // CaptureStage registered a consumer with the listener; a real one would call it on
         // finding a recording, so calling it here is what "a fake event" means for this stage.
@@ -190,7 +193,7 @@ class PipelineWiringTest {
     void theActionStageRunsAloneOnAKnowledgeStoredEventFromAnywhere() {
         when(workItems.candidatePool()).thenReturn(POOL);
         when(decision.detectMentions(KNOWLEDGE, POOL)).thenReturn(List.of(LOGIN_BUG_MENTION));
-        new ActionStage(decision, workItems, bus, audit).start();
+        new ActionStage(decision, workItems, bus, auditTrail()).start();
         var chainId = UUID.randomUUID();
 
         bus.publish(
@@ -209,7 +212,7 @@ class PipelineWiringTest {
     void aMentionMatchingNoCandidateIsAuditedAndNeverProposed() {
         when(workItems.candidatePool()).thenReturn(POOL);
         when(decision.detectMentions(KNOWLEDGE, POOL)).thenReturn(List.of(PAYMENTS_MENTION));
-        new ActionStage(decision, workItems, bus, audit).start();
+        new ActionStage(decision, workItems, bus, auditTrail()).start();
         var chainId = UUID.randomUUID();
 
         bus.publish(
@@ -217,11 +220,23 @@ class PipelineWiringTest {
 
         assertThat(bus.published()).noneMatch(ActionProposed.class::isInstance);
         verify(audit).record(auditEntries.capture());
+        // That it is audited at all, and against this chain. What the entry itself carries is
+        // AuditTrailTest's subject, not this test's.
         assertThat(auditEntries.getValue())
-                .isEqualTo(AuditEntry.builder()
-                        .chainId(chainId)
-                        .step(AuditStep.MENTION_UNMATCHED)
-                        .detail("No candidate matched \"the old payments ticket\"")
-                        .build());
+                .extracting(AuditEntry::chainId, AuditEntry::step)
+                .containsExactly(chainId, AuditStep.MENTION_UNMATCHED);
+    }
+
+    /**
+     * Fixed, because nothing here asserts on time — the chain's timestamps are
+     * {@code AuditTrailTest}'s subject.
+     */
+    private static Clock clock() {
+        return Clock.fixed(Instant.parse("2026-10-07T09:15:00Z"), ZoneOffset.UTC);
+    }
+
+    /** The audit service in front of the mocked store, which is what a stage is handed. */
+    private AuditTrail auditTrail() {
+        return new AuditTrail(audit, bus, clock());
     }
 }

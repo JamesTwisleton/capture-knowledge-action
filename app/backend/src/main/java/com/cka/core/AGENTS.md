@@ -19,13 +19,17 @@ payloads that carry these between stages are in [`event/`](event/AGENTS.md).
 
 - **`null` means "absent" on exactly the fields whose javadoc says so** —
   `CapturedContent.platformSummary`, `WorkItem.description`, `WorkItem.parentId`,
-  `Mention.workItemId`. No `Optional` record components: it is not serialisable as-is and Java's
+  `Mention.workItemId`, `Decider.name`, and the four fields of `AuditEntry` that only some steps
+  have. `AuditEntry.confidence` is a boxed `Double` for that reason: a primitive would make
+  "nobody scored this" indistinguishable from a real score of zero. No `Optional` record components: it is not serialisable as-is and Java's
   own guidance is to use it for return types only.
 - **A provider's own vocabulary never lands here.** A GitHub issue, a Jira epic and a Drive file
   are mapped to these types in their provider. `WorkItem.providerTypeName` exists precisely so the
   provider's label survives that mapping without a vendor type leaking in (PRD 7.9).
-- **Extend a type when its ticket needs it, not before.** `AuditEntry` is deliberately thin —
-  T14 adds provider, model, confidence, decider and prompt version. `ActionType` lists only the
+- **Extend a type when its ticket needs it, not before.** `AuditEntry` grew from three fields to
+  nine in T14, because PRD 9.3 asks all nine of an audit record; `AuditEntry.promptVersion` is
+  the one field nothing populates yet, and T11 is what versions a prompt to put there. `Summary`
+  deliberately does *not* carry a prompt version for the same reason. `ActionType` lists only the
   MVP's `COMMENT` and `CLOSE`; add a type alongside the work item provider operation that performs
   it.
 
