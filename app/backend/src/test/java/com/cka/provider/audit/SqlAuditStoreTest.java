@@ -270,7 +270,7 @@ class SqlAuditStoreTest {
         // record rather than on the tables existing — a table could exist for other reasons.
         var applied = jdbc.queryForList("SELECT version, success FROM flyway_schema_history ORDER BY installed_rank");
 
-        assertThat(applied).extracting(row -> row.get("version")).containsExactly("1", "2");
+        assertThat(applied).extracting(row -> row.get("version")).containsExactly("1", "2", "3");
         assertThat(applied).extracting(row -> row.get("success")).containsOnly(1);
     }
 

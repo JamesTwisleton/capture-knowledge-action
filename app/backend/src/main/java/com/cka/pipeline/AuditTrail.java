@@ -82,9 +82,10 @@ public class AuditTrail {
                         .detail("Summarised by " + e.summary().producedBy().provider() + "/"
                                 + e.summary().producedBy().model())
                         .producedBy(e.summary().producedBy())
-                        // The prompt version belongs on this step — it is the summary's own fact,
-                        // and the rest of the chain reads it from here. T11 versions prompts;
-                        // until it lands there is nothing to record.
+                        // The prompt version belongs on this step and nowhere else in the chain:
+                        // it is the summary's own fact, and an action several steps later reads
+                        // it from here rather than carrying a copy (PRD 7.8).
+                        .promptVersion(e.summary().promptVersion())
                         .build();
             case KnowledgeStored e ->
                 entry(e.chainId(), AuditStep.KNOWLEDGE_STORED)

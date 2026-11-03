@@ -12,6 +12,7 @@ and the record to everything PRD 9.3 requires and added the decision history.
 | Ordering column | `id`, `INTEGER PRIMARY KEY AUTOINCREMENT` |
 | Selected by | `cka.provider.audit=sql` (`CKA_PROVIDER_AUDIT`) |
 | Written by | `AuditTrail` only — see [`pipeline/AGENTS.md`](../../pipeline/AGENTS.md) |
+| Health | `DatabaseHealth.check()`, shared with the prompt store |
 
 - **`chain()` returns entries in the order they were recorded.** The activity view and the "trace
   any action back to its recording" criterion (T14) both read it that way, so a SQL implementation
@@ -28,7 +29,7 @@ and the record to everything PRD 9.3 requires and added the decision history.
   an action type are columns. How a step is phrased is not — `detail` is what triage and the
   activity view show a person, and the one place its wording is decided is `AuditTrail`.
 - **Widen the table with a new migration, never by editing an applied one.** Flyway checksums
-  what it has applied. T14 added `V2…` beside `V1`; T11 adds `V3…`.
+  what it has applied. T14 added `V2…` beside `V1`; T11 took `V3…`.
 - **`AuditEntryRow` flattens two core records into four columns** — `Provenance` to
   `provider`/`model`, `Decider` to `decider_kind`/`decider_name`. Not for the sake of normalising:
   it is what makes "everything this model decided" and "everything James rejected" ordinary

@@ -12,6 +12,7 @@ tickets, its implementations (PRD 7.2):
 | [`workitem`](workitem/AGENTS.md) | `WorkItemProvider`, `WorkItemMapper` | GitHub Issues (T13) |
 | [`eventbus`](eventbus/AGENTS.md) | `EventBus` | RabbitMQ (T07) |
 | [`audit`](audit/AGENTS.md) | `AuditStore` | SQL (T10, T14) |
+| [`prompt`](prompt/AGENTS.md) | `PromptStore` | SQL (T11) |
 
 Tests mock these interfaces directly; the fixtures a mock cannot replace live in
 [`com.cka.testsupport`](../../../../../test/java/com/cka/testsupport/AGENTS.md).

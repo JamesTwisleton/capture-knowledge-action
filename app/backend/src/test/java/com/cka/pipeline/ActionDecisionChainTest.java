@@ -222,6 +222,7 @@ class ActionDecisionChainTest {
         var summary = Summary.builder()
                 .text("Decided: " + content.title())
                 .producedBy(LLM)
+                .promptVersion(1)
                 .build();
         var page = PageReference.builder()
                 .id(content.title() + ".md")
