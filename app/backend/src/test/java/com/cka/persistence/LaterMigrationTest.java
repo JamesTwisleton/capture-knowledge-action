@@ -13,7 +13,8 @@ import org.junit.jupiter.api.Test;
  * T10's second acceptance criterion: "a migration added by a later ticket applies cleanly to an
  * existing database". The one claim this layer makes that nothing else can check — the first
  * criterion is covered by the app starting at all, and {@code SqlAuditStoreTest} asserts that
- * V1 ran, but neither says anything about what happens when T11 and T14 add theirs.
+ * the shipped ones ran, but neither says anything about what happens when the next ticket adds
+ * one — T14's V2 was exactly that case, and T11's is the next.
  *
  * <p>Driven through Flyway's own API rather than a Spring context, because the point is to
  * migrate the same database twice from two different sets of migrations, which one application
@@ -34,8 +35,9 @@ class LaterMigrationTest {
         // not prove much, since the risk in a later migration is what it does to existing rows.
         Flyway.configure().dataSource(url, null, null).locations(SHIPPED).load().migrate();
         try (var connection = DriverManager.getConnection(url);
-                var insert = connection.prepareStatement(
-                        "INSERT INTO audit_entry (chain_id, step, detail) VALUES ('chain-1', 'KNOWLEDGE_STORED', 'before')")) {
+                var insert = connection.prepareStatement("""
+                        INSERT INTO audit_entry (chain_id, step, recorded_at, detail, decider_kind)
+                        VALUES ('chain-1', 'KNOWLEDGE_STORED', 1759828500000, 'before', 'SYSTEM')""")) {
             insert.executeUpdate();
         }
 
@@ -45,16 +47,17 @@ class LaterMigrationTest {
                 .load()
                 .migrate();
 
-        // Only the new one ran: V1 is already recorded and checksummed, so Flyway leaves it be.
+        // Only the new one ran: the shipped migrations are already recorded and checksummed, so
+        // Flyway leaves them be.
         assertThat(later.migrationsExecuted).isEqualTo(1);
         assertThat(later.success).isTrue();
 
         try (var connection = DriverManager.getConnection(url);
                 var statement = connection.createStatement();
-                var rows = statement.executeQuery("SELECT detail, decided_by FROM audit_entry")) {
+                var rows = statement.executeQuery("SELECT detail, reviewed_by FROM audit_entry")) {
             assertThat(rows.next()).as("the row written before the migration").isTrue();
             assertThat(rows.getString("detail")).isEqualTo("before");
-            assertThat(rows.getString("decided_by"))
+            assertThat(rows.getString("reviewed_by"))
                     .as("a column a later ticket added")
                     .isNull();
             assertThat(rows.next()).isFalse();

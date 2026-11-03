@@ -1,7 +1,10 @@
 package com.cka.provider.audit;
 
+import com.cka.core.ActionType;
 import com.cka.core.AuditEntry;
+import com.cka.core.AuditStep;
 import com.cka.provider.ProviderHealth;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +45,16 @@ public class SqlAuditStore implements AuditStore {
     @Override
     public List<AuditEntry> chain(UUID chainId) {
         return entries.findByChainIdOrderByIdAsc(chainId.toString()).stream()
+                .map(AuditEntryRow::toEntry)
+                .toList();
+    }
+
+    @Override
+    public List<AuditEntry> decisions(ActionType type, Instant since) {
+        return entries
+                .findByActionTypeAndStepInAndRecordedAtGreaterThanEqualOrderByRecordedAtDescIdDesc(
+                        type, AuditStep.humanDecisions(), since.toEpochMilli())
+                .stream()
                 .map(AuditEntryRow::toEntry)
                 .toList();
     }

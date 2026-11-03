@@ -2,12 +2,9 @@ package com.cka.pipeline;
 
 import com.cka.core.Action;
 import com.cka.core.ActionType;
-import com.cka.core.AuditEntry;
-import com.cka.core.AuditStep;
 import com.cka.core.Mention;
 import com.cka.core.event.ActionProposed;
 import com.cka.core.event.KnowledgeStored;
-import com.cka.provider.audit.AuditStore;
 import com.cka.provider.decision.DecisionProvider;
 import com.cka.provider.eventbus.EventBus;
 import com.cka.provider.workitem.WorkItemProvider;
@@ -28,7 +25,13 @@ public class ActionStage {
     private final DecisionProvider decision;
     private final WorkItemProvider workItems;
     private final EventBus bus;
-    private final AuditStore audit;
+
+    /**
+     * The audit service, not the store: an unmatched mention is a step of the chain with no event
+     * to carry it, and how a step is phrased and what it records is the service's to decide
+     * (PRD 9.1).
+     */
+    private final AuditTrail audit;
 
     public void start() {
         bus.subscribe(
@@ -39,11 +42,7 @@ public class ActionStage {
 
     private void handle(UUID chainId, Mention mention) {
         if (!mention.matched()) {
-            audit.record(AuditEntry.builder()
-                    .chainId(chainId)
-                    .step(AuditStep.MENTION_UNMATCHED)
-                    .detail("No candidate matched \"" + mention.excerpt() + "\"")
-                    .build());
+            audit.mentionUnmatched(chainId, mention);
             return;
         }
         bus.publish(ActionProposed.builder()

@@ -10,8 +10,8 @@ bus exists — which is what lets any stage be swapped, run alone, or driven by 
 | `CaptureStage` | whatever the content listener finds | `ContentListener` | `ContentCaptured`, minting the chain id |
 | `SummariseStage` | `ContentCaptured` | `LlmProvider` | `ContentSummarised` |
 | `KnowledgeStage` | `ContentSummarised` | `KnowledgeProvider` | `KnowledgeStored` |
-| `ActionStage` | `KnowledgeStored` | `WorkItemProvider`, `DecisionProvider` | `ActionProposed`; unmatched mentions go to the audit store |
-| `AuditTrail` | every event | `AuditStore` | nothing |
+| `ActionStage` | `KnowledgeStored` | `WorkItemProvider`, `DecisionProvider` | `ActionProposed`; unmatched mentions go to the audit service |
+| `AuditTrail` | every event, plus direct calls | `AuditStore` | nothing |
 
 ## Conventions specific to this package
 
@@ -25,6 +25,22 @@ bus exists — which is what lets any stage be swapped, run alone, or driven by 
   hand-published `KnowledgeStored` with nothing upstream. A new stage gets a test like that; if it
   can't be written, the stage is reaching for something it should be receiving on an event.
 
+## `AuditTrail` is the audit service, and the only thing that writes a chain
+
+T10 left the question open and T14 answered it: the three steps with no event — an unmatched
+mention, and a human's accept or reject in triage — are methods on `AuditTrail`, not entries a
+caller builds and hands to the store. `ActionStage` calls `mentionUnmatched`; T15's endpoints
+call `accepted` and `rejected`.
+
+- **Writing the store directly was fine while an entry was three fields.** At nine, two writers
+  are two vocabularies, and the one that forgets the action type costs the trust ramp its data
+  (PRD 9.2) without anything failing. One writer, one place that decides how a step is phrased.
+- **It stays a bus sink for everything that *is* an event**, which is most of the chain. That is
+  what keeps it invisible to the stages: none of them knows the chain is being written, and the
+  one that calls it does so for a step the bus cannot carry.
+- **It takes a `Clock`.** Every entry is stamped by the service, not by the database, so a test
+  can pin a whole chain to one instant — and the trust window has a column it can trust.
+
 ## Gotchas
 
 - **`ActionStage` is the gate chain's skeleton, not the gate chain.** Every matched mention is
@@ -34,4 +50,12 @@ bus exists — which is what lets any stage be swapped, run alone, or driven by 
 - **Ordering is the bus's, not the stages'.** On the test suite's synchronous in-memory bus, a
   publish runs every downstream stage before it returns, so the order handlers subscribed in
   decides the order audit entries land in. A real broker (T07) is asynchronous. Don't write
-  production code that relies on either.
+  production code that relies on either — and in a test, assert the chain's causal spine as a
+  *subsequence*, not as an exact list: where an unmatched mention falls among the proposals from
+  the same knowledge is the decision provider's iteration order, which nothing promises.
+- **Nothing here is a Spring bean yet.** The stages are constructed by hand in tests, so no chain
+  is written in production until the providers they call exist and `com.cka.config` wires them —
+  see [`../provider/AGENTS.md`](../provider/AGENTS.md#selecting-an-implementation). `AuditTrail`
+  and `SqlAuditStore` could be wired today; subscribing at startup against an unreachable broker
+  is the part that needs care first, because a provider being down must never take the backend
+  down with it.
