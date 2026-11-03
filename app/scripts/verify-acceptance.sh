@@ -67,7 +67,14 @@ export RABBITMQ_PASS="${RABBITMQ_PASS:-$(env_value RABBITMQ_PASS)}"
 # lowercase x, adds the executable bit only to things that already have it for someone
 # (i.e. directories, so they stay traversable) — it deliberately does NOT make every
 # plain file spuriously executable the way a plain `+x` would.
-chmod -R o+rwX backend frontend
+#
+# data/ gets the same treatment, and has to be created first. It is gitignored, so a fresh
+# checkout has neither the vault nor the database directory; left alone, Docker creates the
+# bind-mount source itself at `up` time and owns it as root, which the UID-1000 container then
+# cannot write to. The backend dies during Flyway's migration with SQLITE_CANTOPEN, never
+# becomes healthy, and every check after it fails naming something other than the real cause.
+mkdir -p data/db data/vault
+chmod -R o+rwX backend frontend data
 
 echo "Building and starting the stack…"
 # Try up to three times: 1, then 2, then 3.
