@@ -3,7 +3,7 @@
 # CKA MVP: ticket breakdown
 
 Source: scoping conversation on 18 September 2026, building on PRD v0.9.3; revised 19 September 2026 from the demo-script session (see [`demo-script.md`](demo-script.md)), which introduced the content-summarised event and the low-confidence proposed-comment path.
-Status: **filed as GitHub issues** — epic [#1](https://github.com/JamesTwisleton/capture-knowledge-action/issues/1) with T01–T22 attached as sub-issues; **T23 is specified here but not yet filed**. Acceptance criteria below are drawn from the discussion; anything not settled is listed under **Open questions** at the end and flagged inline. This page stays the canonical narrative version; the issues are the working tracker.
+Status: **filed as GitHub issues** — epic [#1](https://github.com/JamesTwisleton/capture-knowledge-action/issues/1) with T01–T23 attached as sub-issues. Acceptance criteria below are drawn from the discussion; anything not settled is listed under **Open questions** at the end and flagged inline. This page stays the canonical narrative version; the issues are the working tracker.
 
 > [!NOTE]
 > This page is delivery planning, not part of the PRD's numbered sections, so editing it does not require a PRD version bump. It is linked from [Section 17, Next steps](16-17-open-questions-and-next-steps.md#17-next-steps).
@@ -25,7 +25,7 @@ Not in the MVP: the full setup wizard (PRD J4), the cost dashboard (J7), other p
 
 ## Structure on GitHub
 
-GitHub has no native epic type. Of the options considered — an issue with a checklist of linked sub-issues, native sub-issues, or a Project with an "Epic" label — **native sub-issues** were chosen: one parent epic, [#1](https://github.com/JamesTwisleton/capture-knowledge-action/issues/1), with T01–T23 attached as real GitHub sub-issues (T23 still to file). That gives a progress bar on the parent and a proper parent/child relationship rather than a markdown checklist.
+GitHub has no native epic type. Of the options considered — an issue with a checklist of linked sub-issues, native sub-issues, or a Project with an "Epic" label — **native sub-issues** were chosen: one parent epic, [#1](https://github.com/JamesTwisleton/capture-knowledge-action/issues/1), with T01–T23 attached as real GitHub sub-issues. That gives a progress bar on the parent and a proper parent/child relationship rather than a markdown checklist.
 
 Labels: every ticket carries `mvp`; the parent also carries `epic`. Area labels (`backend`, `frontend`, `infrastructure`, `provider`, `documentation`) are applied per ticket.
 
@@ -63,7 +63,7 @@ Ownership: the earlier decision was that James hand-builds the Spring Boot and N
 | T13 | GitHub work item provider | [#14](https://github.com/JamesTwisleton/capture-knowledge-action/issues/14) |
 | T14 | Audit log (action decision chain) | [#15](https://github.com/JamesTwisleton/capture-knowledge-action/issues/15) |
 | T15 | Backend endpoints for the front end | [#16](https://github.com/JamesTwisleton/capture-knowledge-action/issues/16) |
-| T23 | Calibration: learning from mention decisions | *to file* |
+| T23 | Calibration: learning from mention decisions | [#38](https://github.com/JamesTwisleton/capture-knowledge-action/issues/38) |
 | T16 | Front end views | [#17](https://github.com/JamesTwisleton/capture-knowledge-action/issues/17) |
 | T17 | Error handling | [#18](https://github.com/JamesTwisleton/capture-knowledge-action/issues/18) |
 | T18 | MCP compatibility: publish the spec, and expose the core through it | [#22](https://github.com/JamesTwisleton/capture-knowledge-action/issues/22) |
@@ -72,7 +72,7 @@ Ownership: the earlier decision was that James hand-builds the Spring Boot and N
 | T20 | Setup and start scripts, README | [#20](https://github.com/JamesTwisleton/capture-knowledge-action/issues/20) |
 | T21 | Demo script and recording | [#21](https://github.com/JamesTwisleton/capture-knowledge-action/issues/21) |
 
-Ticket numbers are stable identifiers, not positions: **T22 is built between T19 and T20**, and **T23 between T15 and T16**, where their rows sit. Both were added after the earlier tickets were filed as GitHub issues, and renumbering to slot either in would have rewritten every live issue and cross-reference for no gain. T23 has no issue number yet — it needs filing as a sub-issue of [#1](https://github.com/JamesTwisleton/capture-knowledge-action/issues/1), and its row says so rather than guessing the number it will get.
+Ticket numbers are stable identifiers, not positions: **T22 is built between T19 and T20**, and **T23 between T15 and T16**, where their rows sit. Both were added after the earlier tickets were filed as GitHub issues, and renumbering to slot either in would have rewritten every live issue and cross-reference for no gain. T23 was filed as [#38](https://github.com/JamesTwisleton/capture-knowledge-action/issues/38) after the rest, which is why its number is out of step with its position.
 
 ## Credentials and config needed
 
