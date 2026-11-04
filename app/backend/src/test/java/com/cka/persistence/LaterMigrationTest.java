@@ -86,10 +86,14 @@ class LaterMigrationTest {
      * number for a ticket to collide with and nothing here to renumber when one lands.
      */
     private static Path aMigrationAfter(Flyway shipped) throws Exception {
-        var current = shipped.info().current().getVersion().getVersion();
-        var location = Files.createTempDirectory("cka-later-migration");
+        var current = shipped.info().current();
+        assertThat(current)
+                .as("the shipped migrations, which this test applies before asking what version they reached")
+                .isNotNull();
 
-        Files.writeString(location.resolve("V" + current + ".1__later_ticket_column.sql"), LATER_MIGRATION);
+        var location = Files.createTempDirectory("cka-later-migration");
+        Files.writeString(
+                location.resolve("V" + current.getVersion() + ".1__later_ticket_column.sql"), LATER_MIGRATION);
         return location;
     }
 
