@@ -68,10 +68,25 @@ framework ships is code to maintain, plus a divergence waiting to happen. (This 
 "Ponytail" rule: does it need to exist, is it already here, does the platform do it.)
 
 **Every acceptance criterion gets a test that runs in CI.** Not a note saying it was checked by
-hand — a test. `app/scripts/verify-acceptance.sh` brings the environment up and runs every file in
-`app/scripts/tests/` — one per criterion — against it, on every push via `.github/workflows/ci.yml`;
-add a file there as tickets land. Assert behaviour, not configuration: an open port is not a
-debugger, and a running container is not a service that answers.
+hand — a test. Assert behaviour, not configuration: an open port is not a debugger, and a running
+container is not a service that answers.
+
+**A test, though — not necessarily a shell script.** `app/scripts/verify-acceptance.sh` brings the
+environment up and runs every file in `app/scripts/tests/` against it on every push, but that
+layer earns its place only where no JUnit test can reach: the *composed* stack. That a volume
+mount puts the database on the host, that a port answers, that the image we built actually starts
+— those need a running environment. Everything else belongs in `app/backend/src/test`, where it
+runs in seconds, fails with a stack trace instead of a grep that found nothing, and gets
+refactored along with the code it checks.
+
+So the bar for a new file in `app/scripts/tests/` is one sentence in its header saying what it
+proves that the JUnit tests cannot. If that sentence is hard to write, or comes out as "the same
+thing, but against the real database", the check does not need to exist — and a check that can
+only assert weakly (grepping a binary file, matching a substring that might appear elsewhere) is
+worth less than the JUnit test it duplicates. A ticket landing is not by itself a reason for a
+script; the suite is at 14 files and ~1000 lines of bash, and that is the direction of travel to
+argue against, one ticket at a time. This is the "Ponytail" rule above, applied to our own
+test layer.
 
 - **Adding a check is three edits, not one.** The new file under `app/scripts/tests/`, a line
   registering it in the right phase of `verify-acceptance.sh`, and the upper bound of the
