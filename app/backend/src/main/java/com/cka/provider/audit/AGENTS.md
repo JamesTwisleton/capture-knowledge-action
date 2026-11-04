@@ -29,7 +29,8 @@ and the record to everything PRD 9.3 requires and added the decision history.
   an action type are columns. How a step is phrased is not — `detail` is what triage and the
   activity view show a person, and the one place its wording is decided is `AuditTrail`.
 - **Widen the table with a new migration, never by editing an applied one.** Flyway checksums
-  what it has applied. T14 added `V2…` beside `V1`; T11 took `V3…`.
+  what it has applied, so `V2__audit_entry_decision_chain.sql` is how the decision-chain columns
+  arrived; the next columns arrive the same way, under the next free version.
 - **`AuditEntryRow` flattens two core records into four columns** — `Provenance` to
   `provider`/`model`, `Decider` to `decider_kind`/`decider_name`. Not for the sake of normalising:
   it is what makes "everything this model decided" and "everything James rejected" ordinary

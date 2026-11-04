@@ -1,5 +1,6 @@
 package com.cka.provider.audit;
 
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.cka.core.ActionType;
@@ -16,10 +17,12 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -264,14 +267,38 @@ class SqlAuditStoreTest {
     }
 
     @Test
-    @DisplayName("The migrations ran, so a later ticket's tables arrive the same way")
-    void theMigrationsRan() {
+    @DisplayName("Every shipped migration ran, so a later ticket's tables arrive the same way")
+    void theMigrationsRan() throws IOException {
         // The acceptance criterion "applies migrations" on startup, asserted on Flyway's own
         // record rather than on the tables existing — a table could exist for other reasons.
+        //
+        // What the versions should be is read off the migration files rather than written out
+        // here: the claim is that Flyway applied all of them and left none behind, and a listed
+        // set of version numbers stops making that claim the moment a ticket adds one — it only
+        // repeats what the previous ticket saw, until somebody edits it back into agreement.
         var applied = jdbc.queryForList("SELECT version, success FROM flyway_schema_history ORDER BY installed_rank");
 
-        assertThat(applied).extracting(row -> row.get("version")).containsExactly("1", "2", "3");
+        assertThat(applied)
+                .extracting(row -> row.get("version"))
+                .containsExactlyInAnyOrderElementsOf(shippedMigrationVersions());
         assertThat(applied).extracting(row -> row.get("success")).containsOnly(1);
+    }
+
+    /**
+     * The versions of the migrations on the classpath, taken from their filenames — {@code
+     * V2__audit_entry_decision_chain.sql} is version {@code "2"}, in the form
+     * {@code flyway_schema_history} stores it, which spells a dotted version with an underscore.
+     */
+    private static List<String> shippedMigrationVersions() throws IOException {
+        var files = new PathMatchingResourcePatternResolver().getResources("classpath:db/migration/V*__*.sql");
+
+        assertThat(files).as("the shipped migrations, which cannot be none").isNotEmpty();
+        return Stream.of(files)
+                .map(file -> requireNonNull(file.getFilename())
+                        .substring(1)
+                        .split("__")[0]
+                        .replace('_', '.'))
+                .toList();
     }
 
     @Test

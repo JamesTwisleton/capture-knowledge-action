@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
  * existing database". The one claim this layer makes that nothing else can check — the first
  * criterion is covered by the app starting at all, and {@code SqlAuditStoreTest} asserts that
  * the shipped ones ran, but neither says anything about what happens when the next ticket adds
- * one — T14's V2 and T11's V3 were each exactly that case.
+ * one — which every ticket that has touched the schema has done.
  *
  * <p>Driven through Flyway's own API rather than a Spring context, because the point is to
  * migrate the same database twice from two different sets of migrations, which one application

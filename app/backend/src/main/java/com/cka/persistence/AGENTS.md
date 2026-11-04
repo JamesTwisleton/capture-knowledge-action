@@ -17,10 +17,9 @@ data, under [`com.cka.provider`](../provider/AGENTS.md).
 
 - **A new table or column is a new migration file, never an edit to an existing one.** Flyway
   checksums what it has applied, so changing `V1__audit_entry.sql` breaks every database that
-  already ran it. T14 widened `audit_entry` by adding `V2…` beside it; T11 added `V3__prompt.sql`.
-  `LaterMigrationTest` is what proves that works against a database already holding rows — and
-  its stand-in migration is renumbered past the real ones each time one lands, because Flyway
-  refuses two migrations claiming the same version.
+  already ran it. Widening `audit_entry` meant a `V2…` beside it, not an edit to it.
+  `LaterMigrationTest` is what proves that works against a database already holding rows; its
+  stand-in migration sits at `V9000…` so that a real migration never collides with it.
 - **Adding a `NOT NULL` column needs a default, on every engine worth substituting.** SQLite,
   Postgres and MySQL all refuse one without, since the rows already there have to be given
   something. Pick the value that is true of those rows rather than a convenient one — `V2`

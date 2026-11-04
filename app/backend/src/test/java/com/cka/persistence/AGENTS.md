@@ -20,8 +20,9 @@ by `SqlAuditStoreTest` asserting Flyway's own history row.
   express that.
 - **The later migration lives in `src/test/resources/db/migration-later`**, not beside the real
   ones. It stands in for the next ticket's tables without inventing columns that ticket has not
-  designed. **Renumber it past the real migrations whenever one lands**: it became `V3…` when T14
-  added `V2…` and `V4…` when T11 added `V3…`, because Flyway refuses two migrations claiming the
-  same version and the failure names the version rather than this file.
+  designed. It is numbered `V9000…` so that it needs no renumbering: all it has to be is the
+  later one, and a version no real ticket will reach is that permanently. A number just past
+  today's would instead collide the next time a real migration landed — and Flyway's failure
+  names the version, not this file, so the fix would not be obvious from the error.
 - **The database has rows in it before the second migration runs.** An empty database proves
   little; what a later migration does to existing data is the actual risk.
