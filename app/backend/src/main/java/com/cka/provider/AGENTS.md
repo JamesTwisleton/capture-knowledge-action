@@ -6,7 +6,7 @@ tickets, its implementations (PRD 7.2):
 | Package | Interface | Reference implementation (ticket) |
 |---|---|---|
 | [`capture`](capture/AGENTS.md) | `ContentListener` | Google Drive folder watcher (T09) |
-| [`llm`](llm/AGENTS.md) | `LlmProvider` | LangChain4j (T12) |
+| [`llm`](llm/AGENTS.md) | `LlmProvider` | LangChain4j (T12) — **landed** |
 | [`knowledge`](knowledge/AGENTS.md) | `KnowledgeProvider` | Markdown vault (T06) |
 | [`decision`](decision/AGENTS.md) | `DecisionProvider` | Jev, and an LLM fallback (T08) |
 | [`workitem`](workitem/AGENTS.md) | `WorkItemProvider`, `WorkItemMapper` | GitHub Issues (T13) |
@@ -45,8 +45,10 @@ public class MarkdownVaultKnowledgeProvider implements KnowledgeProvider { … }
 - **Provider types stay registrable** (PRD 10) for free: a new type is a new interface with
   beans implementing it. There is no registry class or enum of types to edit, and there must not
   be one.
-- The stages get wired into Spring in `com.cka.config` by the same ticket. Until then nothing in
-  production implements these interfaces, so nothing is wired — the app boots as it did after T04.
+- The stages get wired into Spring in [`com.cka.config`](../config/AGENTS.md) by the same ticket.
+  T12 was the first to do it: shipping `LangChain4jLlmProvider` is what gave `SummariseStage` a
+  provider to call, so the two landed together. An interface with no implementation yet is simply
+  a stage not started, which the log says on boot rather than leaving to be inferred.
 
 ## Gotchas
 
