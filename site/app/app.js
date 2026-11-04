@@ -32,10 +32,23 @@
       /* The mention threshold is state, not a constant: accepting a calibration suggestion
          changes it, and the activity view's mention table reclassifies rows against it. */
       threshold: D.candidatePool.threshold,
+      /* Mention decisions made in this session, added to the seeded window. Kept apart from
+         S.trust on purpose — see decide(). */
+      mentionDecisions: { accepted: 0, rejected: 0 },
       unmatched: D.mentionCalibration.examples.map(u => ({ ...u, status: "open" })),
       proposals: [
+        /* Two kinds in one list, as PRD 9.1 requires them to be: a proposed *action* mutates a
+           work item, a proposed *comment* is a mention that scored below the threshold and
+           changes nothing. They look similar and mean very different things, so kind drives
+           both how the card reads and — load-bearing — what the decision feeds. */
+        ...D.mentionSegments.map(m => ({
+          id: "p-mention-" + m.item.replace("#", ""), kind: "mention", type: "comment", item: m.item,
+          itemTitle: m.itemTitle, verb: "Comment on " + m.item,
+          quote: m.text, speaker: m.speaker, time: m.time,
+          confidence: m.confidence, threshold: D.candidatePool.threshold, status: "pending"
+        })),
         {
-          id: "p-close-142", type: "close", item: "#142",
+          id: "p-close-142", kind: "action", type: "close", item: "#142",
           itemTitle: "Retry with backoff for provider timeouts",
           verb: "Close #142",
           quote: D.triggerSegments[0].text,
@@ -43,7 +56,7 @@
           confidence: 94, status: "pending"
         },
         {
-          id: "p-assign-156", type: "assign", item: "#156",
+          id: "p-assign-156", kind: "action", type: "assign", item: "#156",
           itemTitle: "Migrate audit writes to batched inserts",
           verb: "Assign #156 to Sofia Marchetti",
           quote: D.triggerSegments[1].text,
@@ -740,8 +753,9 @@ Full platform transcript stored below this section (elided in this prototype).
     const cal = D.mentionCalibration;
     const clean = cal.proposalDecisions.filter(b => b.rejected === 0 && b.accepted > 0);
     const floor = clean.length ? Math.min(...clean.map(b => b.from)) : null;
-    const accepted = clean.reduce((n, b) => n + b.accepted, 0);
-    const decisions = cal.proposalDecisions.reduce((n, b) => n + b.accepted + b.rejected, 0);
+    const accepted = clean.reduce((n, b) => n + b.accepted, 0) + S.mentionDecisions.accepted;
+    const decisions = cal.proposalDecisions.reduce((n, b) => n + b.accepted + b.rejected, 0)
+      + S.mentionDecisions.accepted + S.mentionDecisions.rejected;
 
     if (floor !== null && floor < S.threshold && decisions >= cal.minimumDecisions && !S.dismissed.thresholdSuggestion) {
       suggestions.push(`
@@ -918,23 +932,35 @@ Full platform transcript stored below this section (elided in this prototype).
 
   function proposalCard(p) {
     const cls = p.status === "approved" ? "resolved-approved" : p.status === "rejected" ? "resolved-rejected" : "";
+    const mention = p.kind === "mention";
+    /* A proposed comment passed no gates — it is here *because* its confidence did not clear
+       the threshold, and a comment needs neither a trigger phrase nor an explicit ID since it
+       changes nothing. Claiming "confidence ✓" on it, as this card used to for every
+       proposal, said the opposite of what happened. */
+    /* p.threshold, not S.threshold: the value this was *judged against*. Once the threshold
+       moves, a proposal read against the live value misdescribes itself — which is why T08
+       records both the score and the threshold it was compared to. */
+    const moved = mention && p.threshold !== S.threshold;
+    const gates = mention
+      ? `below the ${p.threshold}% mention threshold in force when it was scored${moved ? ` (now ${S.threshold}% — a score like this will post automatically next run)` : ""} — no trigger phrase or explicit ID needed, since a comment changes nothing`
+      : "gates passed: trigger phrase ✓ · explicit ID ✓ · confidence ✓";
     return `<div class="card proposal ${cls}">
       <div class="p-head">
-        <span class="p-title">${S.wizard.selections.decision === "llm" ? llmName() : "Jev"} proposes: ${p.verb}</span>
-        <span class="badge blue">confidence ${p.confidence}%</span>
-        <span class="badge dim">${p.type}</span>
+        <span class="p-title">${S.wizard.selections.decision === "llm" ? llmName() : "Jev"} ${mention ? `thinks ${p.item} may have been discussed` : `proposes: ${p.verb}`}</span>
+        <span class="badge ${mention ? "warn" : "blue"}">confidence ${p.confidence}%</span>
+        <span class="badge dim">${mention ? "proposed comment" : p.type}</span>
       </div>
       <div class="p-meta">${p.item} — ${p.itemTitle}</div>
       <blockquote>${p.quote} <span class="muted">— ${p.speaker}, ${p.time}</span></blockquote>
-      <div class="p-meta">Proposed by ${attr(decisionAttr())} from ${attr("transcript · Google Meet")} · gates passed: trigger phrase ✓ · explicit ID ✓ · confidence ✓</div>
+      <div class="p-meta">Proposed by ${attr(decisionAttr())} from ${attr("transcript · Google Meet")} · ${gates}</div>
       ${p.status === "pending"
         ? `<div class="p-actions">
-             <button class="btn good small" data-approve="${p.id}">✓ Approve</button>
+             <button class="btn good small" data-approve="${p.id}">✓ ${mention ? "Accept — post the comment" : "Approve"}</button>
              <button class="btn danger small" data-reject="${p.id}">✕ Reject</button>
            </div>`
         : p.status === "approved"
-          ? `<div class="outcome ok">✓ Approved — applied on GitHub Issues and audited</div>`
-          : `<div class="outcome no">✕ Rejected — nothing applied; the rejection feeds this action type's trust score</div>`}
+          ? `<div class="outcome ok">✓ ${mention ? "Accepted — comment posted, and the decision feeds threshold calibration" : "Approved — applied on GitHub Issues and audited"}</div>`
+          : `<div class="outcome no">✕ Rejected — nothing applied; the rejection feeds ${mention ? "threshold calibration, not any action type's trust score" : "this action type's trust score"}</div>`}
     </div>`;
   }
 
@@ -946,13 +972,27 @@ Full platform transcript stored below this section (elided in this prototype).
 
     const finish = () => {
       p.status = approved ? "approved" : "rejected";
-      const t = S.trust[p.type];
-      if (t) approved ? t.approvals++ : t.rejections++;
-      audit(approved ? "Action approved" : "Action rejected",
-        `${p.verb} · confidence ${p.confidence}% · decided by demo-user`,
-        approved ? "Human decision → Work item provider · GitHub Issues" : "Human decision");
-      if (approved) toast(`${p.verb} — applied and audited`);
-      else toast(`${p.verb} — rejected; feeds the trust score for “${p.type}”`);
+      if (p.kind === "mention") {
+        /* Deliberately does NOT touch S.trust. A mention decision is evidence about where the
+           threshold belongs, not about whether a person trusts an action type — PRD 9.2 keeps
+           them apart, and feeding this into S.trust.comment would move a trust score on
+           evidence about something else entirely, with nothing failing to show it. */
+        approved ? S.mentionDecisions.accepted++ : S.mentionDecisions.rejected++;
+        audit(approved ? "Mention proposal accepted" : "Mention proposal rejected",
+          `${p.item} at ${p.confidence}% confidence, against a ${S.threshold}% threshold · decided by demo-user`,
+          approved ? "Human decision → Work item provider · GitHub Issues" : "Human decision");
+        toast(approved
+          ? `Comment posted on ${p.item} — and ${p.confidence}% is now one more data point for the threshold`
+          : `Rejected — feeds threshold calibration, not the trust score for “comment”`);
+      } else {
+        const t = S.trust[p.type];
+        if (t) approved ? t.approvals++ : t.rejections++;
+        audit(approved ? "Action approved" : "Action rejected",
+          `${p.verb} · confidence ${p.confidence}% · decided by demo-user`,
+          approved ? "Human decision → Work item provider · GitHub Issues" : "Human decision");
+        if (approved) toast(`${p.verb} — applied and audited`);
+        else toast(`${p.verb} — rejected; feeds the trust score for “${p.type}”`);
+      }
       viewInbox();
       renderBadge();
       animateFillsIn(document.querySelector(".trust-grid"));

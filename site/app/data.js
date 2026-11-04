@@ -150,6 +150,8 @@ window.CKA_DATA = {
       { id: "#128", title: "OAuth token refresh fails silently", state: "To do", confidence: 93 },
       { id: "#151", title: "GBP currency formatting on the cost dashboard", state: "To do", confidence: 91 },
       { id: "#139", title: "Wizard: detect platform-supplied transcripts", state: "In review", confidence: 90 },
+      { id: "#149", title: "Flaky test: folder watcher poll interval", state: "In progress", confidence: 78 },
+      { id: "#135", title: "Vault note front-matter for content type", state: "To do", confidence: 71 },
       { id: "#147", title: "Dark mode contrast pass on the Triage Inbox", state: "To do", confidence: 62 },
       { id: "#133", title: "Spike: RabbitMQ event bus provider", state: "To do", confidence: 34 },
       { id: "#160", title: "Contributor guide first draft", state: "To do", confidence: 11 }
@@ -181,6 +183,18 @@ window.CKA_DATA = {
       text: "“—the rubber d— [inaudible] one three—”",
       note: "Possible trigger phrase, but garbled and no item ID was heard in the same sentence. Per policy, nothing is guessed: this is flagged for a human, not acted on."
     }
+  ],
+
+  /* The passages the two below-threshold mentions were scored from. Separate from
+     triggerSegments: no trigger phrase was spoken here, and none is needed — a comment
+     changes nothing, which is why these are proposed rather than gated on intent. */
+  mentionSegments: [
+    { item: "#149", itemTitle: "Flaky test: folder watcher poll interval",
+      text: "The polling one is still going red about one run in five, I think it's a timing thing.",
+      speaker: "Sofia Marchetti", time: "10:28:41", confidence: 78 },
+    { item: "#135", itemTitle: "Vault note front-matter for content type",
+      text: "We said the notes should carry the type at the top so you can filter on it later.",
+      speaker: "Priya Raman", time: "10:34:12", confidence: 71 }
   ],
 
   /* Mention decisions over the same 14-day window — the evidence calibration argues from
