@@ -53,9 +53,13 @@ call `accepted` and `rejected`.
   production code that relies on either — and in a test, assert the chain's causal spine as a
   *subsequence*, not as an exact list: where an unmatched mention falls among the proposals from
   the same knowledge is the decision provider's iteration order, which nothing promises.
-- **Nothing here is a Spring bean yet.** The stages are constructed by hand in tests, so no chain
-  is written in production until the providers they call exist and `com.cka.config` wires them —
-  see [`../provider/AGENTS.md`](../provider/AGENTS.md#selecting-an-implementation). `AuditTrail`
-  and `SqlAuditStore` could be wired today; subscribing at startup against an unreachable broker
-  is the part that needs care first, because a provider being down must never take the backend
-  down with it.
+- **The stages are still not Spring beans, and `SummariseStage` is wired all the same.** T12
+  builds and starts it in [`com.cka.config`](../config/AGENTS.md) on `ApplicationReadyEvent`;
+  the class itself keeps no annotations, which is what lets `PipelineWiringTest` assemble the
+  whole chain from mocks with no container. The other three wait on T06, T08 and T09.
+- **Subscribing at startup against an unreachable broker fails, deliberately** — the question
+  this file previously left open. `EventBus.subscribe` declares its queue before attaching a
+  listener, and that queue is anonymous and auto-delete, so a caught failure leaves no queue and
+  nothing to recreate it when the broker returns: a backend that is up, healthy, and silently
+  dropping every recording. The general rule that a provider being down must not take the backend
+  down still holds everywhere the degraded state can recover; this is the one place it cannot.
