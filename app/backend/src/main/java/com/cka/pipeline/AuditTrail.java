@@ -23,9 +23,11 @@ import lombok.RequiredArgsConstructor;
  * place that decides how a step is phrased and what it carries.
  *
  * <p>Most of the chain arrives as events, so it is a sink on the bus — nothing waits for it, and
- * no stage knows it is there. Three steps have no event, because nothing downstream acts on them:
- * an unmatched mention, and a human's accept or reject in triage, which is the final approval
- * rather than a request to anyone else. Those are the methods below, and a caller reaches for one
+ * no stage knows it is there. Three steps have no event, because no stage is waiting on them: an
+ * unmatched mention, and a human's accept or reject in triage, which is the final approval rather
+ * than a request to anyone else. "No event" is not the same as "nothing acts on it" — a person
+ * can link or dismiss an unmatched mention (PRD 9.2), and T23 adds the methods for that beside
+ * these ones. Those are the methods below, and a caller reaches for one
  * instead of building an entry: that is T14's answer to the question T10 left open. Writing the
  * store directly was fine while an entry was three fields; now that it is nine, two writers
  * would be two vocabularies, and the one that forgot the action type would silently cost the

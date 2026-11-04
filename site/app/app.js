@@ -29,9 +29,26 @@
         prompts: Object.fromEntries(D.contentTypes.map(t => [t.id, t.prompt]))
       },
       trust: JSON.parse(JSON.stringify(D.trustSeed)),
+      /* The mention threshold is state, not a constant: accepting a calibration suggestion
+         changes it, and the activity view's mention table reclassifies rows against it. */
+      threshold: D.candidatePool.threshold,
+      /* Mention decisions made in this session, added to the seeded window. Kept apart from
+         S.trust on purpose — see decide(). */
+      mentionDecisions: { accepted: 0, rejected: 0 },
+      unmatched: D.mentionCalibration.examples.map(u => ({ ...u, status: "open" })),
       proposals: [
+        /* Two kinds in one list, as PRD 9.1 requires them to be: a proposed *action* mutates a
+           work item, a proposed *comment* is a mention that scored below the threshold and
+           changes nothing. They look similar and mean very different things, so kind drives
+           both how the card reads and — load-bearing — what the decision feeds. */
+        ...D.mentionSegments.map(m => ({
+          id: "p-mention-" + m.item.replace("#", ""), kind: "mention", type: "comment", item: m.item,
+          itemTitle: m.itemTitle, verb: "Comment on " + m.item,
+          quote: m.text, speaker: m.speaker, time: m.time,
+          confidence: m.confidence, threshold: D.candidatePool.threshold, status: "pending"
+        })),
         {
-          id: "p-close-142", type: "close", item: "#142",
+          id: "p-close-142", kind: "action", type: "close", item: "#142",
           itemTitle: "Retry with backoff for provider timeouts",
           verb: "Close #142",
           quote: D.triggerSegments[0].text,
@@ -39,7 +56,7 @@
           confidence: 94, status: "pending"
         },
         {
-          id: "p-assign-156", type: "assign", item: "#156",
+          id: "p-assign-156", kind: "action", type: "assign", item: "#156",
           itemTitle: "Migrate audit writes to batched inserts",
           verb: "Assign #156 to Sofia Marchetti",
           quote: D.triggerSegments[1].text,
@@ -49,7 +66,7 @@
       ],
       outbox: D.outbox.map(o => ({ ...o })),
       audit: D.auditSeed.map(a => ({ ...a })),
-      dismissed: { closeSuggestion: false, assignSuggestion: false },
+      dismissed: { closeSuggestion: false, assignSuggestion: false, thresholdSuggestion: false, detectionSuggestion: false },
       replayDone: false
     };
   }
@@ -62,12 +79,22 @@
 
   /* ---------------- helpers ---------------- */
 
+  /* Duration scales with the message, because one number cannot suit both "Retried ✓" and the
+     calibration toasts, which are three times longer and say something the reader has to
+     actually take in. ~60ms a character is the usual reading allowance, on top of a fixed
+     2.2s for noticing the thing at all; floored so nothing flashes past and capped so a long
+     message cannot park itself over the page. Click to dismiss, since the cost of a longer
+     toast is being stuck with one you have already read. */
   function toast(msg) {
     const el = document.getElementById("toast");
     el.textContent = msg;
     el.classList.add("show");
+    el.style.cursor = "pointer";
+    el.title = "Click to dismiss";
     clearTimeout(el._t);
-    el._t = setTimeout(() => el.classList.remove("show"), 2600);
+    const hide = () => { clearTimeout(el._t); el.classList.remove("show"); };
+    el.onclick = hide;
+    el._t = setTimeout(hide, Math.min(9000, Math.max(3500, 2200 + msg.length * 60)));
   }
 
   function gbp(n) {
@@ -544,7 +571,10 @@ Full platform transcript stored below this section (elided in this prototype).
 
   function viewActivity() {
     const m = D.meeting;
-    const pool = D.candidatePool;
+    /* Threshold from state rather than D.candidatePool, so lowering it from the Triage Inbox
+       visibly reclassifies these rows from "propose" to "comment" — which is the whole point
+       of the suggestion, and invisible if this view read the seed value. */
+    const pool = { ...D.candidatePool, threshold: S.threshold };
     const steps = [
       {
         title: "Content captured", by: "Meeting capture · Google Meet (Drive folder watch)",
@@ -726,14 +756,63 @@ Full platform transcript stored below this section (elided in this prototype).
         </div>`);
     }
 
+    /* Calibration (PRD 9.2). The band argued from is the lowest one accepted outright: every
+       proposal at or above it was accepted, so the threshold is sitting above this team's own
+       judgement. Computed rather than written out, so changing the seed data changes the
+       banner — and so the minimum-sample rule is actually enforced rather than described. */
+    const cal = D.mentionCalibration;
+    const clean = cal.proposalDecisions.filter(b => b.rejected === 0 && b.accepted > 0);
+    const floor = clean.length ? Math.min(...clean.map(b => b.from)) : null;
+    const accepted = clean.reduce((n, b) => n + b.accepted, 0) + S.mentionDecisions.accepted;
+    const decisions = cal.proposalDecisions.reduce((n, b) => n + b.accepted + b.rejected, 0)
+      + S.mentionDecisions.accepted + S.mentionDecisions.rejected;
+
+    if (floor !== null && floor < S.threshold && decisions >= cal.minimumDecisions && !S.dismissed.thresholdSuggestion) {
+      suggestions.push(`
+        <div class="suggestion">
+          <div class="stitle">You've accepted all ${accepted} mention proposals scoring ${floor}% or above over the
+          last ${cal.windowDays} days. Lower the mention threshold from ${S.threshold}% to ${floor}%?</div>
+          <p>Those comments would post straight away in future instead of waiting here. This is based on
+          ${decisions} of your decisions over the ${cal.windowDays} days — CKA stays quiet until it has at least
+          ${cal.minimumDecisions}, because “you've accepted 100%” of three proposals is a coincidence, not a
+          pattern. And it only ever asks: it will not move the threshold by itself, because it would then be
+          judging itself on proposals its own setting produced.</p>
+          <p class="small muted">Note the evidence is one-sided. You only ever see mentions that fell <em>below</em>
+          the threshold, so this can argue for lowering it and never for raising it — only rejections below the line
+          do that.</p>
+          <div class="btn-row">
+            <button class="btn good" data-suggest="threshold-lower">Lower the threshold to ${floor}%</button>
+            <button class="btn" data-suggest="threshold-later">Not yet</button>
+          </div>
+        </div>`);
+    }
+
+    const um = D.mentionCalibration.unmatched;
+    if (um.linked > um.dismissed && !S.dismissed.detectionSuggestion) {
+      suggestions.push(`
+        <div class="suggestion negative">
+          <div class="stitle">${um.linked} of the ${um.linked + um.dismissed} unmatched mentions you resolved in the
+          last ${cal.windowDays} days turned out to be real work items.</div>
+          <p>That is detection missing things a person could see, not a threshold set wrongly — so the threshold
+          suggestion above won't fix it. Try a different decision provider or model? Every mention records which
+          provider and model scored it, so this is attributable rather than “the app got it wrong”.</p>
+          <div class="btn-row">
+            <button class="btn" data-suggest="detection-switch">Switch provider / model…</button>
+            <button class="btn ghost" data-suggest="detection-keep">Keep as is</button>
+          </div>
+        </div>`);
+    }
+
     const pending = S.proposals.filter(p => p.status === "pending");
     const resolved = S.proposals.filter(p => p.status !== "pending");
 
     $view.innerHTML = `
       <div class="kicker">Journey J5</div>
       <h1>Triage Inbox</h1>
-      <p class="lede">Proposed mutating actions wait here for a human. Your approvals and rejections are what the
-      trust ramp is built from — per action type, never globally.</p>
+      <p class="lede">Proposed mutating actions wait here for a human. Your decisions are what CKA learns from, in
+      two separate ways: approvals and rejections per action type move the <strong>trust ramp</strong>, deciding who
+      approves; decisions on mentions move the <strong>threshold</strong>, deciding where the line sits. Both only
+      ever produce a suggestion.</p>
       ${suggestions.join("")}
 
       <h2>Pending proposals ${pending.length ? `<span class="badge warn">${pending.length}</span>` : ""}</h2>
@@ -741,6 +820,24 @@ Full platform transcript stored below this section (elided in this prototype).
       ${pending.map(proposalCard).join("")}
 
       ${resolved.length ? `<h3>Decided just now</h3>${resolved.map(proposalCard).join("")}` : ""}
+
+      <h2>Unmatched mentions <span class="badge ${S.unmatched.filter(u => u.status === "open").length ? "warn" : "dim"}">${S.unmatched.filter(u => u.status === "open").length} open</span></h2>
+      <p class="small muted">Something was said that CKA could not tie to any work item in the pool. There is nothing
+      to accept — no item was matched — but you can usually see what was meant. <strong>Link</strong> it to post the
+      comment detection missed, or <strong>dismiss</strong> it as nothing. Leaving it open is fine too. Either
+      resolution is recorded, and the ratio between them is what the suggestion above is built from.</p>
+      ${S.unmatched.map(u => `
+        <div class="card">
+          <blockquote style="border-left:2px solid var(--hairline);padding:4px 12px;font-style:italic" class="dim2 small">${u.quote}
+          <span class="muted">— ${u.speaker}, ${u.time}</span></blockquote>
+          <p class="small muted">${u.note}</p>
+          ${u.status === "open" ? `
+            <div class="p-actions">
+              <button class="btn small good" data-um-link="${u.id}">Link to a work item…</button>
+              <button class="btn small ghost" data-um-dismiss="${u.id}">Dismiss — nothing there</button>
+            </div>` : `<p class="small"><span class="badge ${u.status === "linked" ? "good" : "dim"}">${u.status}</span>
+            ${u.status === "linked" ? "Comment posted on the item, and recorded as a detection miss." : "Recorded as nothing to find."}</p>`}
+        </div>`).join("")}
 
       <h2>Possible trigger phrases <span class="badge dim">not acted on</span></h2>
       ${D.ambiguousSegments.map(s => `
@@ -797,7 +894,36 @@ Full platform transcript stored below this section (elided in this prototype).
       if (a === "assign-disable") { S.trust.assign.mode = "disabled"; S.trust.assign.note = "Disabled by demo-user — no more Assign proposals or their LLM costs."; audit("Trust changed", "Assign proposals disabled by demo-user", "Human decision"); toast("Assign proposals disabled — no more spend on them"); }
       if (a === "assign-switch") { toast("In the full product this opens the provider picker for the decision layer"); return; }
       if (a === "assign-keep") { S.dismissed.assignSuggestion = true; }
+      /* A threshold change is an audited decision in its own right, naming the old value and
+         the new one — PRD 9.3. Without the old value the entry cannot explain a later
+         decision that was made under it. */
+      if (a === "threshold-lower") {
+        const from = S.threshold;
+        S.threshold = Math.min(...D.mentionCalibration.proposalDecisions.filter(x => x.rejected === 0 && x.accepted > 0).map(x => x.from));
+        audit("Threshold changed", `Mention threshold ${from}% → ${S.threshold}% by demo-user, on a calibration suggestion`, "Human decision");
+        toast(`Mention threshold is now ${S.threshold}% — open Activity to see what changed`);
+      }
+      if (a === "threshold-later") { S.dismissed.thresholdSuggestion = true; }
+      if (a === "detection-switch") { toast("In the full product this opens the provider picker for the decision layer"); return; }
+      if (a === "detection-keep") { S.dismissed.detectionSuggestion = true; }
       viewInbox(); renderBadge();
+    }));
+
+    /* unmatched mention resolution — link posts the comment detection missed, dismiss says
+       there was nothing there. Deliberately not accept/reject: no item was ever matched. */
+    document.querySelectorAll("[data-um-link]").forEach(b => b.addEventListener("click", () => {
+      const u = S.unmatched.find(x => x.id === b.dataset.umLink);
+      u.status = "linked";
+      audit("Unmatched mention linked", `${u.id} linked to a work item by demo-user — comment posted, recorded as a detection miss`, "Human decision");
+      toast("Linked — CKA has posted the comment it missed on that item");
+      viewInbox();
+    }));
+    document.querySelectorAll("[data-um-dismiss]").forEach(b => b.addEventListener("click", () => {
+      const u = S.unmatched.find(x => x.id === b.dataset.umDismiss);
+      u.status = "dismissed";
+      audit("Unmatched mention dismissed", `${u.id} dismissed by demo-user — nothing to find`, "Human decision");
+      toast("Dismissed — nothing was posted, and CKA knows there was nothing to find");
+      viewInbox();
     }));
 
     /* outbox actions */
@@ -818,23 +944,35 @@ Full platform transcript stored below this section (elided in this prototype).
 
   function proposalCard(p) {
     const cls = p.status === "approved" ? "resolved-approved" : p.status === "rejected" ? "resolved-rejected" : "";
+    const mention = p.kind === "mention";
+    /* A proposed comment passed no gates — it is here *because* its confidence did not clear
+       the threshold, and a comment needs neither a trigger phrase nor an explicit ID since it
+       changes nothing. Claiming "confidence ✓" on it, as this card used to for every
+       proposal, said the opposite of what happened. */
+    /* p.threshold, not S.threshold: the value this was *judged against*. Once the threshold
+       moves, a proposal read against the live value misdescribes itself — which is why T08
+       records both the score and the threshold it was compared to. */
+    const moved = mention && p.threshold !== S.threshold;
+    const gates = mention
+      ? `CKA was only ${p.confidence}% sure, under the ${p.threshold}% it needed to comment on its own — so it is asking. No trigger phrase needed: a comment changes nothing.${moved ? ` The threshold is now ${S.threshold}%, so a guess like this would post automatically next time.` : ""}`
+      : "gates passed: trigger phrase ✓ · explicit ID ✓ · confidence ✓";
     return `<div class="card proposal ${cls}">
       <div class="p-head">
-        <span class="p-title">${S.wizard.selections.decision === "llm" ? llmName() : "Jev"} proposes: ${p.verb}</span>
-        <span class="badge blue">confidence ${p.confidence}%</span>
-        <span class="badge dim">${p.type}</span>
+        <span class="p-title">${S.wizard.selections.decision === "llm" ? llmName() : "Jev"} ${mention ? `thinks ${p.item} may have been discussed` : `proposes: ${p.verb}`}</span>
+        <span class="badge ${mention ? "warn" : "blue"}">confidence ${p.confidence}%</span>
+        <span class="badge dim">${mention ? "proposed comment" : p.type}</span>
       </div>
       <div class="p-meta">${p.item} — ${p.itemTitle}</div>
       <blockquote>${p.quote} <span class="muted">— ${p.speaker}, ${p.time}</span></blockquote>
-      <div class="p-meta">Proposed by ${attr(decisionAttr())} from ${attr("transcript · Google Meet")} · gates passed: trigger phrase ✓ · explicit ID ✓ · confidence ✓</div>
+      <div class="p-meta">Proposed by ${attr(decisionAttr())} from ${attr("transcript · Google Meet")} · ${gates}</div>
       ${p.status === "pending"
         ? `<div class="p-actions">
-             <button class="btn good small" data-approve="${p.id}">✓ Approve</button>
+             <button class="btn good small" data-approve="${p.id}">✓ ${mention ? "Accept — post the comment" : "Approve"}</button>
              <button class="btn danger small" data-reject="${p.id}">✕ Reject</button>
            </div>`
         : p.status === "approved"
-          ? `<div class="outcome ok">✓ Approved — applied on GitHub Issues and audited</div>`
-          : `<div class="outcome no">✕ Rejected — nothing applied; the rejection feeds this action type's trust score</div>`}
+          ? `<div class="outcome ok">✓ ${mention ? `Accepted — comment posted on ${p.item}. CKA was right to raise it at ${p.confidence}%, which is what its threshold suggestions are built from` : "Approved — applied on GitHub Issues and audited"}</div>`
+          : `<div class="outcome no">✕ Rejected — nothing ${mention ? `posted. CKA was wrong at ${p.confidence}%, which is also worth knowing` : "applied; the rejection feeds this action type's trust score"}</div>`}
     </div>`;
   }
 
@@ -846,13 +984,30 @@ Full platform transcript stored below this section (elided in this prototype).
 
     const finish = () => {
       p.status = approved ? "approved" : "rejected";
-      const t = S.trust[p.type];
-      if (t) approved ? t.approvals++ : t.rejections++;
-      audit(approved ? "Action approved" : "Action rejected",
-        `${p.verb} · confidence ${p.confidence}% · decided by demo-user`,
-        approved ? "Human decision → Work item provider · GitHub Issues" : "Human decision");
-      if (approved) toast(`${p.verb} — applied and audited`);
-      else toast(`${p.verb} — rejected; feeds the trust score for “${p.type}”`);
+      if (p.kind === "mention") {
+        /* Deliberately does NOT touch S.trust. A mention decision is evidence about where the
+           threshold belongs, not about whether a person trusts an action type — PRD 9.2 keeps
+           them apart, and feeding this into S.trust.comment would move a trust score on
+           evidence about something else entirely, with nothing failing to show it. */
+        approved ? S.mentionDecisions.accepted++ : S.mentionDecisions.rejected++;
+        audit(approved ? "Mention proposal accepted" : "Mention proposal rejected",
+          `${p.item} at ${p.confidence}% confidence, against a ${S.threshold}% threshold · decided by demo-user`,
+          approved ? "Human decision → Work item provider · GitHub Issues" : "Human decision");
+        /* Plain language on purpose. Which mechanism a decision feeds is a design guarantee
+           (see the comment above, and PRD 9.2) — it is not something the person clicking
+           needs to hold in their head, and naming it here made the toast unreadable. */
+        toast(approved
+          ? `Comment posted on ${p.item} — CKA guessed right at ${p.confidence}%, and it learns from that`
+          : `Nothing posted — CKA guessed wrong at ${p.confidence}%, and it learns from that`);
+      } else {
+        const t = S.trust[p.type];
+        if (t) approved ? t.approvals++ : t.rejections++;
+        audit(approved ? "Action approved" : "Action rejected",
+          `${p.verb} · confidence ${p.confidence}% · decided by demo-user`,
+          approved ? "Human decision → Work item provider · GitHub Issues" : "Human decision");
+        if (approved) toast(`${p.verb} — applied and audited`);
+        else toast(`${p.verb} — rejected; feeds the trust score for “${p.type}”`);
+      }
       viewInbox();
       renderBadge();
       animateFillsIn(document.querySelector(".trust-grid"));

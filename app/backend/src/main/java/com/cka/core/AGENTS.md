@@ -30,7 +30,12 @@ payloads that carry these between stages are in [`event/`](event/AGENTS.md).
   nine in T14, because PRD 9.3 asks all nine of an audit record, and `Summary` gained
   `promptVersion` in T11 — the ticket that gave a prompt a version to record. `ActionType` lists
   only the MVP's `COMMENT` and `CLOSE`; add a type alongside the work item provider operation
-  that performs it.
+  that performs it. Two more are already specified and deliberately absent: the **threshold a
+  proposal was compared against** (T08, so a decision made under an old threshold can still be
+  read once T23 lets a human change it) and the **steps for linking, dismissing and changing a
+  threshold** on `AuditStep` (T23). Writing them now would mean fields nothing sets and an enum
+  branch nothing reaches — the rule above, applied to a case where the design is settled and the
+  code is not.
 - **A field every instance has is required, even when nothing produces one yet.**
   `Summary.promptVersion` is `@NonNull` because PRD 7.6 asks that the version used is recorded
   against every output and `PromptStore.current` always returns a prompt — so there is no honest

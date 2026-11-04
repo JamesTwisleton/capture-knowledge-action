@@ -4,7 +4,7 @@
 
 Source: narrated by James on 19 September 2026, cleaned up and structured for delivery. Written to be read aloud and adapted in the moment, not memorised word for word.
 
-This script is the deliverable of [`mvp-tickets.md`](mvp-tickets.md) T21 ([#21](https://github.com/JamesTwisleton/capture-knowledge-action/issues/21)), and it **doubles as the MVP test plan** — every beat below is something the built system has to actually do. The [beat checklist](#beat-checklist-t21) at the end maps the narration onto T21's ten beats so it can be used as a pass/fail list, not just a voiceover.
+This script is the deliverable of [`mvp-tickets.md`](mvp-tickets.md) T21 ([#21](https://github.com/JamesTwisleton/capture-knowledge-action/issues/21)), and it **doubles as the MVP test plan** — every beat below is something the built system has to actually do. The [beat checklist](#beat-checklist-t21) at the end maps the narration onto T21's eleven beats so it can be used as a pass/fail list, not just a voiceover.
 
 > [!NOTE]
 > This page is delivery material, not a numbered PRD section, so editing it does not require a PRD version bump. Section 14 of the PRD describes the recording; this is the script for it.
@@ -85,6 +85,10 @@ And here's the audit trail: you can follow any one of these back from the action
 
 Over time, this builds a trust picture. If you've accepted, say, one hundred percent of ticket reassignment actions over the last two weeks, CKA will offer to switch that action to auto-approve. Conversely, if you've only accepted fifty percent of ticket-close actions in the same period, it'll flag that and ask whether you want to disable that action, or try a different LLM provider if accuracy seems to be the issue.
 
+And it does the same thing to its own confidence threshold. Every one of these mention proposals is one CKA wasn't sure enough about to comment automatically — and it remembers what you decided and at what confidence. So when you've accepted every proposal above seventy percent for a fortnight, it says so, and offers to move the line: "lower the mention threshold from ninety to seventy?" It never moves it by itself — that would be the system marking its own homework — and it tells you how many decisions it's arguing from, so you can tell the difference between a pattern and a coincidence.
+
+Same for the ones it couldn't match at all. An unmatched mention has nothing to accept, because there's no ticket attached to it — but you can usually see what was meant, so you can link it to the right ticket, which posts the comment it missed, or dismiss it as nothing. If most of what you link turns out to be real tickets, that's CKA missing things, and it'll suggest trying a different provider or model.
+
 ### Error handling
 
 If an action fails when a provider tries to carry it out, say GitHub is down or your token's expired, that shows up as a new event in the audit trail: "this failed." You're given the choice to retry, switch to another provider, or dismiss it. Nothing fails silently: you can always see exactly what happened and decide how to handle it.
@@ -113,7 +117,7 @@ One thing not included in this MVP: a key part of the composability story is cos
 
 ## Beat checklist (T21)
 
-T21 specifies ten beats. Used as a test plan, each line below has to actually work in the built system, not just be narrated over.
+T21 specifies eleven beats. Used as a test plan, each line below has to actually work in the built system, not just be narrated over.
 
 | # | Beat | Section above |
 |---|---|---|
@@ -125,8 +129,9 @@ T21 specifies ten beats. Used as a test plan, each line below has to actually wo
 | 6 | Accept some proposals and reject the deliberate misclassification | Triage and audit |
 | 7 | Show the comments posted on tickets and the approved actions in GitHub | Triage and audit |
 | 8 | Show the audit trail reflecting the accept and reject decisions | Triage and audit |
-| 9 | Break the GitHub token and show the error state | Error handling |
-| 10 | Reset from the front end and show the clean state | Reset |
+| 9 | Link one unmatched mention to the right ticket, dismiss another, and show a calibration suggestion with the count behind it | Triage and audit |
+| 10 | Break the GitHub token and show the error state | Error handling |
+| 11 | Reset from the front end and show the clean state | Reset |
 
 ## Changes from the narrated version
 
@@ -147,7 +152,8 @@ Recorded so the edits are reviewable rather than silently absorbed.
 - Opening the stored note (beat 4).
 - **Rejecting the deliberate misclassification** (beat 6) — the narration only covered accepting, which would have left the reject path unrecorded despite the test data being built specifically to provoke it.
 - Showing the comments and closed ticket in GitHub, and tracing an entry back through the audit trail (beats 7 and 8).
-- A **Reset** section (beat 10), which the narration did not mention at all.
+- A **Reset** section (beat 11, beat 10 as narrated), which the narration did not mention at all.
+- **Calibration** (beat 9), added in PRD v0.9.9 and so not in the narrated version at all: linking an unmatched mention to the right ticket, dismissing another, and the threshold suggestion that comes out of those decisions. It needs real decision history behind it to be worth filming, which makes it the one beat the seed data (T19) has to manufacture rather than the demo run producing it live — flagged here rather than solved.
 - A short line making the event-bus handoff between the LLM and knowledge providers explicit, since that decoupling is the architectural point this session established.
 - A clause on **unmatched mentions** in the decision-service recap. Without it that recap listed two mention outcomes as though they were all of them; there are three.
 - An **MCP section** before Reset, added when T18 landed. The script pitches composability throughout and MCP is the strongest version of that claim — you aren't locked into CKA's own interface either — so its absence was a hole. Decided: mentioned, not demonstrated live, which settles the open question in T18's notes about whether the recording features an external MCP client.
