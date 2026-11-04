@@ -68,6 +68,14 @@ public class LangChain4jLlmProvider implements LlmProvider {
      * opening a connection: the failure this exists to catch is a key that is present and
      * revoked, which looks perfectly healthy until something uses it. The shortest prompt there
      * is, because the front end polls this.
+     *
+     * <p><strong>Known cost, unresolved:</strong> this shares the model's configured timeout,
+     * which is set for summarising a 40-minute transcript — so an unresponsive vendor can block
+     * a status check for {@code cka.llm.timeout-seconds}. A status view must not hang for three
+     * minutes. Fixing it needs a second {@code ChatModel} built with a short timeout, since
+     * LangChain4j sets timeouts per client rather than per request, and that is two beans for a
+     * consumer that does not exist until T15 exposes provider status. Decide it there, with the
+     * polling interval in hand. The per-poll token cost is real but negligible by comparison.
      */
     @Override
     public ProviderHealth checkHealth() {

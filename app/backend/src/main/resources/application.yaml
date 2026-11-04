@@ -77,6 +77,9 @@ cka:
   # How the LLM provider reaches a model (T12). The vendor is not named here: it is decided by
   # which ChatModel bean is on the classpath, and these are the settings that binding needs.
   llm:
+    # Which LangChain4j binding talks to the model. One ships (anthropic); a second declares
+    # itself with its own name rather than racing this one to back off — see provider/llm.
+    vendor: ${LLM_VENDOR:anthropic}
     api-key: ${LLM_API_KEY:}
     # Recorded against every summary for the audit trail, so changing it changes attribution.
     model: ${LLM_MODEL:claude-sonnet-5}

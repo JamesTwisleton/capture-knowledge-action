@@ -3,7 +3,6 @@ package com.cka.provider.llm;
 import dev.langchain4j.model.anthropic.AnthropicChatModel;
 import dev.langchain4j.model.chat.ChatModel;
 import java.time.Duration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,12 +19,20 @@ import org.springframework.core.env.Environment;
  * <p><strong>Substituting a vendor is this file, not the provider.</strong> Gemini, OpenAI and a
  * local Ollama model are all {@code ChatModel}s in LangChain4j, so pointing CKA at one means a
  * dependency and a {@code @Bean} returning that type — {@code LangChain4jLlmProvider} never
- * learns which it got, and asks the model itself for the attribution it records. The
- * {@code @ConditionalOnMissingBean} is what makes that substitution possible without editing
- * this class: declare a {@code ChatModel} anywhere and this one steps aside.
+ * learns which it got, and asks the model itself for the attribution it records.
+ *
+ * <p>The vendor is chosen by {@code cka.llm.vendor}, defaulting to {@code anthropic}, and
+ * <em>not</em> by {@code @ConditionalOnMissingBean(ChatModel.class)} — which is what this class
+ * tried first. That annotation is evaluated while configuration classes are processed, so
+ * whether this one backs off for a vendor declared elsewhere depends on which was registered
+ * first; Spring limits it to auto-configuration for exactly that reason, and
+ * {@code com.cka.config} already bans the same pattern for the same cause. A second binding
+ * therefore carries {@code havingValue = "gemini"} and the property picks one deterministically,
+ * rather than two configurations racing to decide which model CKA talks to.
  */
 @Configuration
 @ConditionalOnProperty(prefix = "cka.provider", name = "llm", havingValue = "langchain4j")
+@ConditionalOnProperty(prefix = "cka.llm", name = "vendor", havingValue = "anthropic", matchIfMissing = true)
 class AnthropicChatModelConfiguration {
 
     /**
@@ -38,7 +45,6 @@ class AnthropicChatModelConfiguration {
      * @param timeout generous, because summarising a 40-minute transcript is not a quick call
      */
     @Bean
-    @ConditionalOnMissingBean(ChatModel.class)
     ChatModel chatModel(Environment environment) {
         var apiKey = environment.getProperty("cka.llm.api-key");
         if (apiKey == null || apiKey.isBlank()) {

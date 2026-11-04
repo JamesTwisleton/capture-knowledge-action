@@ -76,9 +76,17 @@ class SummariseAcrossTheBusTest {
                 .build();
         bus.publish(ContentCaptured.builder().chainId(chainId).content(content).build());
 
-        assertThat(published).hasSize(2);
-        assertThat(published.get(1)).isInstanceOf(ContentSummarised.class);
-        var summarised = (ContentSummarised) published.get(1);
+        // Filtered by type rather than indexed. published.get(1) would pass only because this
+        // subscriber was registered before the stage was — and InMemoryEventBus delivers in
+        // subscription order while RabbitMQ promises nothing of the kind, which is the trap
+        // testsupport/AGENTS.md names. What is being asserted is that exactly one summarised
+        // event came out, not where it landed in a list.
+        assertThat(published).filteredOn(ContentSummarised.class::isInstance).hasSize(1);
+        var summarised = published.stream()
+                .filter(ContentSummarised.class::isInstance)
+                .map(ContentSummarised.class::cast)
+                .findFirst()
+                .orElseThrow();
         // The same chain id throughout, because T14's audit chain is assembled by it: a new id
         // here and the summary could never be traced back to the recording it came from.
         assertThat(summarised.chainId()).isEqualTo(chainId);
