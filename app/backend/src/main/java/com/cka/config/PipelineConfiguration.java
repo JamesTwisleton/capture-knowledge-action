@@ -3,6 +3,7 @@ package com.cka.config;
 import com.cka.pipeline.SummariseStage;
 import com.cka.provider.eventbus.EventBus;
 import com.cka.provider.llm.LlmProvider;
+import java.util.ArrayList;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -51,17 +52,27 @@ class PipelineConfiguration {
     @Bean
     ApplicationListener<ApplicationReadyEvent> pipelineStarter(
             ObjectProvider<LlmProvider> llmProvider, ObjectProvider<EventBus> eventBus) {
-        return ready -> {
+        return _ -> {
             var llm = llmProvider.getIfAvailable();
             var bus = eventBus.getIfAvailable();
-            if (llm == null || bus == null) {
-                log.info(
-                        "Summarise stage not started: {}",
-                        llm == null ? "no LLM provider configured (cka.provider.llm)" : "no event bus configured");
+            if (llm != null && bus != null) {
+                new SummariseStage(llm, bus).start();
+                log.info("Summarise stage listening for captured content");
                 return;
             }
-            new SummariseStage(llm, bus).start();
-            log.info("Summarise stage listening for captured content");
+
+            // Each absence reported on its own terms, naming the property that would fix it.
+            // The ternary this replaces said "no LLM provider" or, by elimination, "no event
+            // bus" — sound reasoning, and wrong when both were missing: it named the first,
+            // and whoever set that property restarted into a second, different message.
+            var missing = new ArrayList<String>();
+            if (llm == null) {
+                missing.add("no LLM provider (cka.provider.llm)");
+            }
+            if (bus == null) {
+                missing.add("no event bus (cka.provider.eventbus)");
+            }
+            log.info("Summarise stage not started: {}", String.join(", ", missing));
         };
     }
 }
