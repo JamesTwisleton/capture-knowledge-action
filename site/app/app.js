@@ -772,10 +772,11 @@ Full platform transcript stored below this section (elided in this prototype).
         <div class="suggestion">
           <div class="stitle">You've accepted all ${accepted} mention proposals scoring ${floor}% or above over the
           last ${cal.windowDays} days. Lower the mention threshold from ${S.threshold}% to ${floor}%?</div>
-          <p>Those comments would then post automatically instead of waiting here. Based on ${decisions} decisions in
-          the window — CKA won't suggest this below ${cal.minimumDecisions}, because “you've accepted 100%” of a
-          handful is not evidence. It only ever suggests: a threshold that moved itself using proposals its own
-          previous value produced would be grading its own homework.</p>
+          <p>Those comments would post straight away in future instead of waiting here. This is based on
+          ${decisions} of your decisions over the ${cal.windowDays} days — CKA stays quiet until it has at least
+          ${cal.minimumDecisions}, because “you've accepted 100%” of three proposals is a coincidence, not a
+          pattern. And it only ever asks: it will not move the threshold by itself, because it would then be
+          judging itself on proposals its own setting produced.</p>
           <p class="small muted">Note the evidence is one-sided. You only ever see mentions that fell <em>below</em>
           the threshold, so this can argue for lowering it and never for raising it — only rejections below the line
           do that.</p>
@@ -900,7 +901,7 @@ Full platform transcript stored below this section (elided in this prototype).
         const from = S.threshold;
         S.threshold = Math.min(...D.mentionCalibration.proposalDecisions.filter(x => x.rejected === 0 && x.accepted > 0).map(x => x.from));
         audit("Threshold changed", `Mention threshold ${from}% → ${S.threshold}% by demo-user, on a calibration suggestion`, "Human decision");
-        toast(`Mention threshold now ${S.threshold}% — see the activity view's mention table`);
+        toast(`Mention threshold is now ${S.threshold}% — open Activity to see what changed`);
       }
       if (a === "threshold-later") { S.dismissed.thresholdSuggestion = true; }
       if (a === "detection-switch") { toast("In the full product this opens the provider picker for the decision layer"); return; }
@@ -914,13 +915,14 @@ Full platform transcript stored below this section (elided in this prototype).
       const u = S.unmatched.find(x => x.id === b.dataset.umLink);
       u.status = "linked";
       audit("Unmatched mention linked", `${u.id} linked to a work item by demo-user — comment posted, recorded as a detection miss`, "Human decision");
-      toast("Linked — the comment detection missed has been posted");
+      toast("Linked — CKA has posted the comment it missed on that item");
       viewInbox();
     }));
     document.querySelectorAll("[data-um-dismiss]").forEach(b => b.addEventListener("click", () => {
       const u = S.unmatched.find(x => x.id === b.dataset.umDismiss);
       u.status = "dismissed";
       audit("Unmatched mention dismissed", `${u.id} dismissed by demo-user — nothing to find`, "Human decision");
+      toast("Dismissed — nothing was posted, and CKA knows there was nothing to find");
       viewInbox();
     }));
 
@@ -952,7 +954,7 @@ Full platform transcript stored below this section (elided in this prototype).
        records both the score and the threshold it was compared to. */
     const moved = mention && p.threshold !== S.threshold;
     const gates = mention
-      ? `below the ${p.threshold}% mention threshold in force when it was scored${moved ? ` (now ${S.threshold}% — a score like this will post automatically next run)` : ""} — no trigger phrase or explicit ID needed, since a comment changes nothing`
+      ? `CKA was only ${p.confidence}% sure, under the ${p.threshold}% it needed to comment on its own — so it is asking. No trigger phrase needed: a comment changes nothing.${moved ? ` The threshold is now ${S.threshold}%, so a guess like this would post automatically next time.` : ""}`
       : "gates passed: trigger phrase ✓ · explicit ID ✓ · confidence ✓";
     return `<div class="card proposal ${cls}">
       <div class="p-head">
@@ -969,8 +971,8 @@ Full platform transcript stored below this section (elided in this prototype).
              <button class="btn danger small" data-reject="${p.id}">✕ Reject</button>
            </div>`
         : p.status === "approved"
-          ? `<div class="outcome ok">✓ ${mention ? "Accepted — comment posted, and the decision feeds threshold calibration" : "Approved — applied on GitHub Issues and audited"}</div>`
-          : `<div class="outcome no">✕ Rejected — nothing applied; the rejection feeds ${mention ? "threshold calibration, not any action type's trust score" : "this action type's trust score"}</div>`}
+          ? `<div class="outcome ok">✓ ${mention ? `Accepted — comment posted on ${p.item}. CKA was right to raise it at ${p.confidence}%, which is what its threshold suggestions are built from` : "Approved — applied on GitHub Issues and audited"}</div>`
+          : `<div class="outcome no">✕ Rejected — nothing ${mention ? `posted. CKA was wrong at ${p.confidence}%, which is also worth knowing` : "applied; the rejection feeds this action type's trust score"}</div>`}
     </div>`;
   }
 
@@ -991,9 +993,12 @@ Full platform transcript stored below this section (elided in this prototype).
         audit(approved ? "Mention proposal accepted" : "Mention proposal rejected",
           `${p.item} at ${p.confidence}% confidence, against a ${S.threshold}% threshold · decided by demo-user`,
           approved ? "Human decision → Work item provider · GitHub Issues" : "Human decision");
+        /* Plain language on purpose. Which mechanism a decision feeds is a design guarantee
+           (see the comment above, and PRD 9.2) — it is not something the person clicking
+           needs to hold in their head, and naming it here made the toast unreadable. */
         toast(approved
-          ? `Comment posted on ${p.item} — and ${p.confidence}% is now one more data point for the threshold`
-          : `Rejected — feeds threshold calibration, not the trust score for “comment”`);
+          ? `Comment posted on ${p.item} — CKA guessed right at ${p.confidence}%, and it learns from that`
+          : `Nothing posted — CKA guessed wrong at ${p.confidence}%, and it learns from that`);
       } else {
         const t = S.trust[p.type];
         if (t) approved ? t.approvals++ : t.rejections++;
