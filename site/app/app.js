@@ -79,12 +79,22 @@
 
   /* ---------------- helpers ---------------- */
 
+  /* Duration scales with the message, because one number cannot suit both "Retried ✓" and the
+     calibration toasts, which are three times longer and say something the reader has to
+     actually take in. ~60ms a character is the usual reading allowance, on top of a fixed
+     2.2s for noticing the thing at all; floored so nothing flashes past and capped so a long
+     message cannot park itself over the page. Click to dismiss, since the cost of a longer
+     toast is being stuck with one you have already read. */
   function toast(msg) {
     const el = document.getElementById("toast");
     el.textContent = msg;
     el.classList.add("show");
+    el.style.cursor = "pointer";
+    el.title = "Click to dismiss";
     clearTimeout(el._t);
-    el._t = setTimeout(() => el.classList.remove("show"), 2600);
+    const hide = () => { clearTimeout(el._t); el.classList.remove("show"); };
+    el.onclick = hide;
+    el._t = setTimeout(hide, Math.min(9000, Math.max(3500, 2200 + msg.length * 60)));
   }
 
   function gbp(n) {
