@@ -1,6 +1,6 @@
 # Capture-Knowledge-Action
 
-**Product Requirements Document — Draft v0.9.8 for review**
+**Product Requirements Document — Draft v0.9.9 for review**
 
 | | |
 |---|---|
@@ -94,7 +94,7 @@ J1 is the golden path. J2 and J3 are independently valid entry points: the stage
 5. The knowledge provider consumes that event and writes the transcript, summary and a link to the recording to its store (Confluence in this example), where the organisation's search and AI tooling can index them.
 6. The write completes and the knowledge provider publishes a **"knowledge stored"** event. This is the seam between the Knowledge and Action stages: everything from here on is triggered by that event, never called directly by the orchestrator or by the LLM step. That is what lets either stage be swapped, or run on its own (J2, J3), or be driven by knowledge written some other way.
 7. The Action stage consumes the event. The work item provider supplies a **scoped candidate pool** — for example, items on the team's board modified in the last two weeks (configurable; see [7.5](docs/prd/07-core-concepts-and-domain-model.md#75-candidate-pool)).
-8. Jev evaluates the stored knowledge content — transcript and summary together — against the candidate pool and returns a per-item confidence that each was mentioned. This is one step, not two: there is no separate ID-extraction pass to keep in sync with it, which is exactly what makes it tolerant of mistranscribed item IDs (an item's reference number, such as PROJ-1234) where brittle exact-text matching is not. Three outcomes follow, and nothing is discarded: items at or above the mention threshold (default 90%, configurable) are treated as mentioned; items below it become **proposed comments** in the Triage Inbox for a human to confirm; and a reference matching no candidate in the pool at all is recorded as an **unmatched mention**, written to the audit trail and surfaced in the front end.
+8. Jev evaluates the stored knowledge content — transcript and summary together — against the candidate pool and returns a per-item confidence that each was mentioned. This is one step, not two: there is no separate ID-extraction pass to keep in sync with it, which is exactly what makes it tolerant of mistranscribed item IDs (an item's reference number, such as PROJ-1234) where brittle exact-text matching is not. Three outcomes follow, and nothing is discarded: items at or above the mention threshold (default 90%, configurable) are treated as mentioned; items below it become **proposed comments** in the Triage Inbox for a human to confirm; and a reference matching no candidate in the pool at all is recorded as an **unmatched mention**, written to the audit trail and surfaced in the front end, where it can be linked to the item it meant or dismissed as nothing. Those human decisions — on proposals and on unmatched mentions alike — are what the mention threshold is later calibrated against (J5).
 9. For every mentioned item, CKA posts a comment: "This item was discussed in [meeting] on [date] — [link to the knowledge page]". No trigger phrase is needed; commenting is a low-risk action.
 10. Where a participant used the team's trigger phrase with an explicit item ID ("For the rubber duck: please close PROJ-1234"), that segment is passed to Jev to classify whether a mutating action was requested against the candidate that mention detection matched, and with what confidence.
 11. If the per-action-type trust setting allows auto-approval and confidence clears the threshold, the action is applied (for example, the item is transitioned to Done). Otherwise it is placed in the Triage Inbox for a human to accept or reject. Since every mutating action type starts in review, in practice this means every state change goes past a human until that action type has earned auto-approval (J5). **Accepting in the Triage Inbox is the final approval — there is no second confirmation dialog after it.**
@@ -194,15 +194,18 @@ flowchart TB
   linkStyle default stroke:#6e6e6e,stroke-width:3px
 ```
 
-### J5 — Triage Inbox and the trust ramp
+### J5 — Triage Inbox, the trust ramp and calibration
 
 1. Two kinds of proposal appear in the **Triage Inbox**. Proposed mutating actions: "Jev proposes closing PROJ-1234 (confidence 94%) based on [transcript excerpt] — Accept / Reject". And proposed comments, where a mention fell below the confidence threshold: "Jev thinks PROJ-5678 may have been discussed (confidence 71%) — Accept / Reject". Every proposal shows its confidence and which provider and model produced it, so a bad provider is visible and attributable rather than "the app got it wrong".
 2. The user accepts or rejects — individually, or with an **accept all** for the whole list. Accepting is the final approval; there is no second confirmation dialog. Both outcomes are written to the action decision chain and feed the trust score for that action type.
 3. When the approval rate for an action type stays high over a window (for example 100% over two weeks), CKA suggests: "You've accepted every proposed closure for two weeks. Switch closures to auto-approve?" The audit trail continues either way.
 4. The converse is equally important. When the rejection rate stays high, CKA suggests: "You've rejected most proposed closures this month. This is costing you money in LLM calls. Disable this action type, or switch the provider or model making these decisions?"
 5. Trust is tracked **per action type, never globally**: a team can fully trust "comment" while never auto-approving "close".
+6. **The same learning is applied to the confidence threshold itself.** Steps 3 and 4 change *who approves* an action; this changes *where the line is*. Proposed comments are the evidence, because each one carries the confidence it was proposed at: when every proposal above some score has been accepted over the window, CKA suggests moving the line to meet the team's own judgement — "You've accepted all 23 mention proposals scoring 70% or above over the last two weeks. Lower the mention threshold from 90% to 70%?" Accepting means those comments post automatically in future rather than queueing for review. A band that keeps being *rejected* argues the other way, for raising the threshold past it.
+7. **Unmatched mentions become evidence too, once there is something to decide about them.** A reference that matched no work item has nothing to accept — but the person reading it usually knows what it meant, so it can be **linked** to the real item (posting the comment detection missed) or **dismissed** as nothing. The ratio measures detection quality rather than any threshold: "9 of the 11 unmatched mentions you resolved in the last two weeks turned out to be real work items. Try a different decision provider or model?"
+8. **A threshold never moves on its own.** Every one of these is a suggestion with the window and the count it is arguing from, and none is acted on without a person. A threshold that lowered itself using proposals its own previous value produced would be grading its own homework.
 
-*This journey is in the MVP in full: individual accept, individual reject, accept all, both outcomes recorded in the audit chain and visible in the front end, and the suggestion banners at steps 3 and 4 once there is enough accept/reject history for an action type. The demo recording deliberately contains a wrong ticket number so that a misclassification is proposed and the reject path is shown, not only the happy path.*
+*This journey is in the MVP in full: individual accept, individual reject, accept all, linking and dismissing unmatched mentions, every outcome recorded in the audit chain with the confidence it was decided against, and the suggestion banners at steps 3, 4, 6 and 7 once there is enough decision history to argue from. The demo recording deliberately contains a wrong ticket number so that a misclassification is proposed and the reject path is shown, not only the happy path.*
 
 ```mermaid
 ---
@@ -279,7 +282,7 @@ Sections 1–6 above are the product statement and user journeys — the primary
 | 14 | [Landing page](docs/prd/14-landing-page.md) | The GitHub Pages product front door |
 | 15 | [Decision log](docs/prd/15-decision-log.md) | How we got here, in order |
 | 16–17 | [Open questions and next steps](docs/prd/16-17-open-questions-and-next-steps.md) | What's still unresolved, what happens next |
-| — | [MVP ticket breakdown](docs/prd/mvp-tickets.md) | The 22 tickets of the MVP, in order, with acceptance criteria — tracked as epic [#1](https://github.com/JamesTwisleton/capture-knowledge-action/issues/1). Delivery planning rather than a PRD section |
+| — | [MVP ticket breakdown](docs/prd/mvp-tickets.md) | The 23 tickets of the MVP, in order, with acceptance criteria — tracked as epic [#1](https://github.com/JamesTwisleton/capture-knowledge-action/issues/1). Delivery planning rather than a PRD section |
 | — | [MVP demo script](docs/prd/demo-script.md) | The script for the demo recording, doubling as the MVP test plan (T21). Delivery material rather than a PRD section |
 | — | [Changelog](docs/prd/changelog.md) | Version history of this document |
 

@@ -25,6 +25,13 @@ and the record to everything PRD 9.3 requires and added the decision history.
   per-action-type score (PRD 9.2) and the front end's accept/reject history (the J5 groundwork).
   The steps it reads are `AuditStep.humanDecisions()`, so an action CKA applied by itself is not
   counted as a person's opinion of it.
+- **Calibration (T23) needs a different query, not a wider `decisions()`.** PRD 9.2 learns from
+  two sets of human decisions and changes two different things with them: decisions on *actions*
+  move the trust score, decisions on *mentions* move a threshold. They share a shape — a human, an
+  outcome, a confidence — which is exactly why widening this query is the tempting wrong move: it
+  would feed mention verdicts into a per-action-type score and nothing would fail. A threshold is
+  also calibrated from confidences in bands rather than a single rate, so the query it wants
+  groups differently anyway.
 - **Columns exist for what is queried; everything else is `detail`.** A chain, a trust window and
   an action type are columns. How a step is phrased is not — `detail` is what triage and the
   activity view show a person, and the one place its wording is decided is `AuditTrail`.

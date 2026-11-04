@@ -17,7 +17,13 @@ import lombok.RequiredArgsConstructor;
  *
  * <p>This is the gate chain's skeleton, not the gate chain. Every match is proposed for a
  * human to confirm; T08 adds the mention threshold above which a comment is posted
- * automatically, and the intent, decision and trust checks for mutating actions.
+ * automatically, and the intent, decision and trust checks for mutating actions. T08 also makes
+ * that threshold a value read per run rather than a constant, because T23 lets a human change it.
+ *
+ * <p>An unmatched mention is recorded and goes no further <em>here</em>, which is not the same as
+ * going nowhere: PRD 9.2 has a person linking it to the work item it meant or dismissing it, and
+ * those decisions are what the mention threshold is later calibrated from. T23 owns that; this
+ * stage's job ends at the audit entry.
  */
 @RequiredArgsConstructor
 public class ActionStage {

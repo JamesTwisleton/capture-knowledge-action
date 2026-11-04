@@ -103,6 +103,8 @@ The set of work items Jev classifies against. It is scoped *before* classificati
 
 Scoring against the pool has three possible outcomes (see [9.1](09-trust-safety-and-audit.md#91-the-gate-model)): a candidate at or above the mention threshold is commented on automatically; a candidate below it is proposed as a comment in the Triage Inbox for a human to confirm; and a reference matching **no** candidate at all is recorded as an **unmatched mention** — no proposal, but written to the action decision chain and surfaced in the front end rather than dropped without trace. Nothing the decision provider sees is discarded silently.
 
+An unmatched mention can then be **linked** to the work item it meant or **dismissed** as nothing, and those resolutions are what tell CKA whether this pool is the right one: items linked that were in the pool all along are detection misses, while items linked that were never in it are the pool drawn too tightly. Scoping the pool is a trade between precision and reach, and this is the only evidence a team ever gets about which side of it they are on — see [9.2](09-trust-safety-and-audit.md#92-trust-scores-and-calibration).
+
 *MVP scope for GitHub: all issues in the configured repository, with no filtering. The scoping options above are the general design; the MVP exercises the simplest possible pool.*
 
 ### 7.6 Content types and summary prompts
@@ -127,13 +129,15 @@ How types and prompts behave:
 
 ### 7.7 Actions, gates and trust
 
-See [Section 9](09-trust-safety-and-audit.md#9-trust-safety-and-audit).
+See [Section 9](09-trust-safety-and-audit.md#9-trust-safety-and-audit) for the action checks and their thresholds, the trust score that decides who approves an action type, and the **calibration** that turns human decisions on mention detection back into a suggested threshold.
 
 ### 7.8 Audit record
 
 What happened, when, on which content, proposed by which provider and model with what confidence, **using which prompt version**, decided by whom (system or named human), with what outcome, and the error if any.
 
-Individual records are not the unit that matters. The **action decision chain** is: the full traceable record from the original captured content — through knowledge storage, mention detection (including unmatched mentions), comments, proposals, the human accept or reject, and the applied action — to whatever outcome or error resulted. Any action can be traced back to the recording it came from, and any recording forward to everything it caused.
+Individual records are not the unit that matters. The **action decision chain** is: the full traceable record from the original captured content — through knowledge storage, mention detection (including unmatched mentions), comments, proposals, the human accept or reject, the linking or dismissal of an unmatched mention, and the applied action — to whatever outcome or error resulted. Any action can be traced back to the recording it came from, and any recording forward to everything it caused.
+
+The human decisions in that chain are read twice: once by a person asking what happened, and once by [calibration](09-trust-safety-and-audit.md#92-trust-scores-and-calibration), which is why a decision records the confidence it was made against and not only its outcome. An accept with no score attached cannot tell anyone where to put a threshold.
 
 ### 7.9 Work item model
 

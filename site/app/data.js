@@ -183,6 +183,35 @@ window.CKA_DATA = {
     }
   ],
 
+  /* Mention decisions over the same 14-day window — the evidence calibration argues from
+     (PRD 9.2). Kept apart from trustSeed on purpose: these move the mention *threshold*,
+     trustSeed moves who *approves* an action type. Two learnings, two sets of decisions.
+
+     proposalDecisions are the below-threshold proposed comments a human ruled on, bucketed
+     by the confidence each was proposed at. unmatched are the unmatched mentions resolved:
+     "linked" means detection missed a real item, "dismissed" means there was nothing there. */
+  mentionCalibration: {
+    windowDays: 14,
+    /* Illustrative. The real default is deliberately open in the PRD, to be set when T23 is
+       scoped against actual decision history rather than guessed at in advance. */
+    minimumDecisions: 20,
+    proposalDecisions: [
+      { from: 80, to: 89, accepted: 9,  rejected: 0 },
+      { from: 70, to: 79, accepted: 14, rejected: 0 },
+      { from: 60, to: 69, accepted: 3,  rejected: 7 },
+      { from: 50, to: 59, accepted: 0,  rejected: 6 }
+    ],
+    unmatched: { linked: 9, dismissed: 2 },
+    examples: [
+      { id: "um-1", quote: "…and the one about the token refresh thing, that's still broken.",
+        speaker: "Tom Albrecht", time: "10:31:04",
+        note: "No item ID was spoken and no candidate scored above 10%. A person can see this is #128." },
+      { id: "um-2", quote: "…we should probably look at the flaky one at some point.",
+        speaker: "Priya Raman", time: "10:36:22",
+        note: "No candidate, and nothing specific enough to attach to one — the honest resolution is to dismiss it." }
+    ]
+  },
+
   /* Per-action-type trust. mode: auto | review | disabled.
      approvals/rejections are the seeded history for the current 14-day window. */
   trustSeed: {

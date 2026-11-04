@@ -3,7 +3,7 @@
 # CKA MVP: ticket breakdown
 
 Source: scoping conversation on 18 September 2026, building on PRD v0.9.3; revised 19 September 2026 from the demo-script session (see [`demo-script.md`](demo-script.md)), which introduced the content-summarised event and the low-confidence proposed-comment path.
-Status: **filed as GitHub issues** — epic [#1](https://github.com/JamesTwisleton/capture-knowledge-action/issues/1) with T01–T22 attached as sub-issues. Acceptance criteria below are drawn from the discussion; anything not settled is listed under **Open questions** at the end and flagged inline. This page stays the canonical narrative version; the issues are the working tracker.
+Status: **filed as GitHub issues** — epic [#1](https://github.com/JamesTwisleton/capture-knowledge-action/issues/1) with T01–T22 attached as sub-issues; **T23 is specified here but not yet filed**. Acceptance criteria below are drawn from the discussion; anything not settled is listed under **Open questions** at the end and flagged inline. This page stays the canonical narrative version; the issues are the working tracker.
 
 > [!NOTE]
 > This page is delivery planning, not part of the PRD's numbered sections, so editing it does not require a PRD version bump. It is linked from [Section 17, Next steps](16-17-open-questions-and-next-steps.md#17-next-steps).
@@ -25,7 +25,7 @@ Not in the MVP: the full setup wizard (PRD J4), the cost dashboard (J7), other p
 
 ## Structure on GitHub
 
-GitHub has no native epic type. Of the options considered — an issue with a checklist of linked sub-issues, native sub-issues, or a Project with an "Epic" label — **native sub-issues** were chosen: one parent epic, [#1](https://github.com/JamesTwisleton/capture-knowledge-action/issues/1), with T01–T22 attached as real GitHub sub-issues. That gives a progress bar on the parent and a proper parent/child relationship rather than a markdown checklist.
+GitHub has no native epic type. Of the options considered — an issue with a checklist of linked sub-issues, native sub-issues, or a Project with an "Epic" label — **native sub-issues** were chosen: one parent epic, [#1](https://github.com/JamesTwisleton/capture-knowledge-action/issues/1), with T01–T23 attached as real GitHub sub-issues (T23 still to file). That gives a progress bar on the parent and a proper parent/child relationship rather than a markdown checklist.
 
 Labels: every ticket carries `mvp`; the parent also carries `epic`. Area labels (`backend`, `frontend`, `infrastructure`, `provider`, `documentation`) are applied per ticket.
 
@@ -63,6 +63,7 @@ Ownership: the earlier decision was that James hand-builds the Spring Boot and N
 | T13 | GitHub work item provider | [#14](https://github.com/JamesTwisleton/capture-knowledge-action/issues/14) |
 | T14 | Audit log (action decision chain) | [#15](https://github.com/JamesTwisleton/capture-knowledge-action/issues/15) |
 | T15 | Backend endpoints for the front end | [#16](https://github.com/JamesTwisleton/capture-knowledge-action/issues/16) |
+| T23 | Calibration: learning from mention decisions | *to file* |
 | T16 | Front end views | [#17](https://github.com/JamesTwisleton/capture-knowledge-action/issues/17) |
 | T17 | Error handling | [#18](https://github.com/JamesTwisleton/capture-knowledge-action/issues/18) |
 | T18 | MCP compatibility: publish the spec, and expose the core through it | [#22](https://github.com/JamesTwisleton/capture-knowledge-action/issues/22) |
@@ -71,7 +72,7 @@ Ownership: the earlier decision was that James hand-builds the Spring Boot and N
 | T20 | Setup and start scripts, README | [#20](https://github.com/JamesTwisleton/capture-knowledge-action/issues/20) |
 | T21 | Demo script and recording | [#21](https://github.com/JamesTwisleton/capture-knowledge-action/issues/21) |
 
-Ticket numbers are stable identifiers, not positions: **T22 is built between T19 and T20**, where its row sits. It was added after T01–T21 were filed as GitHub issues, and renumbering to slot it in would have rewritten twenty-one live issues and every cross-reference to them for no gain.
+Ticket numbers are stable identifiers, not positions: **T22 is built between T19 and T20**, and **T23 between T15 and T16**, where their rows sit. Both were added after the earlier tickets were filed as GitHub issues, and renumbering to slot either in would have rewritten every live issue and cross-reference for no gain. T23 has no issue number yet — it needs filing as a sub-issue of [#1](https://github.com/JamesTwisleton/capture-knowledge-action/issues/1), and its row says so rather than guessing the number it will get.
 
 ## Credentials and config needed
 
@@ -199,7 +200,8 @@ Ticket numbers are stable identifiers, not positions: **T22 is built between T19
 - Mention detection has **three outcomes, and no fourth** — nothing is discarded silently:
   - At or above the mention threshold (default 90%, configurable): comment on the item automatically, no approval needed.
   - Below the threshold, but a real candidate scored: create a **proposed comment** in the triage list for a human to confirm. Accepting posts the comment; rejecting posts nothing.
-  - No candidate matched at all: record an **unmatched mention** (visible in the audit chain and front end via T14/T16). Nothing is proposed, because there is no item to act on.
+  - No candidate matched at all: record an **unmatched mention** (visible in the audit chain and front end via T14/T16). Nothing is proposed, because there is no item to act on — but it can be linked to a work item or dismissed by a human (T23), and those resolutions are recorded.
+- **The mention threshold is read, not hardcoded.** It ships at 90% but T23 lets a human change it on CKA's suggestion, so check 1 reads the current value on each run rather than capturing it at startup, and every proposal records the confidence it was scored at *and* the threshold it was compared against. Without the second, a decision made under an old threshold is uninterpretable later — which is exactly the data T23 calibrates from.
 - Action classification: for segments containing the trigger phrase, decide whether a mutating action was requested against whichever candidate mention detection matched, and with what confidence.
 - The gate chain as **action checks** compared against **action thresholds**: mention, intent, decision, trust (PRD Section 9).
 - Produces triage proposals — of both kinds, proposed comments and proposed mutating actions — and automatic comment actions, each recording provider, model and confidence.
@@ -299,6 +301,8 @@ Ticket numbers are stable identifiers, not positions: **T22 is built between T19
 - Records the full **action decision chain**: original captured content, through knowledge storage, mention detection (including unmatched mentions), comments, proposals, human accept or reject, applied action and outcome or error.
 - Every entry records provider, model, confidence, decider (system or human) and prompt version.
 - Both accept and reject decisions are written and feed the trust data for that action type.
+- **Human decisions on mention detection are recorded too, with the confidence they were decided against**: accept and reject on proposed comments, and link and dismiss on unmatched mentions. An outcome with no score beside it cannot tell anyone where to put a threshold, so this is the data T23 calibrates from and not a nice-to-have on the entry.
+- A change to an action threshold is itself an audited decision — who changed it, from what value to what value, and whether a calibration suggestion prompted it.
 - Accept/reject history visible in the front end, as groundwork for the PRD J5 "you've rejected most of these recently" suggestion.
 
 **Acceptance criteria:** after a full run, the chain for any applied or rejected action can be traced back to the original recording.
@@ -317,6 +321,7 @@ Ticket numbers are stable identifiers, not positions: **T22 is built between T19
 - Stored knowledge (documentation) view.
 - Reset and seed endpoints (see T19).
 - Prompt list, create and edit endpoints, versioned (see T11).
+- Calibration suggestions, unmatched-mention link and dismiss, and the threshold update they lead to (see T23).
 
 **Open — decide when scoping this ticket:** T16 promises a *live* activity log and *live* provider status, but the front end is REST-only and never touches the event bus (see PRD [7.1](07-core-concepts-and-domain-model.md#71-stages)), so "live" has to be built out of something. Options: client-side polling on an interval (simplest, fits the MVP, and mirrors the folder watcher's own polling), server-sent events, or websockets. Polling is the obvious default; the point is that this is a decision, not something the word "live" supplies for free.
 
@@ -332,13 +337,38 @@ Ticket numbers are stable identifiers, not positions: **T22 is built between T19
 - **Stored documentation view:** open the note that was written to the vault.
 - **Triage list:** proposals with confidence, transcript excerpt, and which provider and model produced them. Two kinds, visually distinguishable at a glance: **proposed comments** (a mention below the confidence threshold — accepting posts the comment) and **proposed actions** (a mutating change — accepting applies it). Accept and reject individually, plus accept all. Accepting in triage is the gate; there is no second confirmation dialog.
 - Accept/reject history visible.
-- **Trust-ramp suggestions:** the triage view surfaces the PRD J5 banners (for example "you've rejected most of these recently", "switch to auto-approve", "disable or switch provider") once there is enough accept/reject history for an action type.
+- **Unmatched mentions are resolvable, not just visible:** each one offers **link to a work item** (which posts the comment detection missed) and **dismiss**, and leaving it unresolved stays a valid state. This is the other half of T23's evidence, so the control has to exist for the calibration banners to ever have anything to say.
+- **Trust-ramp and calibration suggestions:** the triage view surfaces the PRD J5 banners (for example "you've rejected most of these recently", "switch to auto-approve", "disable or switch provider") once there is enough accept/reject history for an action type, and the T23 banners alongside them — "lower the mention threshold from 90% to 70%?" and "most unmatched mentions turned out to be real items; try another provider or model?". Each shows the window and the number of decisions behind it, because a suggestion the reader cannot weigh is one they learn to dismiss. The threshold banner's action changes a setting rather than approving a proposal, so it must not look like an Accept button.
 - **Prompt editor:** list, view versions of, and edit the meeting-type prompt(s), via the T15 endpoints.
 - **Reset button** (see T19).
 
 **Acceptance criteria:** every beat of the demo script (T21) can be performed from the UI.
 
 **Depends on:** T03 (Next.js skeleton), T15 (backend endpoints).
+
+## T23. Calibration: learning from mention decisions
+
+**Goal:** turn the human decisions already in the action decision chain into the two suggestions PRD [9.2](09-trust-safety-and-audit.md#92-trust-scores-and-calibration) promises for check 1 — a mention threshold that matches this team's own judgement, and a read on how well detection is working — and add the one missing input they need, a human verdict on unmatched mentions. T14 records the decisions; nothing yet reads them back.
+
+**Scope**
+- **Unmatched mention resolution.** Two actions on an unmatched mention: **link** it to the work item it actually referred to, which posts the comment detection would have posted had it matched (through the work item provider, the same path accepting a proposed comment takes), and **dismiss** it as nothing — a mistranscription, or talk that was never about a work item. Unresolved is the starting state and a valid resting one. Linking names an existing work item rather than taking free text, so the records stay comparable.
+- **Calibration over a configurable window**, the same window the trust scores use:
+  - Accept and reject on proposed comments, **bucketed by the confidence each was proposed at**. Produces a threshold suggestion naming a concrete value — the floor of the band in which everything was accepted — not a vague "change your threshold?".
+  - A band of confidences that keeps being rejected, which argues for raising the threshold past it.
+  - The link/dismiss ratio on unmatched mentions, which is a detection-quality signal rather than a threshold one, and drives the existing "switch provider or model" suggestion.
+- **A configurable minimum number of decisions before anything is suggested.** Default decided when this ticket is scoped. Every suggestion carries the window and the count behind it.
+- **Suggestions only.** Applying one is a human action. A threshold must never move on its own: it would be reasoning from proposals its own previous value produced, and each move would widen the evidence band justifying the next.
+- **Applying a suggestion is an audited decision** — who, from what value, to what value, and whether a suggestion prompted it (T14).
+- Endpoints for the suggestions, the two resolve actions and the threshold update, listed in T15 and owned here.
+- **One asymmetry to make explicit in the code and the UI copy, not paper over:** humans only ever decide on mentions that fell *below* the threshold. Accept history can argue for lowering it; only rejects below the line can argue for raising it. There is no human verdict on the auto-commented side, so the suggestion never claims one.
+
+**Acceptance criteria:** with seeded decision history, accepting every mention proposal at or above a confidence over the window produces a suggestion naming that confidence as the new threshold; with fewer than the minimum number of decisions, no suggestion is produced at all; accepting the suggestion changes the threshold check 1 compares against on the next run and writes an audit entry naming the person, the old value and the new one; an unmatched mention can be linked — posting the comment on the named item — or dismissed, and both appear in the action decision chain with their decider.
+
+**Notes:** the MVP's candidate pool is every issue in the repository with no filtering, so a linked unmatched mention is always a detection miss and never a pool drawn too tightly. The pool-widening reading of the same signal arrives with pool scoping, after the MVP; build the data so it can answer that question later (was the linked item in the pool?) without building the suggestion now.
+
+**Depends on:** T08 (mention detection and the threshold it reads), T13 (work item provider, for the comment a link posts), T14 (audit chain, for the decisions and their confidences). Must land before T16, which renders the banners and the resolve controls.
+
+**Testing:** every criterion above is provable in JUnit against seeded decision history, so this ticket adds no file to `app/scripts/tests/` — see the bar for that in the root [`AGENTS.md`](../../AGENTS.md). The one thing a composed-stack check could add is that applying a suggestion survives a restart, which is the persistence layer's claim and already covered.
 
 ## T17. Error handling
 
@@ -389,6 +419,7 @@ MCP compatibility itself is a **specification/methodology**, published in the re
 - Seed synthetic GitHub issues in a dedicated demo repository.
 - A **reset button in the front end** calling a backend endpoint that undoes the GitHub actions taken, deletes the synthetic data, and repopulates it, so the demo can be run again from a clean slate.
 - The audit chain is what tells the reset which actions to undo.
+- **Seed a decision history too**, not just issues: enough accepted mention proposals at known confidences, and enough resolved unmatched mentions, for T23's calibration to clear its minimum sample and produce a suggestion. Demo beat 9 shows that suggestion, and no single demo run can generate a fortnight of decisions — so this is seed data, and the reset has to restore it rather than leave the banner permanently armed from a previous run.
 
 **Relationship to T22:** this ticket carries two separable things — **seeding** the synthetic issues, and **making the recording**. T22 sits between them: the seed must run first so the script can name real ticket numbers, and the recording cannot happen until the script exists.
 
@@ -398,7 +429,7 @@ MCP compatibility itself is a **specification/methodology**, published in the re
 
 **Safety:** the reset endpoint undoes real GitHub actions and deletes data, so it must be available only in a demo configuration and unreachable in a normal deployment — consider a demo-mode flag.
 
-**Depends on:** T13 (GitHub work item provider), T14 (audit log), T15 (backend endpoints), T16 (front end views).
+**Depends on:** T13 (GitHub work item provider), T14 (audit log), T15 (backend endpoints), T16 (front end views), T23 (calibration — the seeded decision history has to satisfy its thresholds).
 
 ## T22. Meeting script for the recording that gets parsed
 
@@ -444,7 +475,7 @@ MCP compatibility itself is a **specification/methodology**, published in the re
 
 **Scope:** a written script, doubling as the MVP test plan, then the recording.
 
-**Status:** the script is **written** — see [`demo-script.md`](demo-script.md), narrated 19 September 2026 and structured for delivery, with a beat checklist mapping it onto the ten beats below. The recording remains to be made.
+**Status:** the script is **written** — see [`demo-script.md`](demo-script.md), narrated 19 September 2026 and structured for delivery, with a beat checklist mapping it onto the eleven beats below. The recording remains to be made. Beat 9 was added in PRD v0.9.9, after the narration, so the script carries it as an addition rather than a correction.
 
 **Beats**
 1. Drop the recording into the watched folder.
@@ -455,10 +486,13 @@ MCP compatibility itself is a **specification/methodology**, published in the re
 6. Accept some proposals and reject the deliberate misclassification.
 7. Show the comments posted on tickets (comments need no approval) and the approved ticket actions in GitHub.
 8. Show the audit trail reflecting the accept and reject decisions.
-9. Break the GitHub token (set to nonsense) and show the error state in the front end.
-10. Reset from the front end and show the clean state.
+9. Link an unmatched mention to the right ticket, dismiss another, and show the calibration suggestion that comes out of those decisions, with the count behind it (T23).
+10. Break the GitHub token (set to nonsense) and show the error state in the front end.
+11. Reset from the front end and show the clean state.
 
 **Acceptance criteria:** the script is written and every beat is performed and captured in one screen recording of the real running system.
+
+**Note on beat 9:** a calibration suggestion needs enough decision history to clear its minimum sample, and one demo run cannot produce that — so the history is seeded (T19) rather than generated live. The beat demonstrates the suggestion and the two resolve actions; it does not demonstrate accumulating the evidence, which takes a fortnight by design.
 
 **Decided:** the recording **mentions** MCP but does not show an external MCP client (T18) driving CKA live — settled when the script was written, to keep the recording independent of T18 being finished. See the MCP section in [`demo-script.md`](demo-script.md).
 
@@ -489,7 +523,11 @@ MCP compatibility itself is a **specification/methodology**, published in the re
 - **Action check:** a single check within the mention, intent, decision, trust chain.
 - **Action threshold:** the value a confidence score is compared against at an action check.
 - **Action decision chain:** the full traceable record from original captured content through to whatever actions were taken from it.
-- **Unmatched mention:** a reference that mention detection cannot confidently match to any candidate in the pool. No action is proposed for it, but it is recorded and surfaced (audit chain, front end) rather than silently dropped.
+- **Unmatched mention:** a reference that mention detection cannot confidently match to any candidate in the pool. No action is proposed for it, but it is recorded and surfaced (audit chain, front end) rather than silently dropped, and a human can **link** or **dismiss** it.
+- **Mention decision:** a human verdict on mention detection — accept or reject on a proposed comment, link or dismiss on an unmatched mention. The unit calibration learns from, which is why it is recorded with the confidence it was decided against.
+- **Link / dismiss:** the two resolutions of an unmatched mention. Linking names the work item it actually meant and posts the comment detection missed; dismissing says there was nothing there. Deliberately not called accept/reject, which belong to proposals and imply CKA had already picked an item.
+- **Calibration:** learning from mention decisions to suggest where an action threshold should sit, and how well detection is working. Distinct from a **trust score**, which learns from decisions on *actions* to suggest who should approve them: calibration moves the line, trust moves the approver. Both only ever suggest.
+- **Calibration suggestion:** a banner proposing a specific threshold value or a provider change, stating the window and the number of decisions it is arguing from. Never applied automatically.
 
 ---
 

@@ -7,8 +7,10 @@ import lombok.NonNull;
  * One reference to a work item that the decision provider found in some knowledge.
  *
  * <p>A mention either matches a real candidate in the pool, with a confidence, or matches
- * nothing at all — an <em>unmatched mention</em>, which is recorded rather than dropped and
- * never becomes an action (PRD 9.1).
+ * nothing at all — an <em>unmatched mention</em>, which is recorded rather than dropped and never
+ * becomes an action on its own (PRD 9.1). A human can still link it to the work item it meant,
+ * which posts the comment detection missed, or dismiss it as nothing; both are decisions
+ * calibration reads (PRD 9.2), and both arrive with T23.
  *
  * @param excerpt    the passage the mention was found in, shown in triage
  * @param workItemId the matched candidate's id, or {@code null} if it matched no candidate

@@ -29,6 +29,10 @@
         prompts: Object.fromEntries(D.contentTypes.map(t => [t.id, t.prompt]))
       },
       trust: JSON.parse(JSON.stringify(D.trustSeed)),
+      /* The mention threshold is state, not a constant: accepting a calibration suggestion
+         changes it, and the activity view's mention table reclassifies rows against it. */
+      threshold: D.candidatePool.threshold,
+      unmatched: D.mentionCalibration.examples.map(u => ({ ...u, status: "open" })),
       proposals: [
         {
           id: "p-close-142", type: "close", item: "#142",
@@ -49,7 +53,7 @@
       ],
       outbox: D.outbox.map(o => ({ ...o })),
       audit: D.auditSeed.map(a => ({ ...a })),
-      dismissed: { closeSuggestion: false, assignSuggestion: false },
+      dismissed: { closeSuggestion: false, assignSuggestion: false, thresholdSuggestion: false, detectionSuggestion: false },
       replayDone: false
     };
   }
@@ -544,7 +548,10 @@ Full platform transcript stored below this section (elided in this prototype).
 
   function viewActivity() {
     const m = D.meeting;
-    const pool = D.candidatePool;
+    /* Threshold from state rather than D.candidatePool, so lowering it from the Triage Inbox
+       visibly reclassifies these rows from "propose" to "comment" — which is the whole point
+       of the suggestion, and invisible if this view read the seed value. */
+    const pool = { ...D.candidatePool, threshold: S.threshold };
     const steps = [
       {
         title: "Content captured", by: "Meeting capture · Google Meet (Drive folder watch)",
@@ -726,14 +733,61 @@ Full platform transcript stored below this section (elided in this prototype).
         </div>`);
     }
 
+    /* Calibration (PRD 9.2). The band argued from is the lowest one accepted outright: every
+       proposal at or above it was accepted, so the threshold is sitting above this team's own
+       judgement. Computed rather than written out, so changing the seed data changes the
+       banner — and so the minimum-sample rule is actually enforced rather than described. */
+    const cal = D.mentionCalibration;
+    const clean = cal.proposalDecisions.filter(b => b.rejected === 0 && b.accepted > 0);
+    const floor = clean.length ? Math.min(...clean.map(b => b.from)) : null;
+    const accepted = clean.reduce((n, b) => n + b.accepted, 0);
+    const decisions = cal.proposalDecisions.reduce((n, b) => n + b.accepted + b.rejected, 0);
+
+    if (floor !== null && floor < S.threshold && decisions >= cal.minimumDecisions && !S.dismissed.thresholdSuggestion) {
+      suggestions.push(`
+        <div class="suggestion">
+          <div class="stitle">You've accepted all ${accepted} mention proposals scoring ${floor}% or above over the
+          last ${cal.windowDays} days. Lower the mention threshold from ${S.threshold}% to ${floor}%?</div>
+          <p>Those comments would then post automatically instead of waiting here. Based on ${decisions} decisions in
+          the window — CKA won't suggest this below ${cal.minimumDecisions}, because “you've accepted 100%” of a
+          handful is not evidence. It only ever suggests: a threshold that moved itself using proposals its own
+          previous value produced would be grading its own homework.</p>
+          <p class="small muted">Note the evidence is one-sided. You only ever see mentions that fell <em>below</em>
+          the threshold, so this can argue for lowering it and never for raising it — only rejections below the line
+          do that.</p>
+          <div class="btn-row">
+            <button class="btn good" data-suggest="threshold-lower">Lower the threshold to ${floor}%</button>
+            <button class="btn" data-suggest="threshold-later">Not yet</button>
+          </div>
+        </div>`);
+    }
+
+    const um = D.mentionCalibration.unmatched;
+    if (um.linked > um.dismissed && !S.dismissed.detectionSuggestion) {
+      suggestions.push(`
+        <div class="suggestion negative">
+          <div class="stitle">${um.linked} of the ${um.linked + um.dismissed} unmatched mentions you resolved in the
+          last ${cal.windowDays} days turned out to be real work items.</div>
+          <p>That is detection missing things a person could see, not a threshold set wrongly — so the threshold
+          suggestion above won't fix it. Try a different decision provider or model? Every mention records which
+          provider and model scored it, so this is attributable rather than “the app got it wrong”.</p>
+          <div class="btn-row">
+            <button class="btn" data-suggest="detection-switch">Switch provider / model…</button>
+            <button class="btn ghost" data-suggest="detection-keep">Keep as is</button>
+          </div>
+        </div>`);
+    }
+
     const pending = S.proposals.filter(p => p.status === "pending");
     const resolved = S.proposals.filter(p => p.status !== "pending");
 
     $view.innerHTML = `
       <div class="kicker">Journey J5</div>
       <h1>Triage Inbox</h1>
-      <p class="lede">Proposed mutating actions wait here for a human. Your approvals and rejections are what the
-      trust ramp is built from — per action type, never globally.</p>
+      <p class="lede">Proposed mutating actions wait here for a human. Your decisions are what CKA learns from, in
+      two separate ways: approvals and rejections per action type move the <strong>trust ramp</strong>, deciding who
+      approves; decisions on mentions move the <strong>threshold</strong>, deciding where the line sits. Both only
+      ever produce a suggestion.</p>
       ${suggestions.join("")}
 
       <h2>Pending proposals ${pending.length ? `<span class="badge warn">${pending.length}</span>` : ""}</h2>
@@ -741,6 +795,24 @@ Full platform transcript stored below this section (elided in this prototype).
       ${pending.map(proposalCard).join("")}
 
       ${resolved.length ? `<h3>Decided just now</h3>${resolved.map(proposalCard).join("")}` : ""}
+
+      <h2>Unmatched mentions <span class="badge ${S.unmatched.filter(u => u.status === "open").length ? "warn" : "dim"}">${S.unmatched.filter(u => u.status === "open").length} open</span></h2>
+      <p class="small muted">Something was said that CKA could not tie to any work item in the pool. There is nothing
+      to accept — no item was matched — but you can usually see what was meant. <strong>Link</strong> it to post the
+      comment detection missed, or <strong>dismiss</strong> it as nothing. Leaving it open is fine too. Either
+      resolution is recorded, and the ratio between them is what the suggestion above is built from.</p>
+      ${S.unmatched.map(u => `
+        <div class="card">
+          <blockquote style="border-left:2px solid var(--hairline);padding:4px 12px;font-style:italic" class="dim2 small">${u.quote}
+          <span class="muted">— ${u.speaker}, ${u.time}</span></blockquote>
+          <p class="small muted">${u.note}</p>
+          ${u.status === "open" ? `
+            <div class="p-actions">
+              <button class="btn small good" data-um-link="${u.id}">Link to a work item…</button>
+              <button class="btn small ghost" data-um-dismiss="${u.id}">Dismiss — nothing there</button>
+            </div>` : `<p class="small"><span class="badge ${u.status === "linked" ? "good" : "dim"}">${u.status}</span>
+            ${u.status === "linked" ? "Comment posted on the item, and recorded as a detection miss." : "Recorded as nothing to find."}</p>`}
+        </div>`).join("")}
 
       <h2>Possible trigger phrases <span class="badge dim">not acted on</span></h2>
       ${D.ambiguousSegments.map(s => `
@@ -797,7 +869,35 @@ Full platform transcript stored below this section (elided in this prototype).
       if (a === "assign-disable") { S.trust.assign.mode = "disabled"; S.trust.assign.note = "Disabled by demo-user — no more Assign proposals or their LLM costs."; audit("Trust changed", "Assign proposals disabled by demo-user", "Human decision"); toast("Assign proposals disabled — no more spend on them"); }
       if (a === "assign-switch") { toast("In the full product this opens the provider picker for the decision layer"); return; }
       if (a === "assign-keep") { S.dismissed.assignSuggestion = true; }
+      /* A threshold change is an audited decision in its own right, naming the old value and
+         the new one — PRD 9.3. Without the old value the entry cannot explain a later
+         decision that was made under it. */
+      if (a === "threshold-lower") {
+        const from = S.threshold;
+        S.threshold = Math.min(...D.mentionCalibration.proposalDecisions.filter(x => x.rejected === 0 && x.accepted > 0).map(x => x.from));
+        audit("Threshold changed", `Mention threshold ${from}% → ${S.threshold}% by demo-user, on a calibration suggestion`, "Human decision");
+        toast(`Mention threshold now ${S.threshold}% — see the activity view's mention table`);
+      }
+      if (a === "threshold-later") { S.dismissed.thresholdSuggestion = true; }
+      if (a === "detection-switch") { toast("In the full product this opens the provider picker for the decision layer"); return; }
+      if (a === "detection-keep") { S.dismissed.detectionSuggestion = true; }
       viewInbox(); renderBadge();
+    }));
+
+    /* unmatched mention resolution — link posts the comment detection missed, dismiss says
+       there was nothing there. Deliberately not accept/reject: no item was ever matched. */
+    document.querySelectorAll("[data-um-link]").forEach(b => b.addEventListener("click", () => {
+      const u = S.unmatched.find(x => x.id === b.dataset.umLink);
+      u.status = "linked";
+      audit("Unmatched mention linked", `${u.id} linked to a work item by demo-user — comment posted, recorded as a detection miss`, "Human decision");
+      toast("Linked — the comment detection missed has been posted");
+      viewInbox();
+    }));
+    document.querySelectorAll("[data-um-dismiss]").forEach(b => b.addEventListener("click", () => {
+      const u = S.unmatched.find(x => x.id === b.dataset.umDismiss);
+      u.status = "dismissed";
+      audit("Unmatched mention dismissed", `${u.id} dismissed by demo-user — nothing to find`, "Human decision");
+      viewInbox();
     }));
 
     /* outbox actions */
