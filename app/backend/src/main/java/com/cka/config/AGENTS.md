@@ -21,9 +21,10 @@ detail of one implementation, while this package is the composition of the whole
   annotation is evaluated while configuration classes are processed, so its answer depends on
   whether the bean it asks about happens to have been registered yet; Spring's own documentation
   limits it to auto-configuration for that reason. Both this package and the providers are found
-  by scanning, so the ordering is not ours to rely on. An `ObjectProvider` resolved at event time
-  asks a fully built context, where the question has one answer. T12 had a stage that was wired
-  or not depending on scan order before this rule existed.
+  by scanning, so the ordering is not ours to rely on. Ask once every bean definition exists and
+  the question has one answer — an `ObjectProvider` read inside a listener does that, and so does
+  a plain `Optional` parameter. What matters is only that it is not asked while configuration
+  classes are still being processed, which is where a stage wired by scan order comes from.
 - **A provider that is absent is a stage that does not start, and the log says so.** Running with
   `CKA_PROVIDER_LLM=none` is supported — the capture and knowledge halves work without it — so
   the absence is reported at `INFO` rather than treated as a misconfiguration.

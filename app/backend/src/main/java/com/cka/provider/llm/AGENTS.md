@@ -18,9 +18,9 @@ type (PRD 8.2). `LangChain4jLlmProvider` (T12) is the implementation.
 - **It holds a `ChatModel`, not an Anthropic client.** That interface is LangChain4j's
   vendor-neutral one, so Gemini, OpenAI and a local Ollama model are the same type here:
   substituting one is a dependency and a `@Bean`, never an edit to the provider.
-- **A second vendor is selected by `cka.llm.vendor`, not by `@ConditionalOnMissingBean`.** The
-  back-off version was tried and removed: that annotation is evaluated while configuration
-  classes are processed, so which vendor won would depend on registration order — the same
+- **A second vendor is selected by `cka.llm.vendor`, not by `@ConditionalOnMissingBean`.** That
+  annotation is evaluated while configuration classes are processed, so which vendor won would
+  depend on registration order — the same
   unreliability [`../../config/AGENTS.md`](../../config/AGENTS.md) bans for `@ConditionalOnBean`.
   `anthropic` is the default; a Gemini binding carries `havingValue = "gemini"` and the property
   decides, deterministically.

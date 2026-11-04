@@ -32,9 +32,11 @@ class PipelineConfiguration {
      * — is quietly unreliable. {@code @ConditionalOnBean} is evaluated while configuration classes
      * are processed, so its answer depends on whether the bean it asks about has been registered
      * yet; Spring's own documentation limits it to auto-configuration for exactly that reason.
-     * Both this class and the providers are found by scanning, so "is there an LLM provider?" was
-     * being asked in whatever order the scan happened to produce. {@link ObjectProvider} resolved
-     * at event time asks the same question of a fully built context, where there is one answer.
+     * Both this class and the providers are found by scanning, so "is there an LLM provider?"
+     * would be answered in whatever order the scan happens to produce. Asking once every bean
+     * definition exists gets one answer instead — which an {@link ObjectProvider} read inside
+     * the listener does, and so would a plain {@code Optional} parameter; what matters is only
+     * that the question is not asked while configuration classes are still being processed.
      *
      * <p>Nothing to start is a supported way to run: with {@code CKA_PROVIDER_LLM=none} the
      * capture and knowledge halves still work, and the log says why summarising is off rather
@@ -61,10 +63,8 @@ class PipelineConfiguration {
                 return;
             }
 
-            // Each absence reported on its own terms, naming the property that would fix it.
-            // The ternary this replaces said "no LLM provider" or, by elimination, "no event
-            // bus" — sound reasoning, and wrong when both were missing: it named the first,
-            // and whoever set that property restarted into a second, different message.
+            // Every absence, not the first one found, each naming the property that turns it
+            // on — so one restart is enough when more than one is missing.
             var missing = new ArrayList<String>();
             if (llm == null) {
                 missing.add("no LLM provider (cka.provider.llm)");

@@ -22,8 +22,8 @@ import org.springframework.core.env.Environment;
  * learns which it got, and asks the model itself for the attribution it records.
  *
  * <p>The vendor is chosen by {@code cka.llm.vendor}, defaulting to {@code anthropic}, and
- * <em>not</em> by {@code @ConditionalOnMissingBean(ChatModel.class)} — which is what this class
- * tried first. That annotation is evaluated while configuration classes are processed, so
+ * <em>not</em> by {@code @ConditionalOnMissingBean(ChatModel.class)}. That annotation is
+ * evaluated while configuration classes are processed, so
  * whether this one backs off for a vendor declared elsewhere depends on which was registered
  * first; Spring limits it to auto-configuration for exactly that reason, and
  * {@code com.cka.config} already bans the same pattern for the same cause. A second binding
