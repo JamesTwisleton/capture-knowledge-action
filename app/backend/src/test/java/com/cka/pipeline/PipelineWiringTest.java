@@ -77,6 +77,7 @@ class PipelineWiringTest {
     private static final Summary SUMMARY = Summary.builder()
             .text("Decided: the login bug is a duplicate of an older report.")
             .producedBy(LLM)
+            .promptVersion(1)
             .build();
     private static final PageReference PAGE = PageReference.builder()
             .id("Sprint Refinement 2026-10-07.md")

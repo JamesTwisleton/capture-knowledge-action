@@ -27,11 +27,15 @@ payloads that carry these between stages are in [`event/`](event/AGENTS.md).
   are mapped to these types in their provider. `WorkItem.providerTypeName` exists precisely so the
   provider's label survives that mapping without a vendor type leaking in (PRD 7.9).
 - **Extend a type when its ticket needs it, not before.** `AuditEntry` grew from three fields to
-  nine in T14, because PRD 9.3 asks all nine of an audit record; `AuditEntry.promptVersion` is
-  the one field nothing populates yet, and T11 is what versions a prompt to put there. `Summary`
-  deliberately does *not* carry a prompt version for the same reason. `ActionType` lists only the
-  MVP's `COMMENT` and `CLOSE`; add a type alongside the work item provider operation that performs
-  it.
+  nine in T14, because PRD 9.3 asks all nine of an audit record, and `Summary` gained
+  `promptVersion` in T11 — the ticket that gave a prompt a version to record. `ActionType` lists
+  only the MVP's `COMMENT` and `CLOSE`; add a type alongside the work item provider operation
+  that performs it.
+- **A field every instance has is required, even when nothing produces one yet.**
+  `Summary.promptVersion` is `@NonNull` because PRD 7.6 asks that the version used is recorded
+  against every output and `PromptStore.current` always returns a prompt — so there is no honest
+  summary without one. The cost is that T12 cannot forget it; the alternative is a nullable field
+  that quietly stays null and a hole in the audit chain nothing can fill in afterwards.
 
 ## Gotchas
 

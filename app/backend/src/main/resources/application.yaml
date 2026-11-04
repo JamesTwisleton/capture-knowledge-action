@@ -28,8 +28,9 @@ spring:
       maximum-pool-size: 1
 
   # Migrations live in the same repository as the schema they create and are applied at startup,
-  # so a database is never a version behind the code that reads it. T11 and T14 add their tables
-  # by adding a file here, never by editing one Flyway has already applied and checksummed.
+  # so a database is never a version behind the code that reads it. T14's audit columns and T11's
+  # prompt table each arrived as a new file here, never by editing one Flyway has already applied
+  # and checksummed — not even its comments, which are part of the checksum.
   flyway:
     locations: classpath:db/migration
 
@@ -65,3 +66,4 @@ cka:
   provider:
     eventbus: rabbitmq
     audit: sql
+    prompt: sql

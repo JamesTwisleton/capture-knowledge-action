@@ -31,10 +31,9 @@ import lombok.NonNull;
  * @param confidence    the provider's confidence, from 0 to 1, or {@code null} if it scored
  *                      nothing
  * @param decider       who decided: the system, or the human who accepted or rejected in triage
- * @param promptVersion the version of the summary prompt behind this chain, or {@code null}.
- *                      Prompts are versioned by T11; until that lands nothing can supply one,
- *                      and the chain carries it on its {@code CONTENT_SUMMARISED} step — the
- *                      one place it is a fact rather than a copy
+ * @param promptVersion the version of the summary prompt behind this chain, or {@code null} on
+ *                      every step but {@code CONTENT_SUMMARISED} — the one place it is a fact
+ *                      rather than a copy. The chain relates it to the actions that followed
  */
 @Builder(toBuilder = true)
 public record AuditEntry(

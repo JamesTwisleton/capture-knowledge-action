@@ -59,6 +59,7 @@ class AuditTrailTest {
     private static final Summary SUMMARY = Summary.builder()
             .text("Decided: the login bug is a duplicate.")
             .producedBy(LLM)
+            .promptVersion(3)
             .build();
     private static final Knowledge KNOWLEDGE = Knowledge.builder()
             .page(PageReference.builder()
@@ -141,8 +142,8 @@ class AuditTrailTest {
     }
 
     @Test
-    @DisplayName("A summarised step records the provider and model that wrote the summary")
-    void aSummarisedStepRecordsTheProviderAndModelThatWroteTheSummary() {
+    @DisplayName("A summarised step records the provider, the model and the prompt version")
+    void aSummarisedStepRecordsTheProviderTheModelAndThePromptVersion() {
         var chainId = ChainId.next();
         audit.start();
 
@@ -154,9 +155,9 @@ class AuditTrailTest {
 
         assertThat(recorded.getFirst().producedBy()).isEqualTo(LLM);
         assertThat(recorded.getFirst().decider()).isEqualTo(Decider.system());
-        // Prompts are versioned by T11; nothing can supply one yet, and the step that will is
-        // this one — PRD 7.8's "using which prompt version".
-        assertThat(recorded.getFirst().promptVersion()).isNull();
+        // PRD 7.8's "using which prompt version". This is the only step that records one, and
+        // the only place in the chain where it is a fact rather than a copy.
+        assertThat(recorded.getFirst().promptVersion()).isEqualTo(3);
     }
 
     @Test

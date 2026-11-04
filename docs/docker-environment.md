@@ -122,8 +122,8 @@ silent, error-free non-generation — which is exactly why both are called out h
 ./app/scripts/verify-acceptance.sh
 ```
 
-Brings the stack up, runs every check under `scripts/tests/` — one file per criterion — tears it
-down, and fails loudly if anything regressed. CI runs the same script on every push.
+Brings the stack up, runs every check under `scripts/tests/`, tears it down, and fails loudly if
+anything regressed. CI runs the same script on every push.
 
 The checks run in three phases, because they are not all equally safe to run together: the
 read-only ones in parallel, then the two that force a real recompile (Maven, Turbopack) in

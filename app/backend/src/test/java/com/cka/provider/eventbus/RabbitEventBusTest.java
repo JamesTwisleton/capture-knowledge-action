@@ -70,8 +70,11 @@ class RabbitEventBusTest {
             .transcript("We agreed the login bug is a duplicate.")
             .platformSummary("Login bug closed as duplicate.")
             .build();
-    private static final Summary SUMMARY =
-            Summary.builder().text("Decided: a duplicate.").producedBy(LLM).build();
+    private static final Summary SUMMARY = Summary.builder()
+            .text("Decided: a duplicate.")
+            .producedBy(LLM)
+            .promptVersion(1)
+            .build();
     private static final Knowledge KNOWLEDGE = Knowledge.builder()
             .page(PageReference.builder()
                     .id("refinement.md")

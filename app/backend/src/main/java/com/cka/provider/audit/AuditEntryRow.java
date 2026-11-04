@@ -35,7 +35,7 @@ import org.springframework.data.relational.core.mapping.Table;
  *                    read as a real score
  * @param deciderKind SYSTEM or HUMAN, never null — every step is decided by one or the other
  * @param deciderName the human's name, {@code null} for the system
- * @param promptVersion the prompt version behind the chain, {@code null} until T11 supplies one
+ * @param promptVersion the prompt version behind the chain, set on the summarised step only
  */
 @Table("audit_entry")
 record AuditEntryRow(
