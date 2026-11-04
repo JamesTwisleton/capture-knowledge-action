@@ -17,3 +17,10 @@ retrievable.
 - **The broker is switched off, not mocked**, with `cka.provider.eventbus=none` — same as
   `SqlAuditStoreTest`, and for the same reason: a prompt test should not need a RabbitMQ
   connection, or log warnings because there isn't one.
+- **There is deliberately no `t11_…test.sh` in `app/scripts/tests/`**, and its absence is not an
+  oversight. T11 adds a table and seeds it; this class proves that against a real SQLite database,
+  and there is nothing left about the composed stack for a shell check to reach — T10's check
+  already proves the volume mount and that migrations run there, for every migration including
+  this one. The one that was written grepped the database file for a phrase from the prompt text,
+  which SQLite would still find after the rows were deleted. See the bar in the root
+  [`AGENTS.md`](../../../../../../../../../AGENTS.md).

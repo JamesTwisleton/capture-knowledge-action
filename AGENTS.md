@@ -90,7 +90,8 @@ test layer.
 
 - **Adding a check is three edits, not one.** The new file under `app/scripts/tests/`, a line
   registering it in the right phase of `verify-acceptance.sh`, and the upper bound of the
-  `acceptance` job's name in `ci.yml` — `Acceptance criteria (T01–T11, T14)` as of T11. That name is the only
+  `acceptance` job's name in `ci.yml` — `Acceptance criteria (T01–T10, T14)` as of T11, which covers
+  every criterion the suite reaches; T11 is absent deliberately, see above. That name is the only
   place a reader sees how far the suite reaches, so it goes stale the moment a ticket adds a check
   and leaves it alone. Bump it in the same commit as the test, and say so in the PR.
 - **Rename that job freely, but never the Spotless one.** The single required status check on
