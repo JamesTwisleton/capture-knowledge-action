@@ -53,7 +53,8 @@ import org.springframework.test.context.DynamicPropertySource;
  * store underneath rather than a mock. That is the point of the test: the trace has to survive
  * the round trip through the database, and a mocked store would prove only that the pipeline
  * called it. The providers are mocked, because each is a single call a stage makes and hands on,
- * and none of the five exists yet (T06, T09, T12, T13 bring them).
+ * and what a real one does is its own ticket's test — T06's vault and T12's model are built now,
+ * T09's capture and T13's tracker are not.
  *
  * <p>Two recordings run through: one whose proposal a human rejects, one whose proposal they
  * accept and which is then applied. Both are traced, and nothing but the chain is used to do it

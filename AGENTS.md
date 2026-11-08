@@ -111,12 +111,24 @@ stay that way. Link to `README.md` rather than restating it.
 From T20, `./setup.sh` writes real credentials into `app/.env` — never track it, never paste its contents
 into a commit, a comment or an issue.
 
-## Before you raise a PR, review it adversarially
+## Before you raise a PR, review it adversarially — three times
 
-Once the work is green and before `gh pr create`, run a separate pass over the whole diff as a
-hostile reviewer who holds the conventions above and wants the change to be **smaller**. Not a
-summary of what you built — a hunt for what should not survive. Findings go in the PR, including
-the ones you decided not to act on and why.
+Once the work is green and before `gh pr create`, run a pass over the whole diff as a hostile
+reviewer who holds the conventions above and wants the change to be **smaller**. Not a summary of
+what you built — a hunt for what should not survive. Act on what it finds, re-run everything, and
+then **do it twice more**. Three rounds, each over the diff as it now stands. Findings from all
+three go in the PR, including the ones you decided not to act on and why.
+
+**Why three and not one.** The first round finds what you already half-knew was weak, and fixing
+it changes the diff — so the second round is reading different code, including the code the first
+round wrote, which nobody has reviewed at all. In practice the rounds find different classes of
+thing: the first catches the obvious passengers, the second catches what the fixes introduced and
+the claims the fixes made, and the third is where the quiet ones turn up, because by then the
+loud ones are gone and there is nothing else to look at. A round that finds nothing is a finding
+in itself — record it and stop early only on the third.
+
+**Each round is a fresh read, not a re-check of the last one's list.** Re-reading your own
+findings is how a pass turns into a summary. Start from the diff again.
 
 - **Brevity is the goal.** Every field, method, test, comment, column and config key earns its
   place or goes. The usual catches: a field nothing populates, a method with one caller that

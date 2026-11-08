@@ -178,10 +178,13 @@ run_phase() {
 echo
 echo "Running acceptance checks…"
 
-# Phase 1: everything that only reads — safe to run together against the stack.
+# Phase 1: safe to run together against the stack, because nothing here contends with anything
+# else here. Read-only, with one exception: t06_knowledge_vault publishes one event and removes
+# the note it produces, and no other check looks at the vault.
 run_phase scripts/tests/t01_environment.test.sh scripts/tests/t01_debugger.test.sh \
           scripts/tests/t01_documentation.test.sh scripts/tests/hygiene.test.sh \
-          scripts/tests/t07_event_bus.test.sh scripts/tests/t10_sql_persistence.test.sh \
+          scripts/tests/t06_knowledge_vault.test.sh scripts/tests/t07_event_bus.test.sh \
+          scripts/tests/t10_sql_persistence.test.sh \
           scripts/tests/t14_audit_chain.test.sh
 
 # Phase 2: each of these forces a real recompile (Maven, Turbopack). Running them

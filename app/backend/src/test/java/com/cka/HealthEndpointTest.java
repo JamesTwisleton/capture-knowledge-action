@@ -21,7 +21,10 @@ import org.springframework.boot.test.web.server.LocalServerPort;
  * the same thing the healthcheck does, and it avoids the test-autoconfigure modules,
  * which Spring Boot 4 rearranged.
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+// The broker is switched off, as in the SQL provider tests and for the same reason: this test
+// is about /actuator/health being exposed, and a pipeline stage subscribing to a broker that
+// is not running fails the context at startup by design — see config/AGENTS.md.
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = "cka.provider.eventbus=none")
 @DisplayName("Actuator health endpoint")
 class HealthEndpointTest {
 

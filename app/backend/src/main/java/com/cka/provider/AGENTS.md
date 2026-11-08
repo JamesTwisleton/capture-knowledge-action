@@ -7,7 +7,7 @@ tickets, its implementations (PRD 7.2):
 |---|---|---|
 | [`capture`](capture/AGENTS.md) | `ContentListener` | Google Drive folder watcher (T09) |
 | [`llm`](llm/AGENTS.md) | `LlmProvider` | LangChain4j (T12) — **landed** |
-| [`knowledge`](knowledge/AGENTS.md) | `KnowledgeProvider` | Markdown vault (T06) |
+| [`knowledge`](knowledge/AGENTS.md) | `KnowledgeProvider` | Markdown vault (T06) — **landed** |
 | [`decision`](decision/AGENTS.md) | `DecisionProvider` | Jev, and an LLM fallback (T08) |
 | [`workitem`](workitem/AGENTS.md) | `WorkItemProvider`, `WorkItemMapper` | GitHub Issues (T13) |
 | [`eventbus`](eventbus/AGENTS.md) | `EventBus` | RabbitMQ (T07) |

@@ -7,8 +7,10 @@ with Mockito mocks for the providers and the real in-memory bus from
 - **`PipelineWiringTest` is T05's acceptance criterion** — the core wired with a stand-in for
   every provider interface, running a fake event through the whole chain. It runs in CI's backend unit-test job.
   It has no shell check under `app/scripts/tests/`, unlike T01–T04's criteria, because it is
-  about the core running on doubles, which the live stack cannot show; T06 onward, whose
-  criteria are about real providers, get their checks there.
+  about the core running on doubles, which the live stack cannot show. Whether a provider ticket
+  gets one depends on whether its criteria say anything a JUnit test cannot reach — T06's do,
+  because the vault has to land on a mounted volume; T11's and T12's did not. The bar is in the
+  root [`AGENTS.md`](../../../../../../../../AGENTS.md).
 - **`AuditTrailTest` is the audit service's own test**, and the one place that asserts what a
   step of the chain *carries* — its time, its decider, its action type, its confidence, its
   provenance. Other tests assert that a step was recorded at all; duplicating the contents here
