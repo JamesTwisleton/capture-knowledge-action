@@ -91,27 +91,34 @@ class LangChain4jLlmProviderTest {
     }
 
     @Test
-    @DisplayName("The prompt is asked for by the content's own type, not by its title")
-    void thePromptIsAskedForByTheContentsOwnType() {
-        // The assertion that names the problem rather than tripping over it. Swap
-        // content.contentType() for content.title() in the provider — "Sprint Refinement
-        // 2026-10-07" instead of "Sprint Refinement", both Strings, nothing a compiler can
-        // catch — and this is the only test that says which argument was wrong. The other tests
-        // in this class stub current(anyString()) and pass regardless; the two that stub an
-        // exact type do fail, but as a NullPointerException from inside summarise() with
-        // nothing pointing at the cause.
+    @DisplayName("The prompt used is the one for the content's own type, not another type's")
+    void thePromptUsedIsTheOneForTheContentsOwnType() {
+        // The fake answers any type, echoing back what it was asked, with the refinement prompt
+        // pinned to version 7 — so the summary reports which prompt was used, and a wrong
+        // lookup produces a wrong prompt instead of a null and a NullPointerException. Read
+        // content.title() in place of content.contentType() ("Sprint Refinement 2026-10-07"
+        // rather than "Sprint Refinement", both Strings, nothing a compiler catches) and this
+        // fails with "expected: 7 but was: 1".
         //
-        // In production nothing throws at all, which is what makes it worth a test: no stored
-        // prompt matches, PromptStore returns the General fallback as designed, and every item
-        // is summarised in the wrong shape with the pipeline reporting success throughout.
-        //
-        // Which prompt applies when a content type has none of its own is PromptStore's
-        // decision, not this provider's, and SqlPromptStoreTest is what proves it.
-        given(prompt("Sprint Refinement", 1, "Summarise."), "Decided.");
+        // Worth a test because production says nothing: no stored prompt matches, PromptStore
+        // returns the General fallback exactly as designed, and every item is summarised in the
+        // wrong shape while the pipeline reports success. Which prompt a type without one of
+        // its own falls back to is PromptStore's decision, proved by SqlPromptStoreTest.
+        when(prompts.current(anyString()))
+                .thenAnswer(asked -> prompt(asked.getArgument(0), 1, "prompt for " + asked.getArgument(0)));
+        when(prompts.current("Sprint Refinement"))
+                .thenReturn(prompt("Sprint Refinement", 7, "List the items discussed."));
+        when(chat.provider()).thenReturn(ModelProvider.ANTHROPIC);
+        when(chat.chat(anyList()))
+                .thenReturn(ChatResponse.builder()
+                        .aiMessage(AiMessage.from("Decided."))
+                        .modelName("claude-sonnet-5")
+                        .build());
 
-        provider.summarise(REFINEMENT);
+        var summary = provider.summarise(REFINEMENT);
 
-        verify(prompts).current("Sprint Refinement");
+        assertThat(summary.promptVersion()).isEqualTo(7);
+        assertThat(((SystemMessage) sentMessages().get(0)).text()).isEqualTo("List the items discussed.");
     }
 
     @Test
