@@ -46,8 +46,13 @@ class LangChain4jLlmProviderTest {
     private final PromptStore prompts = mock(PromptStore.class);
     private final LangChain4jLlmProvider provider = new LangChain4jLlmProvider(chat, prompts);
 
+    /**
+     * Stubs the store so that {@code prompt} is what exists for <em>its own</em> content type.
+     * Every test then requires the provider to look up the type it was given: ask for anything
+     * else and the store has no prompt to return.
+     */
     private void given(Prompt prompt, String reply) {
-        when(prompts.current(anyString())).thenReturn(prompt);
+        when(prompts.current(prompt.contentType())).thenReturn(prompt);
         when(chat.provider()).thenReturn(ModelProvider.ANTHROPIC);
         when(chat.chat(anyList()))
                 .thenReturn(ChatResponse.builder()
@@ -88,37 +93,6 @@ class LangChain4jLlmProviderTest {
         assertThat(messages.get(0)).isInstanceOf(SystemMessage.class);
         assertThat(((SystemMessage) messages.get(0)).text()).isEqualTo("Summarise the refinement.");
         assertThat(messages.get(1)).isInstanceOf(UserMessage.class);
-    }
-
-    @Test
-    @DisplayName("The prompt used is the one for the content's own type, not another type's")
-    void thePromptUsedIsTheOneForTheContentsOwnType() {
-        // The fake answers any type, echoing back what it was asked, with the refinement prompt
-        // pinned to version 7 — so the summary reports which prompt was used, and a wrong
-        // lookup produces a wrong prompt instead of a null and a NullPointerException. Read
-        // content.title() in place of content.contentType() ("Sprint Refinement 2026-10-07"
-        // rather than "Sprint Refinement", both Strings, nothing a compiler catches) and this
-        // fails with "expected: 7 but was: 1".
-        //
-        // Worth a test because production says nothing: no stored prompt matches, PromptStore
-        // returns the General fallback exactly as designed, and every item is summarised in the
-        // wrong shape while the pipeline reports success. Which prompt a type without one of
-        // its own falls back to is PromptStore's decision, proved by SqlPromptStoreTest.
-        when(prompts.current(anyString()))
-                .thenAnswer(asked -> prompt(asked.getArgument(0), 1, "prompt for " + asked.getArgument(0)));
-        when(prompts.current("Sprint Refinement"))
-                .thenReturn(prompt("Sprint Refinement", 7, "List the items discussed."));
-        when(chat.provider()).thenReturn(ModelProvider.ANTHROPIC);
-        when(chat.chat(anyList()))
-                .thenReturn(ChatResponse.builder()
-                        .aiMessage(AiMessage.from("Decided."))
-                        .modelName("claude-sonnet-5")
-                        .build());
-
-        var summary = provider.summarise(REFINEMENT);
-
-        assertThat(summary.promptVersion()).isEqualTo(7);
-        assertThat(((SystemMessage) sentMessages().get(0)).text()).isEqualTo("List the items discussed.");
     }
 
     @Test
@@ -186,7 +160,7 @@ class LangChain4jLlmProviderTest {
         // ChatResponse.modelName() is optional in LangChain4j and some providers leave it unset.
         // Provenance.model is @NonNull, so an unset name would fail the build of the Summary
         // rather than lose the attribution quietly.
-        when(prompts.current(anyString())).thenReturn(prompt("Sprint Refinement", 1, "Summarise."));
+        when(prompts.current("Sprint Refinement")).thenReturn(prompt("Sprint Refinement", 1, "Summarise."));
         when(chat.provider()).thenReturn(ModelProvider.OLLAMA);
         when(chat.chat(anyList()))
                 .thenReturn(ChatResponse.builder()
