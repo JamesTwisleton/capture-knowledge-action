@@ -67,3 +67,22 @@ cka:
     eventbus: rabbitmq
     audit: sql
     prompt: sql
+    # T12, and the one capability that ships switched *off*. Every other provider here can
+    # satisfy itself from the stack alone; this one needs a credential nobody has on a fresh
+    # clone, and selecting it without one is a startup failure rather than a degraded service.
+    # So `docker compose up` works immediately, and `CKA_PROVIDER_LLM=langchain4j` in app/.env
+    # turns summarising on once LLM_API_KEY is set — which is what T20's ./setup.sh will write.
+    llm: none
+
+  # How the LLM provider reaches a model (T12).
+  llm:
+    # Which LangChain4j binding talks to the model, and the default lives here rather than in
+    # the annotation that reads it: one place says what CKA talks to by default, and a second
+    # binding declares its own name instead of racing this one to back off — see provider/llm.
+    vendor: ${LLM_VENDOR:anthropic}
+    api-key: ${LLM_API_KEY:}
+    # Recorded against every summary for the audit trail, so changing it changes attribution.
+    model: ${LLM_MODEL:claude-sonnet-5}
+    max-tokens: ${LLM_MAX_TOKENS:8192}
+    # A 40-minute transcript is not a quick call; the SDK default is far shorter than this.
+    timeout-seconds: ${LLM_TIMEOUT_SECONDS:180}

@@ -28,6 +28,8 @@
              it. Same override mechanism as tomcat.version above; remove once Boot catches up —
              see issue #27. -->
         <lombok.version>1.18.48</lombok.version>
+        <!-- Not managed by Spring Boot's BOM, so the version lives here. -->
+        <langchain4j.version>1.8.0</langchain4j.version>
     </properties>
 
     <dependencies>
@@ -78,6 +80,18 @@
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
             <scope>runtime</scope>
+        </dependency>
+
+        <!-- LangChain4j is the one gateway every LLM call goes through (PRD Section 3), which is
+             what makes "Claude, Gemini, OpenAI or a local Ollama model, by configuration" a
+             config change rather than a code change — and what keeps every call visible to the
+             cost tracking J7 needs. langchain4j-anthropic is one vendor binding on top of the
+             vendor-neutral `ChatModel` interface in core; adding Gemini or Ollama is another
+             dependency and a bean, never a change to the provider. -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-anthropic</artifactId>
+            <version>${langchain4j.version}</version>
         </dependency>
 
         <dependency>
