@@ -20,9 +20,12 @@ Tests for [`main/.../provider/llm`](../../../../../../main/java/com/cka/provider
   is not a Spring bean — `PipelineConfiguration` constructs and starts it — so "a bean exists"
   would have passed while nothing had subscribed, which is the actual failure: captured content
   reaching a bus nobody listens to and simply stopping.
-- **It needs a context of its own because the provider ships off.** Every other `@SpringBootTest`
-  in the repository proves the *off* path, since `cka.provider.llm` defaults to `none`. This one
-  is why defaulting it on is caught immediately: doing so broke all 37 context loads at once.
+- **It needs a context of its own because the provider ships off.** `cka.provider.llm` defaults
+  to `none`, so every other `@SpringBootTest` in the repository exercises the *off* path — and
+  the on path is three things that have to agree: the provider bean appears, the `ChatModel`
+  bean builds, and the stage subscribes. Any of them could break with no existing test noticing,
+  because nothing else turns the provider on. The opposite mistake needs no test of its own:
+  flipping the default on fails every context load in the repository, since none supplies a key.
 - **It supplies `InMemoryEventBus` as the `EventBus` bean** rather than standing up a broker.
   Subscribing to RabbitMQ with no broker running throws, on purpose — see
   [`../../config/AGENTS.md`](../../../../../../main/java/com/cka/config/AGENTS.md).
