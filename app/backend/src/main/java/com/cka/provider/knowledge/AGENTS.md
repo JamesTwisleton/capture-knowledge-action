@@ -20,9 +20,12 @@ implementation — Obsidian-compatible, not Obsidian-dependent.
   someone typed into a calendar invite. Separators and the characters Windows rejects are
   replaced, leading dots and spaces trimmed, and the length capped — so `../` in an invite cannot
   reach a directory the vault does not own, and a note written on Linux still opens on Windows.
-- **Two meetings called "Stand-up" are the normal case, not a conflict.** The second note counts
-  up to `Stand-up 2.md` as Obsidian itself does. Overwriting would mean knowledge silently
-  replacing knowledge, which is worse than none.
+- **Two meetings called "Stand-up" are the normal case, not a conflict.** The second becomes
+  `Stand-up (2026-11-08 143205).md` — named for when it was stored, which says *which* stand-up
+  where a counter would only say it was not the first. Bracketed because titles often carry a
+  date already, and two bare dates in one filename tell a reader nothing about which is which.
+  A counter still backs it up for two notes stored in the same second. Overwriting would mean
+  knowledge silently replacing knowledge, which is worse than none.
 - **Written to a temp file and moved into place.** Obsidian watches the vault and opens what it
   finds, so writing in place means someone can open a half-written note; a move is atomic. The
   channel is forced before the move, because writing a file only hands the bytes to the OS, and

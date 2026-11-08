@@ -60,9 +60,14 @@ public class MarkdownVaultKnowledgeProvider implements KnowledgeProvider {
     private static final int MAX_TITLE_BYTES = 180;
 
     /**
-     * Second resolution, no colons, and the same shape as the dates teams already put in meeting
-     * titles — so a disambiguated note reads like one somebody named rather than one a program
-     * numbered. Colons are illegal in filenames on Windows, which rules out plain ISO-8601.
+     * Second resolution, and no colons — those are illegal in filenames on Windows, which rules
+     * out plain ISO-8601.
+     *
+     * <p>Parenthesised where it is used, because teams put dates in meeting titles already:
+     * {@code Sprint Refinement 2026-10-07 2026-11-08 143205} offers a reader two dates and no way
+     * to tell which is the meeting's. A separator alone does not fix that — the name is full of
+     * spaces from the title regardless — but a bracket reads as an annotation rather than as more
+     * title.
      */
     private static final DateTimeFormatter SUFFIX = DateTimeFormatter.ofPattern("yyyy-MM-dd HHmmss");
 
@@ -266,7 +271,7 @@ public class MarkdownVaultKnowledgeProvider implements KnowledgeProvider {
      * must not overwrite the first — knowledge that silently replaces knowledge is worse than none.
      *
      * <p>A clash is disambiguated by when the note was stored, so the second becomes
-     * {@code Stand-up 2026-11-08 143205.md}: a name that says which stand-up it was, where a
+     * {@code Stand-up (2026-11-08 143205).md}: a name that says which stand-up it was, where a
      * counter would only say it was not the first. The counter survives as the last resort for
      * two notes stored in the same second, which is the only case a timestamp cannot separate.
      *
@@ -277,7 +282,7 @@ public class MarkdownVaultKnowledgeProvider implements KnowledgeProvider {
      */
     private Path claimFilename(String filename) throws IOException {
         var base = filename.substring(0, filename.length() - ".md".length());
-        var stamped = base + " " + SUFFIX.format(LocalDateTime.now(clock));
+        var stamped = base + " (" + SUFFIX.format(LocalDateTime.now(clock)) + ")";
         for (int n = 1; ; n++) {
             var name = switch (n) {
                 case 1 -> filename;

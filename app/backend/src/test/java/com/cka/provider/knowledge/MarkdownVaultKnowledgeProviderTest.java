@@ -176,9 +176,12 @@ class MarkdownVaultKnowledgeProviderTest {
                                 .build());
 
         assertThat(first.id()).isEqualTo("Stand-up.md");
+        // Bracketed, because a title often carries a date of its own — "Sprint Refinement
+        // 2026-10-07 2026-11-08 143205" would leave a reader guessing which date is the
+        // meeting's. The brackets mark the half CKA added.
         // Named for when it was stored, so the note says which stand-up it was rather than only
         // that it was not the first. The clock is pinned, so this is the value and not a shape.
-        assertThat(second.id()).isEqualTo("Stand-up 2026-11-08 143205.md");
+        assertThat(second.id()).isEqualTo("Stand-up (2026-11-08 143205).md");
         assertThat(noteAt(first.id())).contains("- #142 — agreed done, to be closed.");
         assertThat(noteAt(second.id())).contains("A different summary.");
     }
