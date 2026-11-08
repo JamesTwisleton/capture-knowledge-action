@@ -111,12 +111,24 @@ stay that way. Link to `README.md` rather than restating it.
 From T20, `./setup.sh` writes real credentials into `app/.env` — never track it, never paste its contents
 into a commit, a comment or an issue.
 
-## Before you raise a PR, review it adversarially
+## Before you raise a PR, review it adversarially — three times
 
-Once the work is green and before `gh pr create`, run a separate pass over the whole diff as a
-hostile reviewer who holds the conventions above and wants the change to be **smaller**. Not a
-summary of what you built — a hunt for what should not survive. Findings go in the PR, including
-the ones you decided not to act on and why.
+Once the work is green and before `gh pr create`, run a pass over the whole diff as a hostile
+reviewer who holds the conventions above and wants the change to be **smaller**. Not a summary of
+what you built — a hunt for what should not survive. Act on what it finds, re-run everything, and
+then **do it twice more**. Three rounds, each over the diff as it now stands. Findings from all
+three go in the PR, including the ones you decided not to act on and why.
+
+**Why three and not one.** The first round finds what you already half-knew was weak, and fixing
+it changes the diff — so the second round is reading different code, including the code the first
+round wrote, which nobody has reviewed at all. In practice the rounds find different classes of
+thing: the first catches the obvious passengers, the second catches what the fixes introduced and
+the claims the fixes made, and the third is where the quiet ones turn up, because by then the
+loud ones are gone and there is nothing else to look at. A round that finds nothing is a finding
+in itself — record it and stop early only on the third.
+
+**Each round is a fresh read, not a re-check of the last one's list.** Re-reading your own
+findings is how a pass turns into a summary. Start from the diff again.
 
 - **Brevity is the goal.** Every field, method, test, comment, column and config key earns its
   place or goes. The usual catches: a field nothing populates, a method with one caller that
@@ -131,6 +143,35 @@ the ones you decided not to act on and why.
   fixture that builds one — find them all, including the ones in unrelated tests.
 - **Re-run everything afterwards**, because an adversarial pass that changes nothing was not a
   review, and one that changes something invalidates the green run that preceded it.
+
+## CI runs on Linux. Your laptop is not the target
+
+Every job in `ci.yml` runs on `ubuntu-latest`, and the stack runs in Linux containers. A Mac
+agrees with that most of the time and then quietly does not, so a green local suite is evidence,
+not proof. Three layers, cheapest first:
+
+1. **The host suite** — `./mvnw test` from `app/backend`. Fast, and the only place the
+   Testcontainers tests can run, because a container cannot reach the host's Docker socket.
+2. **The same suite on Linux** — `docker compose exec backend mvn test -Dtest='!RabbitEventBusTest'`.
+   Catches what the platform decides rather than what the code says: a case-sensitive filesystem
+   (APFS is case-*insensitive* by default, so two notes differing only in case are one file on a
+   Mac and two on Linux), the default charset and locale, and absolute paths like `/data` that
+   exist in the container and nowhere else. Drop `-o` the first time — the image's local
+   repository is not the host's and will need to fetch the surefire provider.
+3. **The composed stack** — `./app/scripts/verify-acceptance.sh`. The only layer that crosses the
+   container/host boundary, and the only one that can see what lives there.
+
+**The layer that matters is the one you will be tempted to skip.** Anything crossing that
+boundary — a mounted volume, a file another account has to open, a path that means something
+different inside and out — is invisible to layers 1 and 2 *by construction*, because there the
+process that writes the file is the process that reads it. T06 shipped notes at mode `0600`,
+which every unit test on the host happily read because it owned them, and which CI could not
+read at all: `grep: Permission denied`. Docker Desktop maps uids on bind mounts, so no amount of
+local running would have shown it. **A provider that writes somewhere a person later opens needs
+an acceptance check, and CI is where that check first tells the truth.**
+
+Also assume `x86_64` in CI against `aarch64` on an Apple machine. It rarely matters for the JVM;
+it matters for any image tag, native library or checksum.
 
 ## PRD versioning — read this before editing README.md or anything under prd/
 

@@ -46,6 +46,16 @@ adding anything to it.
 
 ## Gotchas specific to this package
 
+- **A `@SpringBootTest` now starts pipeline stages, and they are real.** From T06 the knowledge
+  provider ships selected, so any context test gets a live `KnowledgeStage` subscribed to the
+  bus — which writes notes to `cka.vault.path` and publishes its own events. A test that
+  publishes through a *real* broker therefore gains a subscriber it did not ask for, and one
+  that leaves the vault path alone writes into the working tree. Switch the providers off by
+  name (`cka.provider.knowledge=none`), or point the vault at a temp directory, as
+  `RabbitEventBusTest` and `LlmProviderWiringTest` do respectively. **Name the property rather
+  than relying on a shipped default**, so the next ticket to turn a provider on by default does
+  not silently re-break the test.
+
 - **Spring Boot 4 rearranged the test-autoconfigure modules.** Several `@...Test` slice annotations
   moved or changed artifact. `HealthEndpointTest` deliberately avoids them and makes a plain HTTP
   call instead, which is both simpler and immune to that churn. Check what is actually on the

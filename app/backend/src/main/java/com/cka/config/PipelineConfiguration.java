@@ -1,9 +1,11 @@
 package com.cka.config;
 
+import com.cka.pipeline.KnowledgeStage;
 import com.cka.pipeline.SummariseStage;
 import com.cka.provider.eventbus.EventBus;
+import com.cka.provider.knowledge.KnowledgeProvider;
 import com.cka.provider.llm.LlmProvider;
-import java.util.ArrayList;
+import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -17,8 +19,8 @@ import org.springframework.context.annotation.Configuration;
  * Spring annotations — deliberately, and it is what lets {@code PipelineWiringTest} build the
  * whole chain out of mocks with no container at all.
  *
- * <p>One stage so far. T12 wires {@code SummariseStage} because T12 is the first ticket to ship
- * a provider a stage needs; the other three arrive with T06, T08 and T09.
+ * <p>Two stages, each wired by the ticket that shipped the provider it calls: T12 for
+ * {@code SummariseStage}, T06 for {@code KnowledgeStage}. The other two arrive with T08 and T09.
  */
 @Slf4j
 @Configuration
@@ -53,26 +55,38 @@ class PipelineConfiguration {
      */
     @Bean
     ApplicationListener<ApplicationReadyEvent> pipelineStarter(
-            ObjectProvider<LlmProvider> llmProvider, ObjectProvider<EventBus> eventBus) {
+            ObjectProvider<LlmProvider> llmProvider,
+            ObjectProvider<KnowledgeProvider> knowledgeProvider,
+            ObjectProvider<EventBus> eventBus) {
         return _ -> {
-            var llm = llmProvider.getIfAvailable();
             var bus = eventBus.getIfAvailable();
-            if (llm != null && bus != null) {
-                new SummariseStage(llm, bus).start();
-                log.info("Summarise stage listening for captured content");
+            if (bus == null) {
+                // Said once rather than per stage: with no bus nothing can start, and repeating
+                // that for each stage adds nothing a reader does not already have.
+                log.info("No pipeline stages started: no event bus (cka.provider.eventbus)");
                 return;
             }
-
-            // Every absence, not the first one found, each naming the property that turns it
-            // on — so one restart is enough when more than one is missing.
-            var missing = new ArrayList<String>();
-            if (llm == null) {
-                missing.add("no LLM provider (cka.provider.llm)");
-            }
-            if (bus == null) {
-                missing.add("no event bus (cka.provider.eventbus)");
-            }
-            log.info("Summarise stage not started: {}", String.join(", ", missing));
+            start("Summarise", llmProvider, "cka.provider.llm", llm -> new SummariseStage(llm, bus).start());
+            start(
+                    "Knowledge",
+                    knowledgeProvider,
+                    "cka.provider.knowledge",
+                    vault -> new KnowledgeStage(vault, bus).start());
         };
+    }
+
+    /**
+     * Starts one stage if the provider it calls exists, and names the property that would supply
+     * it if not. Stages are independent: a vault with no LLM configured still stores whatever
+     * reaches the bus, which is what lets half the pipeline be run and demonstrated on its own.
+     */
+    private <P> void start(String stage, ObjectProvider<P> provider, String property, Consumer<P> wire) {
+        var found = provider.getIfAvailable();
+        if (found == null) {
+            log.info("{} stage not started: no provider ({})", stage, property);
+            return;
+        }
+        wire.accept(found);
+        log.info("{} stage listening", stage);
     }
 }

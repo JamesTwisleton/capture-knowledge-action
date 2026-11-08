@@ -7,7 +7,8 @@ detail of one implementation, while this package is the composition of the whole
 
 | | |
 |---|---|
-| `PipelineConfiguration` | Builds the pipeline stages and starts them listening (T12) |
+| `PipelineConfiguration` | Builds the pipeline stages and starts them listening (T12, T06) |
+| `ClockConfiguration` | The one clock the application reads time from, in UTC (T06) |
 
 ## Conventions specific to this package
 
@@ -28,6 +29,13 @@ detail of one implementation, while this package is the composition of the whole
 - **A provider that is absent is a stage that does not start, and the log says so.** Running with
   `CKA_PROVIDER_LLM=none` is supported — the capture and knowledge halves work without it — so
   the absence is reported at `INFO` rather than treated as a misconfiguration.
+- **Stages start independently of each other.** Each needs the bus and its own provider, and
+  nothing orders them: a vault with no LLM configured still stores whatever reaches the bus. That
+  is what lets half a pipeline be run and demonstrated, and it is why the absent-provider message
+  names one stage rather than refusing to start any.
+- **The bus is the one shared requirement**, so it is reported once rather than per stage. With
+  no bus there is nothing for any stage to subscribe to, and saying that three times tells a
+  reader nothing the first line did not.
 
 ## Gotchas
 

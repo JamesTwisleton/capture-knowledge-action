@@ -24,6 +24,9 @@ services:
       # filesystem — the backend's working directory is /app, which is the bind-mounted source
       # tree, so the default relative path would put the database in the repository.
       - DB_PATH=${DB_PATH:-/data/db/cka.db}
+      # The Markdown vault (T06), on the volume mounted below for the same reason as the
+      # database: the notes outlive the container and open in Obsidian from the host.
+      - VAULT_PATH=${VAULT_PATH:-/data/vault}
       # The browser calls this cross-origin (port 3000 -> 8080), so without CORS
       # Actuator's response is opaque to fetch() even though curl sees it fine.
       # Actuator's own CORS support, not a hand-written filter (T04 needs this too).

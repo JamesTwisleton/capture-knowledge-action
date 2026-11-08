@@ -44,7 +44,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
         properties = {
             "cka.provider.llm=langchain4j",
             "cka.llm.api-key=not-a-real-key-and-never-used",
-            "cka.provider.eventbus=none"
+            "cka.provider.eventbus=none",
+            // The Knowledge stage is wired too, and it subscribes to what the Summarise stage
+            // publishes — so without this the note would land in the repository's own vault.
+            "cka.vault.path=${java.io.tmpdir}/cka-wiring-test-vault"
         })
 @Import(LlmProviderWiringTest.AnEventBusThatNeedsNoBroker.class)
 @DisplayName("Selecting the LangChain4j provider wires it and the Summarise stage")

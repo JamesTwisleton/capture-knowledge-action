@@ -66,6 +66,8 @@ cka:
   provider:
     eventbus: rabbitmq
     audit: sql
+    # T06. Needs a directory rather than a credential, so unlike the LLM it ships selected.
+    knowledge: markdown-vault
     prompt: sql
     # T12, and the one capability that ships switched *off*. Every other provider here can
     # satisfy itself from the stack alone; this one needs a credential nobody has on a fresh
@@ -73,6 +75,15 @@ cka:
     # So `docker compose up` works immediately, and `CKA_PROVIDER_LLM=langchain4j` in app/.env
     # turns summarising on once LLM_API_KEY is set — which is what T20's ./setup.sh will write.
     llm: none
+
+  # Where the Markdown vault writes (T06). Relative by default, for the same reason the
+  # datasource URL above is: ../data/vault from the backend's working directory is app/data/vault,
+  # the directory the repository reserves for runtime data and the same one Compose mounts at
+  # /data/vault. The notes therefore land in one place on the host whether the backend runs in a
+  # container or straight from a checkout, which is what lets a single Obsidian vault follow both.
+  # Compose sets VAULT_PATH to the absolute container path.
+  vault:
+    path: ${VAULT_PATH:../data/vault}
 
   # How the LLM provider reaches a model (T12).
   llm:
