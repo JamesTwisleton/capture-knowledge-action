@@ -119,6 +119,13 @@ public class LangChain4jLlmProvider implements LlmProvider {
                 .build();
     }
 
+    /**
+     * {@code Locale.ROOT}, not the default locale: this string is written to the audit trail and
+     * queried by equality, and in a Turkish locale {@code "ANTHROPIC".toLowerCase()} is
+     * {@code "anthropıc"} with a dotless i. A container's locale comes from its base image, so
+     * the default would make attribution depend on where the backend happens to run and split
+     * the audit rows that "everything this provider decided" is supposed to find.
+     */
     private String vendor() {
         return chat.provider().name().toLowerCase(Locale.ROOT);
     }
