@@ -6,6 +6,7 @@ import com.cka.core.CapturedContent;
 import com.cka.core.Provenance;
 import com.cka.core.Summary;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
@@ -143,7 +144,7 @@ class MarkdownVaultKnowledgeProviderTest {
         var page = provider().store(content("会議".repeat(200)), SUMMARY);
 
         assertThat(vault.resolve(page.id())).isRegularFile();
-        assertThat(page.id().getBytes(java.nio.charset.StandardCharsets.UTF_8)).hasSizeLessThan(255);
+        assertThat(page.id().getBytes(StandardCharsets.UTF_8)).hasSizeLessThan(255);
         assertThat(page.id()).doesNotContain("\uFFFD").endsWith(".md");
     }
 
