@@ -144,6 +144,35 @@ findings is how a pass turns into a summary. Start from the diff again.
 - **Re-run everything afterwards**, because an adversarial pass that changes nothing was not a
   review, and one that changes something invalidates the green run that preceded it.
 
+## CI runs on Linux. Your laptop is not the target
+
+Every job in `ci.yml` runs on `ubuntu-latest`, and the stack runs in Linux containers. A Mac
+agrees with that most of the time and then quietly does not, so a green local suite is evidence,
+not proof. Three layers, cheapest first:
+
+1. **The host suite** — `./mvnw test` from `app/backend`. Fast, and the only place the
+   Testcontainers tests can run, because a container cannot reach the host's Docker socket.
+2. **The same suite on Linux** — `docker compose exec backend mvn test -Dtest='!RabbitEventBusTest'`.
+   Catches what the platform decides rather than what the code says: a case-sensitive filesystem
+   (APFS is case-*insensitive* by default, so two notes differing only in case are one file on a
+   Mac and two on Linux), the default charset and locale, and absolute paths like `/data` that
+   exist in the container and nowhere else. Drop `-o` the first time — the image's local
+   repository is not the host's and will need to fetch the surefire provider.
+3. **The composed stack** — `./app/scripts/verify-acceptance.sh`. The only layer that crosses the
+   container/host boundary, and the only one that can see what lives there.
+
+**The layer that matters is the one you will be tempted to skip.** Anything crossing that
+boundary — a mounted volume, a file another account has to open, a path that means something
+different inside and out — is invisible to layers 1 and 2 *by construction*, because there the
+process that writes the file is the process that reads it. T06 shipped notes at mode `0600`,
+which every unit test on the host happily read because it owned them, and which CI could not
+read at all: `grep: Permission denied`. Docker Desktop maps uids on bind mounts, so no amount of
+local running would have shown it. **A provider that writes somewhere a person later opens needs
+an acceptance check, and CI is where that check first tells the truth.**
+
+Also assume `x86_64` in CI against `aarch64` on an Apple machine. It rarely matters for the JVM;
+it matters for any image tag, native library or checksum.
+
 ## PRD versioning — read this before editing README.md or anything under prd/
 
 The PRD is `README.md` (Sections 1–6) plus the **numbered section pages** under [`docs/prd/`](docs/prd/) (Section 7 onward).
