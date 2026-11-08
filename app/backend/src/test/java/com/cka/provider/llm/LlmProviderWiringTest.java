@@ -1,7 +1,7 @@
 package com.cka.provider.llm;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
 
 import com.cka.core.CapturedContent;
@@ -16,7 +16,6 @@ import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -98,7 +97,7 @@ class LlmProviderWiringTest {
                         .instructions("Summarise.")
                         .build());
         when(mockedModel.provider()).thenReturn(ModelProvider.ANTHROPIC);
-        when(mockedModel.chat(any(List.class)))
+        when(mockedModel.chat(anyList()))
                 .thenReturn(ChatResponse.builder()
                         .aiMessage(AiMessage.from("Decided."))
                         .modelName("claude-sonnet-5")

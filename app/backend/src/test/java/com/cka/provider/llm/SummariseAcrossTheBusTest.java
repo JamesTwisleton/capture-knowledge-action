@@ -1,7 +1,7 @@
 package com.cka.provider.llm;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -20,7 +20,6 @@ import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -58,7 +57,7 @@ class SummariseAcrossTheBusTest {
                         .instructions("List the items discussed and what was decided.")
                         .build());
         when(chat.provider()).thenReturn(ModelProvider.ANTHROPIC);
-        when(chat.chat(any(List.class)))
+        when(chat.chat(anyList()))
                 .thenReturn(ChatResponse.builder()
                         .aiMessage(AiMessage.from("- #142 — agreed done, to be closed."))
                         .modelName("claude-sonnet-5")
@@ -110,7 +109,7 @@ class SummariseAcrossTheBusTest {
                         .instructions("Summarise this content.")
                         .build());
         when(chat.provider()).thenReturn(ModelProvider.ANTHROPIC);
-        when(chat.chat(any(List.class)))
+        when(chat.chat(anyList()))
                 .thenReturn(ChatResponse.builder()
                         .aiMessage(AiMessage.from("A summary."))
                         .modelName("claude-sonnet-5")

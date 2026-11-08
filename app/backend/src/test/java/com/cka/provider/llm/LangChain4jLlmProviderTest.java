@@ -1,9 +1,10 @@
 package com.cka.provider.llm;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.cka.core.CapturedContent;
@@ -48,7 +49,7 @@ class LangChain4jLlmProviderTest {
     private void given(Prompt prompt, String reply) {
         when(prompts.current(anyString())).thenReturn(prompt);
         when(chat.provider()).thenReturn(ModelProvider.ANTHROPIC);
-        when(chat.chat(any(List.class)))
+        when(chat.chat(anyList()))
                 .thenReturn(ChatResponse.builder()
                         .aiMessage(AiMessage.from(reply))
                         .modelName("claude-sonnet-5")
@@ -63,10 +64,15 @@ class LangChain4jLlmProviderTest {
                 .build();
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * {@code ArgumentCaptor.captor()}, not {@code forClass(List.class)}. A class literal cannot
+     * carry an element type — {@code List.class} is a {@code Class<List>} — so the captor comes
+     * back raw and both the capture and the read are unchecked. {@code captor()} takes the type
+     * from the variable it is assigned to, which is how the element type survives.
+     */
     private List<ChatMessage> sentMessages() {
-        var captor = ArgumentCaptor.forClass(List.class);
-        org.mockito.Mockito.verify(chat).chat(captor.capture());
+        ArgumentCaptor<List<ChatMessage>> captor = ArgumentCaptor.captor();
+        verify(chat).chat(captor.capture());
         return captor.getValue();
     }
 
@@ -94,7 +100,7 @@ class LangChain4jLlmProviderTest {
 
         provider.summarise(REFINEMENT);
 
-        org.mockito.Mockito.verify(prompts).current("Sprint Refinement");
+        verify(prompts).current("Sprint Refinement");
     }
 
     @Test
@@ -164,7 +170,7 @@ class LangChain4jLlmProviderTest {
         // rather than lose the attribution quietly.
         when(prompts.current(anyString())).thenReturn(prompt("Sprint Refinement", 1, "Summarise."));
         when(chat.provider()).thenReturn(ModelProvider.OLLAMA);
-        when(chat.chat(any(List.class)))
+        when(chat.chat(anyList()))
                 .thenReturn(ChatResponse.builder()
                         .aiMessage(AiMessage.from("Decided."))
                         .build());
