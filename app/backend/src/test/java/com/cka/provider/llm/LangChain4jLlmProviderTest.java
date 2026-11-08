@@ -91,11 +91,22 @@ class LangChain4jLlmProviderTest {
     }
 
     @Test
-    @DisplayName("The prompt is asked for by the content's own type, so a type with none gets the fallback")
+    @DisplayName("The prompt is asked for by the content's own type, not by its title")
     void thePromptIsAskedForByTheContentsOwnType() {
-        // The fallback is PromptStore's to apply, not this class's — asking for the right type is
-        // the whole of this provider's responsibility, and asking for the wrong one is a bug a
-        // test on the returned text would never catch.
+        // The assertion that names the problem rather than tripping over it. Swap
+        // content.contentType() for content.title() in the provider — "Sprint Refinement
+        // 2026-10-07" instead of "Sprint Refinement", both Strings, nothing a compiler can
+        // catch — and this is the only test that says which argument was wrong. The other tests
+        // in this class stub current(anyString()) and pass regardless; the two that stub an
+        // exact type do fail, but as a NullPointerException from inside summarise() with
+        // nothing pointing at the cause.
+        //
+        // In production nothing throws at all, which is what makes it worth a test: no stored
+        // prompt matches, PromptStore returns the General fallback as designed, and every item
+        // is summarised in the wrong shape with the pipeline reporting success throughout.
+        //
+        // Which prompt applies when a content type has none of its own is PromptStore's
+        // decision, not this provider's, and SqlPromptStoreTest is what proves it.
         given(prompt("Sprint Refinement", 1, "Summarise."), "Decided.");
 
         provider.summarise(REFINEMENT);
