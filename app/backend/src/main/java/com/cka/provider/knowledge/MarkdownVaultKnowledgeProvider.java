@@ -63,13 +63,19 @@ public class MarkdownVaultKnowledgeProvider implements KnowledgeProvider {
      * Second resolution, and no colons — those are illegal in filenames on Windows, which rules
      * out plain ISO-8601.
      *
-     * <p>Parenthesised where it is used, because teams put dates in meeting titles already:
-     * {@code Sprint Refinement 2026-10-07 2026-11-08 143205} offers a reader two dates and no way
-     * to tell which is the meeting's. A separator alone does not fix that — the name is full of
-     * spaces from the title regardless — but a bracket reads as an annotation rather than as more
-     * title.
+     * <p>Joined with underscores, and attached with one, so the suffix reads as a unit against a
+     * title made of spaces: {@code Stand-up_2026-11-08_143205}. Teams put dates in meeting titles
+     * already, so a space-joined suffix would leave a reader two dates and no way to tell which
+     * is the meeting's.
+     *
+     * <p><strong>Underscores and not brackets, because links come first.</strong> Parentheses are
+     * safe inside {@code [[wiki links]]}, which is what Obsidian writes by default — but a vault
+     * with "Use [[Wikilinks]]" switched off writes {@code [text](path)} instead, where an
+     * unescaped bracket in the path ends the link early. An underscore needs no escaping in
+     * either form. Spaces in a name are unavoidable, since they come from the title, and Obsidian
+     * encodes those itself; adding a character it has to escape is the avoidable part.
      */
-    private static final DateTimeFormatter SUFFIX = DateTimeFormatter.ofPattern("yyyy-MM-dd HHmmss");
+    private static final DateTimeFormatter SUFFIX = DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss");
 
     private final Path vault;
 
@@ -271,7 +277,7 @@ public class MarkdownVaultKnowledgeProvider implements KnowledgeProvider {
      * must not overwrite the first — knowledge that silently replaces knowledge is worse than none.
      *
      * <p>A clash is disambiguated by when the note was stored, so the second becomes
-     * {@code Stand-up (2026-11-08 143205).md}: a name that says which stand-up it was, where a
+     * {@code Stand-up_2026-11-08_143205.md}: a name that says which stand-up it was, where a
      * counter would only say it was not the first. The counter survives as the last resort for
      * two notes stored in the same second, which is the only case a timestamp cannot separate.
      *
@@ -282,12 +288,12 @@ public class MarkdownVaultKnowledgeProvider implements KnowledgeProvider {
      */
     private Path claimFilename(String filename) throws IOException {
         var base = filename.substring(0, filename.length() - ".md".length());
-        var stamped = base + " (" + SUFFIX.format(LocalDateTime.now(clock)) + ")";
+        var stamped = base + "_" + SUFFIX.format(LocalDateTime.now(clock));
         for (int n = 1; ; n++) {
             var name = switch (n) {
                 case 1 -> filename;
                 case 2 -> stamped + ".md";
-                default -> stamped + " " + (n - 1) + ".md";
+                default -> stamped + "_" + (n - 1) + ".md";
             };
             try {
                 return Files.createFile(vault.resolve(name));
