@@ -84,7 +84,12 @@ if note_written; then
 
   # Removed again: this is somebody's real vault when the stack is run for the demo, and a note
   # per acceptance run would accumulate there. The reset in T19 does not cover the vault yet.
-  rm -f "$NOTE"
+  #
+  # Deleted from inside the container, because removing a file needs write permission on its
+  # *directory* — and the vault directory belongs to the container's user, so on a Linux host
+  # `rm` here fails, silently with -f, and the notes pile up. The container always has the
+  # permission it created the directory with.
+  docker compose exec -T backend rm -f "${VAULT_PATH:-/data/vault}/${TITLE}.md"     && pass "the note was removed again, leaving the vault as it was"     || fail "could not remove $NOTE — it will be left in the vault"
 fi
 
 exit $(( FAILURES > 0 ))

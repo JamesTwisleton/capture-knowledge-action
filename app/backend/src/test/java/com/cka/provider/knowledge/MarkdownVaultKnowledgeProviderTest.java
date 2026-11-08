@@ -8,6 +8,7 @@ import com.cka.core.Summary;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -199,6 +200,20 @@ class MarkdownVaultKnowledgeProviderTest {
                 assertThat(f).isNotEmptyFile();
             });
         }
+    }
+
+    @Test
+    @DisplayName("The note is readable by someone other than the process that wrote it")
+    void theNoteIsReadableByOthers() throws IOException {
+        // The whole point of a vault on a mounted volume is that a person opens it on the host
+        // while CKA writes from inside a container — a different account on the same machine.
+        // createTempFile creates owner-only and move carries that through, so without widening
+        // it the note exists and nobody else can read it, which an acceptance run found on Linux
+        // and a Mac never shows because Docker Desktop maps the uid.
+        var page = provider().store(content("Sprint Refinement 2026-10-07"), SUMMARY);
+
+        var permissions = Files.getPosixFilePermissions(vault.resolve(page.id()));
+        assertThat(permissions).contains(PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ);
     }
 
     @Test

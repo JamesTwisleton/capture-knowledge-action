@@ -49,7 +49,14 @@ import org.testcontainers.rabbitmq.RabbitMQContainer;
  * only while these run sequentially, which is JUnit's default and is not overridden anywhere —
  * a wildcard subscriber would otherwise collect events published by whatever ran beside it.
  */
-@SpringBootTest
+// No production pipeline stage may run here. This test publishes one of every event through a
+// real broker, and a wired stage is a second subscriber it did not ask for: KnowledgeStage
+// consumes a content-summarised event, writes a note into the repository's vault, and publishes
+// a knowledge-stored event of its own — which a wildcard subscriber then collects, failing
+// whenever delivery wins the race. The providers that start stages are switched off by name
+// rather than relying on their shipped defaults, so a ticket that turns another one on by
+// default does not quietly reintroduce it.
+@SpringBootTest(properties = {"cka.provider.knowledge=none", "cka.provider.llm=none"})
 @Testcontainers
 @DisplayName("Events reach their subscribers through a real broker")
 class RabbitEventBusTest {

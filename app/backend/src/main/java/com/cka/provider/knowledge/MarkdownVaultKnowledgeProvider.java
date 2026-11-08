@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.PosixFilePermissions;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -140,6 +141,7 @@ public class MarkdownVaultKnowledgeProvider implements KnowledgeProvider {
      */
     private Path writeToTempFile(String markdown) throws IOException {
         var partial = Files.createTempFile(vault, ".cka-writing-", ".tmp");
+        makeReadable(partial);
         try (var channel = Files.newByteChannel(partial, StandardOpenOption.WRITE)) {
             channel.write(StandardCharsets.UTF_8.encode(markdown));
             if (channel instanceof FileChannel file) {
@@ -147,6 +149,24 @@ public class MarkdownVaultKnowledgeProvider implements KnowledgeProvider {
             }
         }
         return partial;
+    }
+
+    /**
+     * Widens the note's permissions, because {@code createTempFile} deliberately creates with
+     * owner-only access and {@code move} carries that through to the note. A vault nobody but
+     * the writing process can read is the one thing this provider must not produce: CKA writes
+     * from inside a container and a person opens the result on the host, so the note has to be
+     * readable by a different account on the same machine.
+     *
+     * <p>Set on the temporary file rather than after the move, so the note is never visible in
+     * the vault with the wrong permissions on it. Skipped where the filesystem has no POSIX
+     * permissions to set — Windows carries none, and there is nothing to widen.
+     */
+    private void makeReadable(Path file) throws IOException {
+        if (!file.getFileSystem().supportedFileAttributeViews().contains("posix")) {
+            return;
+        }
+        Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("rw-r--r--"));
     }
 
     /**
