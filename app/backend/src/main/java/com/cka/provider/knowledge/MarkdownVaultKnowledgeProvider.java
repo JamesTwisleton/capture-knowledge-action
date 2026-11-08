@@ -105,9 +105,16 @@ public class MarkdownVaultKnowledgeProvider implements KnowledgeProvider {
     }
 
     /**
-     * A real write, not {@code Files.isWritable}, which answers from permission bits and so says
-     * "yes" for a read-only bind mount and for a full disk. Named with a leading dot, which
-     * Obsidian ignores, and deleted immediately — the vault is somebody's own folder.
+     * A real write, not {@code Files.isWritable}, which answers a different question: whether
+     * permission would allow a write, not whether a note can be stored. Measured — it returns
+     * {@code true} for a {@code VAULT_PATH} that points at a regular file, where the write fails
+     * with "Not a directory", and {@code true} for a full filesystem, where it fails with "No
+     * space left on device". (It does catch a read-only mount, which the permission check
+     * reaches.) A misconfigured path and a full disk are the two ways this breaks in a real
+     * deployment, and they are exactly the two it cannot see.
+     *
+     * <p>The probe is named with a leading dot, which Obsidian ignores, and deleted in a
+     * {@code finally} — the vault is somebody's own folder, and the front end polls this.
      */
     @Override
     public ProviderHealth checkHealth() {

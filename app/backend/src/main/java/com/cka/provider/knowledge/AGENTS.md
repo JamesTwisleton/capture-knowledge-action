@@ -28,9 +28,12 @@ implementation — Obsidian-compatible, not Obsidian-dependent.
   channel is forced before the move, because writing a file only hands the bytes to the OS, and
   `store` must not return until the note is durable — `KnowledgeStage` publishes knowledge stored
   the moment it does, and the Action stage acts on that.
-- **The health check writes.** `Files.isWritable` answers from permission bits and says yes for a
-  read-only bind mount and for a full disk. The probe is a dot-prefixed temp file, which Obsidian
-  ignores, deleted immediately — the vault is somebody's own folder.
+- **The health check writes**, because `Files.isWritable` answers whether permission would allow
+  a write rather than whether a note can be stored. It returns `true` for a `VAULT_PATH` pointing
+  at a regular file and `true` for a full filesystem — the two ways this actually breaks in a
+  deployment — while catching only the read-only mount. The probe is a dot-prefixed temp file,
+  which Obsidian ignores, deleted in a `finally` because the vault is somebody's own folder and
+  the front end polls this.
 
 - **Return only once the write is durable.** `KnowledgeStage` publishes knowledge stored as soon as
   `store` returns, and the Action stage acts on it; a page that later fails to flush is an action
