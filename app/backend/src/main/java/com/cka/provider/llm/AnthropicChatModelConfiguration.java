@@ -29,12 +29,6 @@ import org.springframework.core.env.Environment;
  * {@code com.cka.config} already bans the same pattern for the same cause. A second binding
  * therefore carries {@code havingValue = "gemini"} and the property picks one deterministically,
  * rather than two configurations racing to decide which model CKA talks to.
- *
- * <p>No {@code matchIfMissing}: {@code application.yaml} supplies the default, so the property
- * is never absent in a running application, and every other provider conditional in the codebase
- * reads the same way — a value selects an implementation, and absence implies nothing. Putting
- * the default in the annotation too would state "anthropic is the default" in two places that
- * then have to be changed together.
  */
 @Configuration
 @ConditionalOnProperty(prefix = "cka.provider", name = "llm", havingValue = "langchain4j")
