@@ -13,6 +13,9 @@ import com.cka.testsupport.InMemoryEventBus;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -30,6 +33,9 @@ import org.junit.jupiter.api.io.TempDir;
 @DisplayName("A summarised content event writes a note and announces it, with no publisher present")
 class StoreAcrossTheBusTest {
 
+    /** Pinned, so a disambiguating suffix is a value a test can name. */
+    private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-11-08T14:32:05Z"), ZoneOffset.UTC);
+
     @TempDir
     Path vault;
 
@@ -40,7 +46,7 @@ class StoreAcrossTheBusTest {
     void publishingContentSummarisedWritesTheNoteAndAnnouncesIt() throws IOException {
         var stored = new ArrayList<KnowledgeStored>();
         bus.subscribe(KnowledgeStored.class, stored::add);
-        new KnowledgeStage(new MarkdownVaultKnowledgeProvider(vault.toString()), bus).start();
+        new KnowledgeStage(new MarkdownVaultKnowledgeProvider(vault.toString(), CLOCK), bus).start();
 
         var chainId = UUID.randomUUID();
         var content = CapturedContent.builder()
@@ -95,7 +101,7 @@ class StoreAcrossTheBusTest {
                     .isRegularFile();
             delivered.add(event);
         });
-        new KnowledgeStage(new MarkdownVaultKnowledgeProvider(vault.toString()), bus).start();
+        new KnowledgeStage(new MarkdownVaultKnowledgeProvider(vault.toString(), CLOCK), bus).start();
 
         bus.publish(ContentSummarised.builder()
                 .chainId(UUID.randomUUID())

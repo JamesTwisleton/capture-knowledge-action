@@ -9,6 +9,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -19,6 +22,9 @@ import org.junit.jupiter.api.io.TempDir;
  */
 @DisplayName("The Markdown vault writes one readable note per captured item")
 class MarkdownVaultKnowledgeProviderTest {
+
+    /** Pinned, so a disambiguating suffix is a value a test can name. */
+    private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-11-08T14:32:05Z"), ZoneOffset.UTC);
 
     @TempDir
     Path vault;
@@ -43,7 +49,7 @@ class MarkdownVaultKnowledgeProviderTest {
     }
 
     private MarkdownVaultKnowledgeProvider provider() {
-        return new MarkdownVaultKnowledgeProvider(vault.toString());
+        return new MarkdownVaultKnowledgeProvider(vault.toString(), CLOCK);
     }
 
     private String noteAt(String vaultRelativeId) throws IOException {
@@ -169,7 +175,10 @@ class MarkdownVaultKnowledgeProviderTest {
                                 .promptVersion(SUMMARY.promptVersion())
                                 .build());
 
-        assertThat(second.id()).isNotEqualTo(first.id());
+        assertThat(first.id()).isEqualTo("Stand-up.md");
+        // Named for when it was stored, so the note says which stand-up it was rather than only
+        // that it was not the first. The clock is pinned, so this is the value and not a shape.
+        assertThat(second.id()).isEqualTo("Stand-up 2026-11-08 143205.md");
         assertThat(noteAt(first.id())).contains("- #142 — agreed done, to be closed.");
         assertThat(noteAt(second.id())).contains("A different summary.");
     }
@@ -181,7 +190,7 @@ class MarkdownVaultKnowledgeProviderTest {
         // the first captured meeting — the same gap SqlitePersistenceConfiguration fills.
         var nested = vault.resolve("not/created/yet");
 
-        var page = new MarkdownVaultKnowledgeProvider(nested.toString()).store(content("Stand-up"), SUMMARY);
+        var page = new MarkdownVaultKnowledgeProvider(nested.toString(), CLOCK).store(content("Stand-up"), SUMMARY);
 
         assertThat(nested.resolve(page.id())).isRegularFile();
     }
@@ -232,7 +241,7 @@ class MarkdownVaultKnowledgeProviderTest {
         // not a directory, and every write would fail. checkHealth reports; it must not throw.
         var notADirectory = Files.writeString(vault.resolve("oops.txt"), "not a vault");
 
-        var health = new MarkdownVaultKnowledgeProvider(notADirectory.toString()).checkHealth();
+        var health = new MarkdownVaultKnowledgeProvider(notADirectory.toString(), CLOCK).checkHealth();
 
         assertThat(health.up()).isFalse();
         assertThat(health.detail()).contains(notADirectory.toString());

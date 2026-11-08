@@ -14,6 +14,9 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -56,10 +59,21 @@ public class MarkdownVaultKnowledgeProvider implements KnowledgeProvider {
      */
     private static final int MAX_TITLE_BYTES = 180;
 
+    /**
+     * Second resolution, no colons, and the same shape as the dates teams already put in meeting
+     * titles — so a disambiguated note reads like one somebody named rather than one a program
+     * numbered. Colons are illegal in filenames on Windows, which rules out plain ISO-8601.
+     */
+    private static final DateTimeFormatter SUFFIX = DateTimeFormatter.ofPattern("yyyy-MM-dd HHmmss");
+
     private final Path vault;
 
-    public MarkdownVaultKnowledgeProvider(@Value("${cka.vault.path}") String vaultPath) {
+    /** Injected rather than {@code Instant.now()}, as {@code AuditTrail}'s is, so a test can pin it. */
+    private final Clock clock;
+
+    public MarkdownVaultKnowledgeProvider(@Value("${cka.vault.path}") String vaultPath, Clock clock) {
         this.vault = Path.of(vaultPath).toAbsolutePath().normalize();
+        this.clock = clock;
     }
 
     @Override
@@ -247,22 +261,31 @@ public class MarkdownVaultKnowledgeProvider implements KnowledgeProvider {
     }
 
     /**
-     * The first name not already taken, counting up as Obsidian itself does, and <em>claimed</em>
-     * by creating the file rather than by asking whether it exists. Two meetings called "Stand-up"
-     * are the normal case, not a conflict, and the second must not overwrite the first — knowledge
-     * that silently replaces knowledge is worse than none.
+     * The name a note gets, <em>claimed</em> by creating the file rather than by asking whether it
+     * exists. Two meetings called "Stand-up" are the normal case, not a conflict, and the second
+     * must not overwrite the first — knowledge that silently replaces knowledge is worse than none.
      *
-     * <p>Claiming rather than checking is what makes that true under concurrency. Asking
+     * <p>A clash is disambiguated by when the note was stored, so the second becomes
+     * {@code Stand-up 2026-11-08 143205.md}: a name that says which stand-up it was, where a
+     * counter would only say it was not the first. The counter survives as the last resort for
+     * two notes stored in the same second, which is the only case a timestamp cannot separate.
+     *
+     * <p>Claiming rather than checking is what makes any of it hold under concurrency. Asking
      * {@code Files.exists} and then writing leaves a window in which two writers agree on the
      * same free name, and the move that follows replaces rather than fails.
      * {@code Files.createFile} is atomic: exactly one caller gets the name.
      */
     private Path claimFilename(String filename) throws IOException {
         var base = filename.substring(0, filename.length() - ".md".length());
+        var stamped = base + " " + SUFFIX.format(LocalDateTime.now(clock));
         for (int n = 1; ; n++) {
-            var candidate = vault.resolve(n == 1 ? filename : base + " " + n + ".md");
+            var name = switch (n) {
+                case 1 -> filename;
+                case 2 -> stamped + ".md";
+                default -> stamped + " " + (n - 1) + ".md";
+            };
             try {
-                return Files.createFile(candidate);
+                return Files.createFile(vault.resolve(name));
             } catch (FileAlreadyExistsException taken) {
                 // Someone else has this one. Next.
             }
