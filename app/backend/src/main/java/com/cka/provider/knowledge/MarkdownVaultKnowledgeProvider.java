@@ -64,7 +64,8 @@ public class MarkdownVaultKnowledgeProvider implements KnowledgeProvider {
      * out plain ISO-8601.
      *
      * <p>Joined with underscores, and attached with one, so the suffix reads as a unit against a
-     * title made of spaces: {@code Stand-up_2026-11-08_143205}. Teams put dates in meeting titles
+     * title made of spaces — the underscores are the suffix's, never the title's, which is left
+     * exactly as it was found. Teams put dates in meeting titles
      * already, so a space-joined suffix would leave a reader two dates and no way to tell which
      * is the meeting's.
      *
@@ -276,10 +277,11 @@ public class MarkdownVaultKnowledgeProvider implements KnowledgeProvider {
      * exists. Two meetings called "Stand-up" are the normal case, not a conflict, and the second
      * must not overwrite the first — knowledge that silently replaces knowledge is worse than none.
      *
-     * <p>A clash is disambiguated by when the note was stored, so the second becomes
-     * {@code Stand-up_2026-11-08_143205.md}: a name that says which stand-up it was, where a
-     * counter would only say it was not the first. The counter survives as the last resort for
-     * two notes stored in the same second, which is the only case a timestamp cannot separate.
+     * <p>A clash is disambiguated by when the note was stored. The title is not rewritten — the
+     * stamp is appended to it, so {@code Stand-up.md} is followed by {@code Stand-up} +
+     * {@code _2026-11-08_143205} + {@code .md}. That says which stand-up it was, where a counter
+     * would only say it was not the first. The counter survives as the last resort for two notes
+     * stored in the same second, the one case a timestamp cannot separate.
      *
      * <p>Claiming rather than checking is what makes any of it hold under concurrency. Asking
      * {@code Files.exists} and then writing leaves a window in which two writers agree on the

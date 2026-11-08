@@ -39,10 +39,17 @@ implementation — Obsidian-compatible, not Obsidian-dependent.
   *bytes* while a UTF-8 character can be three of them, so a title in Japanese fails with
   `ENAMETOOLONG` at a third of the length a character count would allow. The cut steps back off
   continuation bytes, dropping a whole character rather than leaving half of one in a filename.
-- **Two meetings called "Stand-up" are the normal case, not a conflict.** The second becomes
-  `Stand-up_2026-11-08_143205.md`, named for when it was stored — which says *which* stand-up,
-  where a counter would only say it was not the first. A counter still backs it up for two notes
-  stored in the same second. The name is claimed with `createFile`, not checked with `exists`:
+- **Two meetings called "Stand-up" are the normal case, not a conflict.** The title is never
+  rewritten; a suffix is appended to the second one:
+
+  | | |
+  |---|---|
+  | first | `Stand-up.md` |
+  | second | `Stand-up` + `_2026-11-08_143205` + `.md` |
+  | same second | `Stand-up` + `_2026-11-08_143205` + `_2` + `.md` |
+
+  Naming it for when it was stored says *which* stand-up, where a counter would only say it was
+  not the first. The name is claimed with `createFile`, not checked with `exists`:
   check-then-write leaves a window where two writers agree on a free name and the move that
   follows replaces rather than fails.
 - **Nothing is added to a filename that Obsidian would have to escape in a link.** Underscores
