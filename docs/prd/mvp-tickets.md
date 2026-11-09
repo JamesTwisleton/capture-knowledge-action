@@ -322,6 +322,7 @@ Ticket numbers are stable identifiers, not positions: **T22 is built between T19
 - Reset and seed endpoints (see T19).
 - Prompt list, create and edit endpoints, versioned (see T11).
 - Calibration suggestions, unmatched-mention link and dismiss, and the threshold update they lead to (see T23).
+- Meetings captured and never stored, listed with a retry — **landed early with T09** (`GET /api/captures/unstored`, `POST /api/captures/unstored/retry`), which also started the `api` package and its CORS setting.
 
 **Open — decide when scoping this ticket:** T16 promises a *live* activity log and *live* provider status, but the front end is REST-only and never touches the event bus (see PRD [7.1](07-core-concepts-and-domain-model.md#71-stages)), so "live" has to be built out of something. Options: client-side polling on an interval (simplest, fits the MVP, and mirrors the folder watcher's own polling), server-sent events, or websockets. Polling is the obvious default; the point is that this is a decision, not something the word "live" supplies for free.
 

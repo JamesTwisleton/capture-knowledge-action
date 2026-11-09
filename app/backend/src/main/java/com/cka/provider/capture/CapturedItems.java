@@ -1,5 +1,6 @@
 package com.cka.provider.capture;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -43,6 +44,17 @@ public interface CapturedItems {
 
     /** The remembered meetings whose note has been seen in the store at least once. */
     Set<String> confirmedStored();
+
+    /** The remembered meetings whose note has never been seen in the store. */
+    List<UnstoredCapture> unstored();
+
+    /**
+     * Forgets a meeting whose note has never been seen, so the next poll captures it again — a
+     * person's way out of {@link #unstored}. Returns whether there was one to forget. A meeting
+     * whose note <em>has</em> been seen is left alone: retrying it would write a second note,
+     * and deleting the first already asks for it again.
+     */
+    boolean retry(String title);
 
     /**
      * Drops one, so the next poll treats the meeting as new again. Doing nothing for a title

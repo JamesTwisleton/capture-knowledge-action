@@ -2,6 +2,7 @@ package com.cka.provider.capture;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +45,19 @@ public class SqlCapturedItems implements CapturedItems {
     public Set<String> confirmedStored() {
         return Set.copyOf(
                 jdbc.queryForList("SELECT title FROM captured_item WHERE stored_at IS NOT NULL", String.class));
+    }
+
+    @Override
+    public List<UnstoredCapture> unstored() {
+        return jdbc.query(
+                "SELECT title, captured_at FROM captured_item WHERE stored_at IS NULL",
+                (row, n) ->
+                        new UnstoredCapture(row.getString("title"), Instant.ofEpochMilli(row.getLong("captured_at"))));
+    }
+
+    @Override
+    public boolean retry(String title) {
+        return jdbc.update("DELETE FROM captured_item WHERE title = ? AND stored_at IS NULL", title) > 0;
     }
 
     @Override

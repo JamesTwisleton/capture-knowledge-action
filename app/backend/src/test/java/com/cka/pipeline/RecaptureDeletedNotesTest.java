@@ -7,9 +7,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.cka.provider.capture.CapturedItems;
+import com.cka.provider.capture.UnstoredCapture;
 import com.cka.provider.knowledge.KnowledgeProvider;
 import java.time.Duration;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -53,6 +55,17 @@ class RecaptureDeletedNotesTest {
         @Override
         public Set<String> confirmedStored() {
             return Set.copyOf(confirmed);
+        }
+
+        // A person's, from the API; nothing under test calls them.
+        @Override
+        public List<UnstoredCapture> unstored() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean retry(String title) {
+            throw new UnsupportedOperationException();
         }
     };
 

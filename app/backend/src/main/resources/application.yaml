@@ -113,6 +113,11 @@ cka:
     # turns summarising on once LLM_API_KEY is set — which is what T20's ./setup.sh will write.
     llm: none
 
+  # The origin the front end is served from, which is what the browser sends when it calls
+  # /api/ from another port. Compose derives it from FRONTEND_PORT.
+  api:
+    allowed-origin: ${CKA_API_ALLOWED_ORIGIN:http://localhost:3000}
+
   # Where the Markdown vault writes (T06). Relative by default, for the same reason the
   # datasource URL above is: ../data/vault from the backend's working directory is app/data/vault,
   # the directory the repository reserves for runtime data and the same one Compose mounts at

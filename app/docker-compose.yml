@@ -38,6 +38,8 @@ services:
       # Actuator's own CORS support, not a hand-written filter (T04 needs this too).
       - MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWED_ORIGINS=http://localhost:${FRONTEND_PORT:-3000}
       - MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWED_METHODS=GET
+      # The same origin for CKA's own /api/ endpoints, which are not Actuator's.
+      - CKA_API_ALLOWED_ORIGIN=http://localhost:${FRONTEND_PORT:-3000}
     volumes:
       - ./backend:/app
       # The knowledge vault (T06) and SQLite database (T10) live on the host so they

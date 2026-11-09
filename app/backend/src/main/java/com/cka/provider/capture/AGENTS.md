@@ -10,6 +10,7 @@ The Capture stage's provider: `ContentListener`, which finds new content and han
 | Consent | `GoogleConsent`, run once through `app/scripts/google-consent.sh` to get that token |
 | Gemini | `GeminiNotes`, which splits a notes document into its summary and transcript tabs |
 | Handed on | `CapturedItems`, in SQLite as `SqlCapturedItems` (the `captured_item` table) |
+| Never stored | `CapturedItems.unstored()` and `retry()`, served by `api/UnstoredCapturesController` |
 | Interval | `cka.capture.poll-interval`, measured from the end of the previous poll |
 | Status | `FolderWatcher.status()`, a `PollingStatus` for T16's activity log |
 

@@ -97,6 +97,17 @@ class SqlCapturedItemsTest {
     }
 
     @Test
+    @DisplayName("A meeting whose note was never seen is listed, and stops being listed once it is")
+    void unstoredMeetingsAreListedUntilTheirNoteIsSeen() {
+        captured.remember("Demo 2026-11-08");
+
+        assertThat(captured.unstored()).extracting(UnstoredCapture::title).contains("Demo 2026-11-08");
+
+        captured.confirmStored("Demo 2026-11-08");
+        assertThat(captured.unstored()).extracting(UnstoredCapture::title).doesNotContain("Demo 2026-11-08");
+    }
+
+    @Test
     @DisplayName("Confirming a meeting that was never captured records nothing")
     void confirmingAnUncapturedMeetingRecordsNothing() {
         captured.confirmStored("Never captured 2026-11-08");

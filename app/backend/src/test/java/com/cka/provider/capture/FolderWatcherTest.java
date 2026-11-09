@@ -95,6 +95,17 @@ class FolderWatcherTest {
         public java.util.Set<String> confirmedStored() {
             return java.util.Set.of();
         }
+
+        // A person's, from the API; nothing under test calls them.
+        @Override
+        public List<UnstoredCapture> unstored() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean retry(String title) {
+            throw new UnsupportedOperationException();
+        }
     }
 
     private final FakeFolder folder = new FakeFolder();

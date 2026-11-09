@@ -12,8 +12,8 @@ working inside one.
 | [`core`](core/AGENTS.md) | The domain model — work item, captured content, summary, action, audit entry — and, in [`core.event`](core/event/AGENTS.md), the event payloads that travel on the bus. Plain records and enums; no framework types. |
 | [`provider`](provider/AGENTS.md) | One sub-package per capability (`capture`, `llm`, `knowledge`, `decision`, `workitem`, `eventbus`, `audit`), each an interface plus, from later tickets, its implementations. |
 | [`pipeline`](pipeline/AGENTS.md) | The stages that connect providers to the bus, and the audit trail. |
-| `config` | *Not created yet.* Spring `@Configuration` that wires the pipeline stages from whichever provider beans are configured. Arrives with the first real provider — see [`provider/AGENTS.md`](provider/AGENTS.md#selecting-an-implementation). |
-| `api` | *Not created yet.* The REST surface (T15). |
+| [`config`](config/AGENTS.md) | Spring `@Configuration` that wires the pipeline stages from whichever provider beans are configured — see [`provider/AGENTS.md`](provider/AGENTS.md#selecting-an-implementation). |
+| [`api`](api/AGENTS.md) | The REST surface the front end calls (T15). |
 
 ## Conventions
 
