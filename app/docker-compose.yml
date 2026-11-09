@@ -17,6 +17,12 @@ services:
       - .env
     environment:
       - SERVER_PORT=8080
+      # Maven's bundled Guice reaches into sun.misc.Unsafe, which JDK 24+ warns about (JEP 498).
+      # Four lines of warning before any output that matters, on every container start, about
+      # Maven's own code rather than this project's. Set here rather than in a committed
+      # .mvn/jvm.config because that would apply to everybody's host builds too; the container
+      # has no ~/.mavenrc to put it in. Remove when the image's Maven ships a fixed Guice.
+      - MAVEN_OPTS=--sun-misc-unsafe-memory-access=allow
       - SPRING_DEVTOOLS_RESTART_ENABLED=true
       - EVENT_BUS_HOST=event-bus
       - EVENT_BUS_PORT=5672

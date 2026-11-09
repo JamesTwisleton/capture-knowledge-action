@@ -2,8 +2,12 @@
 
 Tests for [`main/.../provider/capture`](../../../../../../main/java/com/cka/provider/capture/AGENTS.md).
 
-`FolderWatcherTest` covers T09's first pass: what the watcher decides, over a hand-written
-`RecordingFolder`.
+| Class | Covers |
+|---|---|
+| `FolderWatcherTest` | what the watcher decides, over a hand-written `RecordingFolder` |
+| `GeminiNotesTest` | splitting a real notes export into its summary and transcript |
+| `SqlCapturedItemsTest` | the capture record against a real SQLite file of its own |
+| `CaptureWiringTest` | selecting `google-drive` gives a context that starts, with Drive mocked |
 
 - **A hand-written fake, not a mock.** The folder has real behaviour the tests depend on — files
   appearing between polls, reading one returning its text, listing throwing when it is
@@ -18,5 +22,8 @@ Tests for [`main/.../provider/capture`](../../../../../../main/java/com/cka/prov
   more than once — a one-shot schedule would pass every other test in the class. It also asserts
   no further polls happen after `stop()`, since a daemon thread outliving a shutdown is a leak
   nothing else would notice.
-- **No Google account, and no Drive.** Everything here is the watcher's own logic. Reaching Drive
-  is T09's second pass and will be an implementation of `RecordingFolder`.
+- **No Google account.** `GoogleDriveRecordingFolder` is a thin adapter over the Drive client and
+  is exercised against a real folder by running the stack, not here.
+- **Fixtures use Meet's real timestamp formats** ("started 2026/06/27 21:43 BST", "Jun 27, 2026
+  at …"). An invented "(2026-11-08 14:32 GMT)" format once hid a bug that stripped brackets out
+  of real meeting names. Most use an ASCII hyphen before the suffix; one test pins the en dash.

@@ -13,15 +13,15 @@ import java.util.List;
  * files are one meeting, which meeting is ready, what it has already handed on — is the same
  * either way, and that is where the work is.
  *
- * <p>Names, not ids. Meet tells you which files belong together by naming them alike, so the name
- * is the only thing the watcher needs; an id would be an extra concept for it to carry around
- * and nothing to spend it on.
+ * <p>Files, not names. The watcher groups by name — Meet names a meeting's files alike — but it
+ * also needs somewhere a person can open the recording, which becomes the link on the vault
+ * note, and a handle to read a file back by. A name alone cannot carry either.
  */
 public interface RecordingFolder extends Provider {
 
-    /** Every file currently in the folder, by name. Throws if the folder cannot be reached. */
-    List<String> list();
+    /** Every file currently in the folder. Throws if the folder cannot be reached. */
+    List<FolderFile> list();
 
-    /** The text of one file, or {@code null} if it has none. */
-    String read(String name);
+    /** The text of one file, or {@code null} if it has none — a recording, for instance. */
+    String read(FolderFile file);
 }

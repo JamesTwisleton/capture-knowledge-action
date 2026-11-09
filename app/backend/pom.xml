@@ -30,6 +30,9 @@
         <lombok.version>1.18.48</lombok.version>
         <!-- Not managed by Spring Boot's BOM, so the version lives here. -->
         <langchain4j.version>1.8.0</langchain4j.version>
+        <google-drive.version>v3-rev20250216-2.0.0</google-drive.version>
+        <google-auth.version>1.30.1</google-auth.version>
+        <guava.version>33.4.8-jre</guava.version>
     </properties>
 
     <dependencies>
@@ -73,6 +76,13 @@
             <artifactId>spring-boot-starter-flyway</artifactId>
         </dependency>
 
+        <!-- Reads a note's front matter back (T09's recapture on delete). Already on the classpath
+             through Boot; declared because the vault now calls it directly. Version from Boot. -->
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+        </dependency>
+
         <!-- SQLite: the default database, and the only one the MVP tests (T10). A single file,
              so there is no server to run and no credentials to configure. Runtime scope — nothing
              compiles against the driver, Boot resolves it from the jdbc:sqlite: URL. -->
@@ -80,6 +90,37 @@
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
             <scope>runtime</scope>
+        </dependency>
+
+        <!-- Google Drive, for T09's folder watcher. Official Google clients rather than a
+             self-written HTTP wrapper, which is the distinction decision 60 drew: CKA depends on
+             a vendor's own client *because* it is authoritative about its own API, and declined
+             community Jev clients because they were not. Two artifacts, not the BOM: the Drive
+             API itself, and the auth library for a refresh token and the silent renewal of access
+             tokens. Deliberately not google-oauth-client-jetty — UserAuthorizer exchanges the
+             consent code on its own, so the one-time consent flow needs the JDK's HTTP server
+             and not a second web server on the application's classpath. -->
+        <!-- Pinned ahead of what the Google clients ask for, and to the -jre flavour rather than
+             -android. 33.3.1-android reaches into sun.misc.Unsafe from AbstractFuture, which
+             JDK 24+ warns about on every start (JEP 498) and which a later JDK will remove
+             outright. 33.4.8-jre has no UnsafeAtomicHelper in it at all — it uses VarHandle —
+             so this fixes the warning at its cause rather than silencing it with a JVM flag.
+             Verified by loading AbstractFuture under both and watching for the warning.
+             Remove the pin once the Google clients depend on a Guava this new. -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.apis</groupId>
+            <artifactId>google-api-services-drive</artifactId>
+            <version>${google-drive.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.auth</groupId>
+            <artifactId>google-auth-library-oauth2-http</artifactId>
+            <version>${google-auth.version}</version>
         </dependency>
 
         <!-- LangChain4j is the one gateway every LLM call goes through (PRD Section 3), which is
@@ -197,7 +238,15 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <argLine>-javaagent:${org.mockito:mockito-core:jar}</argLine>
+                    <!-- Native access is granted because the SQLite driver loads a native
+                         library, and JDK 24+ warns on every start that restricted methods "will
+                         be blocked in a future release unless native access is enabled".
+                         Granting it is what the warning asks for and says the call is intended;
+                         the alternative is four lines of noise before every test run and,
+                         eventually, a driver that cannot load. ALL-UNNAMED because nothing
+                         here is modular. (The flag cannot be named in an XML comment: a
+                         double hyphen is not allowed inside one.) -->
+                    <argLine>-javaagent:${org.mockito:mockito-core:jar} --enable-native-access=ALL-UNNAMED</argLine>
                     <!-- Report each test by its @DisplayName instead of its method identifier, so
                          a CI failure reads as the sentence describing what broke rather than as
                          aMentionMatchingNoCandidateIsAuditedAndNeverProposed. Surefire needs

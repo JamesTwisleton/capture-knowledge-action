@@ -1,6 +1,7 @@
 package com.cka.provider.capture;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import com.cka.core.CapturedContent;
 import com.cka.provider.ProviderHealth;
@@ -38,17 +39,19 @@ class FolderWatcherTest {
         }
 
         @Override
-        public List<String> list() {
+        public List<FolderFile> list() {
             listCalls++;
             if (!reachable) {
                 throw new IllegalStateException("folder unreachable");
             }
-            return List.copyOf(files.keySet());
+            return files.keySet().stream()
+                    .map(name -> new FolderFile(name, name, "https://drive.test/" + name, "text/plain"))
+                    .toList();
         }
 
         @Override
-        public String read(String name) {
-            return files.get(name);
+        public String read(FolderFile file) {
+            return files.get(file.name());
         }
 
         @Override
@@ -57,9 +60,47 @@ class FolderWatcherTest {
         }
     }
 
+    /** The simplest thing that honours the contract: remembered titles, in a set. */
+    private static final class RememberedInMemory implements CapturedItems {
+        private final java.util.Set<String> titles = new java.util.HashSet<>();
+        private boolean unreachable;
+
+        @Override
+        public boolean alreadyCaptured(String title) {
+            if (unreachable) {
+                throw new IllegalStateException("database is locked");
+            }
+            return titles.contains(title);
+        }
+
+        @Override
+        public void remember(String title) {
+            titles.add(title);
+        }
+
+        @Override
+        public java.util.Set<String> allTitles() {
+            return java.util.Set.copyOf(titles);
+        }
+
+        @Override
+        public void forget(String title) {
+            titles.remove(title);
+        }
+
+        @Override
+        public void confirmStored(String title) {}
+
+        @Override
+        public java.util.Set<String> confirmedStored() {
+            return java.util.Set.of();
+        }
+    }
+
     private final FakeFolder folder = new FakeFolder();
+    private final RememberedInMemory remembered = new RememberedInMemory();
     private final List<CapturedContent> captured = new ArrayList<>();
-    private final FolderWatcher watcher = new FolderWatcher(folder, Duration.ofMillis(20));
+    private final FolderWatcher watcher = new FolderWatcher(folder, remembered, Duration.ofMillis(20));
 
     private void aMeetingCalled(String name) {
         folder.put(name + " - Recording.mp4", "");
@@ -70,13 +111,13 @@ class FolderWatcherTest {
     @Test
     @DisplayName("A meeting's recording, transcript and notes become one captured item")
     void aMeetingsFilesBecomeOneCapturedItem() {
-        aMeetingCalled("Sprint Refinement (2026-11-08 14:32 GMT)");
+        aMeetingCalled("Sprint Refinement started 2026/11/08 14:32 GMT");
 
         watcher.pollOnce(captured::add);
 
         assertThat(captured).hasSize(1);
         var content = captured.getFirst();
-        assertThat(content.title()).isEqualTo("Sprint Refinement (2026-11-08 14:32 GMT)");
+        assertThat(content.title()).isEqualTo("Sprint Refinement started 2026/11/08 14:32 GMT");
         assertThat(content.transcript()).isEqualTo("Priya: #142 is merged, so it can be closed.");
         assertThat(content.platformSummary()).isEqualTo("The team agreed #142 is done.");
     }
@@ -87,7 +128,7 @@ class FolderWatcherTest {
         // PRD 7.6 keys prompts by content type and PromptStore already falls back to General for
         // a type it has never seen — so the watcher names the type and decides nothing. A
         // mapping here would be a second place to add a meeting type, which 7.6 says is a row.
-        aMeetingCalled("Sprint Refinement (2026-11-08 14:32 GMT)");
+        aMeetingCalled("Sprint Refinement started 2026/11/08 14:32 GMT");
 
         watcher.pollOnce(captured::add);
 
@@ -97,11 +138,11 @@ class FolderWatcherTest {
     @Test
     @DisplayName("A meeting name containing brackets keeps them in its content type")
     void aMeetingNameContainingBracketsKeepsThem() {
-        // Meet's timestamp is the *last* parenthesised group, not the first, and meeting names
-        // carry brackets of their own: "Planning (Q4)", "1:1 (Priya)". Taking the first bracket
-        // turns "Planning (Q4)" into "Planning" — a different content type, and so a different
+        // Meeting names carry brackets of their own: "Planning (Q4)", "1:1 (Priya)". Cutting at
+        // a bracket — which an earlier version did, for a timestamp format Meet never writes —
+        // turns "Planning (Q4)" into "Planning": a different content type, and so a different
         // prompt, decided by where someone happened to put a bracket in a calendar invite.
-        aMeetingCalled("Planning (Q4) (2026-11-08 14:32 GMT)");
+        aMeetingCalled("Planning (Q4) started 2026/11/08 14:32 GMT");
 
         watcher.pollOnce(captured::add);
 
@@ -109,16 +150,103 @@ class FolderWatcherTest {
     }
 
     @Test
-    @DisplayName("A meeting named only by its timestamp still has a content type")
-    void aMeetingNamedOnlyByItsTimestampStillHasAContentType() {
-        // CapturedContent.contentType is @NonNull and an empty one is no better than a null:
-        // nothing to key a prompt by and nothing to show a person. The whole title stands in,
-        // and PromptStore's fallback handles a type it has never seen.
-        aMeetingCalled("(2026-11-08 14:32 GMT)");
+    @DisplayName("Meet's en dash is recognised as the separator, not just a hyphen")
+    void meetsEnDashIsRecognised() {
+        // Taken from a real folder: Meet writes "… BST – Notes by Gemini" with U+2013, not the
+        // ASCII hyphen. Matching only the hyphen finds nothing and says nothing — a file that
+        // matches no suffix is simply not part of any meeting — so the whole watcher would have
+        // sat polling a folder full of recordings and captured none of them.
+        folder.put("Meeting started 2026/06/27 21:43 BST \u2013 Transcript", "Priya: #142 is done.");
+        folder.put("Meeting started 2026/06/27 21:43 BST \u2013 Notes by Gemini", "The team agreed.");
 
         watcher.pollOnce(captured::add);
 
-        assertThat(captured.getFirst().contentType()).isNotBlank();
+        assertThat(captured).hasSize(1);
+        assertThat(captured.getFirst().transcript()).isEqualTo("Priya: #142 is done.");
+        assertThat(captured.getFirst().platformSummary()).isEqualTo("The team agreed.");
+        // The title keeps the dash the folder actually used, rather than the one matching used.
+        assertThat(captured.getFirst().title()).isEqualTo("Meeting started 2026/06/27 21:43 BST");
+    }
+
+    @Test
+    @DisplayName("Meet's own timestamp forms are stripped, leaving the name somebody gave it")
+    void meetsTimestampFormsAreStripped() {
+        // Both taken from a real folder: Meet writes "<name> started <date> <tz>" and
+        // "<name> <Mon D, YYYY> at <time> <tz>". Neither is the bracketed form the code first
+        // assumed, so without this every meeting's type was the whole filename — unique per
+        // meeting, and so never matching a stored prompt.
+        folder.put("Sprint Refinement started 2026/06/27 21:43 BST \u2013 Transcript", "Priya: done.");
+        folder.put("Retro Jun 27, 2026 at 21:43 BST \u2013 Transcript", "Tom: fine.");
+
+        watcher.pollOnce(captured::add);
+
+        assertThat(captured).extracting(CapturedContent::contentType).containsExactly("Sprint Refinement", "Retro");
+    }
+
+    @Test
+    @DisplayName("A meeting nobody named is Unknown, not \"Meeting\"")
+    void aMeetingNobodyNamedIsUnknown() {
+        // "Meeting Jun 27, 2026 at 21:43 BST" is what Meet calls an unnamed meeting, so the
+        // word left after stripping the date is Meet's placeholder rather than a type. Calling
+        // it one would give every unnamed meeting the same meaningless type.
+        folder.put("Meeting Jun 27, 2026 at 21:43 BST \u2013 Transcript", "Priya: hello.");
+
+        watcher.pollOnce(captured::add);
+
+        assertThat(captured.getFirst().contentType()).isEqualTo(CapturedContent.UNKNOWN_CONTENT_TYPE);
+    }
+
+    @Test
+    @DisplayName("A notes document with a transcript tab is the transcript, with no transcript file")
+    void aNotesDocumentWithATranscriptTabIsTheTranscript() {
+        // The shape a real folder turned out to have: Gemini writes one document with a
+        // "Meeting records" tab and a "Transcript" tab, and Drive's export flattens both. There
+        // is no transcript file to wait for, and a watcher that waits for one waits forever.
+        folder.put("Sprint Refinement started 2026/06/27 21:43 BST \u2013 Notes by Gemini", """
+                Jun 27, 2026
+                Meeting records Transcript
+                Summary
+                The team agreed #142 is a duplicate.
+                Details
+                Jun 27, 2026
+                00:00:00
+                Priya Raman: One four two is merged.
+                """);
+
+        watcher.pollOnce(captured::add);
+
+        assertThat(captured).hasSize(1);
+        assertThat(captured.getFirst().transcript()).startsWith("00:00:00").contains("Priya Raman:");
+        assertThat(captured.getFirst().platformSummary())
+                .contains("The team agreed #142 is a duplicate.")
+                .doesNotContain("Priya Raman:");
+        assertThat(captured.getFirst().contentType()).isEqualTo("Sprint Refinement");
+    }
+
+    @Test
+    @DisplayName("A notes document with no transcript tab yet is waited for, not handed on")
+    void aNotesDocumentWithNoTranscriptTabIsWaitedFor() {
+        folder.put("Stand-up started 2026/06/27 09:02 BST \u2013 Notes by Gemini", "Summary\nNothing blocking.");
+
+        watcher.pollOnce(captured::add);
+
+        assertThat(captured).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Drive's \"Copy of\" prefix is not part of the meeting's name")
+    void drivesCopyOfPrefixIsNotPartOfTheName() {
+        // Seen in a real folder: duplicating a file in Drive renames it "Copy of …", and
+        // duplicating that gives "Copy of Copy of …". Left in, a nameless meeting reads as
+        // "Copy of Meeting" and so misses the placeholder check entirely.
+        folder.put("Copy of Meeting started 2026/06/27 21:43 BST \u2013 Transcript", "Priya: hello.");
+        folder.put("Copy of Copy of Retro started 2026/06/27 22:00 BST \u2013 Transcript", "Tom: fine.");
+
+        watcher.pollOnce(captured::add);
+
+        assertThat(captured)
+                .extracting(CapturedContent::contentType)
+                .containsExactly(CapturedContent.UNKNOWN_CONTENT_TYPE, "Retro");
     }
 
     @Test
@@ -127,7 +255,7 @@ class FolderWatcherTest {
         // The transcript is the thing being summarised. Publishing a recording without one would
         // start an action decision chain the LLM provider cannot do anything with, and the
         // failure would surface two stages away from the folder that caused it.
-        folder.put("Sprint Refinement (2026-11-08 14:32 GMT) - Recording.mp4", "");
+        folder.put("Sprint Refinement started 2026/11/08 14:32 GMT - Recording.mp4", "");
 
         watcher.pollOnce(captured::add);
 
@@ -139,7 +267,7 @@ class FolderWatcherTest {
     void aMeetingWithNoNotesIsStillHandedOn() {
         // Notes are Gemini's and may be switched off for the account; the transcript is enough.
         // CapturedContent.platformSummary is nullable for exactly this case.
-        folder.put("Stand-up (2026-11-08 09:02 GMT) - Transcript", "Tom: nothing blocking.");
+        folder.put("Stand-up started 2026/11/08 09:02 GMT - Transcript", "Tom: nothing blocking.");
 
         watcher.pollOnce(captured::add);
 
@@ -152,7 +280,7 @@ class FolderWatcherTest {
     void aMeetingAlreadyHandedOnIsNotHandedOnAgain() {
         // Every poll sees the whole folder, so without this the same recording starts a new
         // action decision chain on every interval and comments on every ticket again.
-        aMeetingCalled("Sprint Refinement (2026-11-08 14:32 GMT)");
+        aMeetingCalled("Sprint Refinement started 2026/11/08 14:32 GMT");
 
         watcher.pollOnce(captured::add);
         watcher.pollOnce(captured::add);
@@ -164,10 +292,10 @@ class FolderWatcherTest {
     @Test
     @DisplayName("A meeting that appears after the first poll is handed on when it appears")
     void aMeetingThatAppearsLaterIsHandedOn() {
-        aMeetingCalled("Sprint Refinement (2026-11-08 14:32 GMT)");
+        aMeetingCalled("Sprint Refinement started 2026/11/08 14:32 GMT");
         watcher.pollOnce(captured::add);
 
-        aMeetingCalled("Retro (2026-11-08 16:00 GMT)");
+        aMeetingCalled("Retro started 2026/11/08 16:00 GMT");
         watcher.pollOnce(captured::add);
 
         assertThat(captured).extracting(CapturedContent::contentType).containsExactly("Sprint Refinement", "Retro");
@@ -179,11 +307,11 @@ class FolderWatcherTest {
         // Meet writes the recording first and the transcript minutes later, so the folder is
         // genuinely incomplete for a while. The incomplete meeting must not be remembered as
         // handed on, or the transcript would never be picked up.
-        folder.put("Sprint Refinement (2026-11-08 14:32 GMT) - Recording.mp4", "");
+        folder.put("Sprint Refinement started 2026/11/08 14:32 GMT - Recording.mp4", "");
         watcher.pollOnce(captured::add);
         assertThat(captured).isEmpty();
 
-        folder.put("Sprint Refinement (2026-11-08 14:32 GMT) - Transcript", "Priya: #142 is done.");
+        folder.put("Sprint Refinement started 2026/11/08 14:32 GMT - Transcript", "Priya: #142 is done.");
         watcher.pollOnce(captured::add);
         watcher.pollOnce(captured::add);
 
@@ -195,11 +323,14 @@ class FolderWatcherTest {
     @DisplayName("The source link points at the recording, not the transcript")
     void theSourceLinkPointsAtTheRecording() {
         // PRD: the note links back to the recording, which is what a person wants to open.
-        aMeetingCalled("Sprint Refinement (2026-11-08 14:32 GMT)");
+        aMeetingCalled("Sprint Refinement started 2026/11/08 14:32 GMT");
 
         watcher.pollOnce(captured::add);
 
-        assertThat(captured.getFirst().sourceUri()).contains("Recording");
+        assertThat(captured.getFirst().sourceUri())
+                .as("a link a person can open, not a filename")
+                .startsWith("https://")
+                .contains("Recording");
     }
 
     @Test
@@ -207,7 +338,7 @@ class FolderWatcherTest {
     void aFolderThatCannotBeListedDoesNotThrow() {
         // A poll runs on a timer with nothing to catch what it throws, and Drive being briefly
         // unreachable is ordinary. The next poll must still happen.
-        aMeetingCalled("Sprint Refinement (2026-11-08 14:32 GMT)");
+        aMeetingCalled("Sprint Refinement started 2026/11/08 14:32 GMT");
         folder.reachable = false;
 
         watcher.pollOnce(captured::add);
@@ -223,7 +354,7 @@ class FolderWatcherTest {
     void pollingStatusSaysWhatItHasFound() {
         // T16's activity log shows that CKA is polling and has found something, which is the
         // difference between "working" and "idle" to someone watching the screen.
-        aMeetingCalled("Sprint Refinement (2026-11-08 14:32 GMT)");
+        aMeetingCalled("Sprint Refinement started 2026/11/08 14:32 GMT");
 
         watcher.pollOnce(captured::add);
 
@@ -239,8 +370,8 @@ class FolderWatcherTest {
         // meeting after it in iteration order is skipped — and skipped again on the next poll,
         // and the next, because the failing one is still there and still first. A folder would
         // silently stop making progress with nothing but a log line to say so.
-        aMeetingCalled("Doomed (2026-11-08 10:00 GMT)");
-        aMeetingCalled("Fine (2026-11-08 11:00 GMT)");
+        aMeetingCalled("Doomed started 2026/11/08 10:00 GMT");
+        aMeetingCalled("Fine started 2026/11/08 11:00 GMT");
 
         watcher.pollOnce(content -> {
             if (content.title().startsWith("Doomed")) {
@@ -250,6 +381,44 @@ class FolderWatcherTest {
         });
 
         assertThat(captured).extracting(CapturedContent::contentType).containsExactly("Fine");
+    }
+
+    @Test
+    @DisplayName("A capture record that cannot be read leaves the watcher reporting, not throwing")
+    void aCaptureRecordThatCannotBeReadDoesNotThrow() {
+        // The record is a database query, and anything thrown out of a poll cancels the timer:
+        // the watcher would stop for good on the first locked database, and say nothing.
+        aMeetingCalled("Sprint Refinement started 2026/11/08 14:32 GMT");
+        remembered.unreachable = true;
+
+        assertThatCode(() -> watcher.pollOnce(captured::add)).doesNotThrowAnyException();
+
+        remembered.unreachable = false;
+        watcher.pollOnce(captured::add);
+        assertThat(captured).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("Beside a transcript file, the notes' own transcript tab is not the platform summary")
+    void theNotesTranscriptTabIsNotThePlatformSummary() {
+        folder.put("Retro - Transcript", "Priya: #142 is merged.");
+        folder.put(
+                "Retro - Notes by Gemini",
+                "Summary\nThe team agreed #142 is done.\n\n00:00:00\nPriya: #142 is merged.");
+
+        watcher.pollOnce(captured::add);
+
+        assertThat(captured.getFirst().platformSummary()).isEqualTo("Summary\nThe team agreed #142 is done.");
+    }
+
+    @Test
+    @DisplayName("A transcript file holding only Drive's byte-order mark is not yet speech")
+    void aTranscriptOfOnlyAByteOrderMarkIsWaitedFor() {
+        folder.put("Retro - Transcript", "\uFEFF");
+
+        watcher.pollOnce(captured::add);
+
+        assertThat(captured).isEmpty();
     }
 
     @Test
@@ -265,7 +434,7 @@ class FolderWatcherTest {
             arrived.countDown();
         });
 
-        aMeetingCalled("Sprint Refinement (2026-11-08 14:32 GMT)");
+        aMeetingCalled("Sprint Refinement started 2026/11/08 14:32 GMT");
 
         assertThat(arrived.await(5, TimeUnit.SECONDS))
                 .as("a meeting added after listening began")

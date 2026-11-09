@@ -1,0 +1,7 @@
+${AnsiColor.BRIGHT_RED}  ___ ${AnsiColor.BRIGHT_GREEN} _  __ ${AnsiColor.BRIGHT_BLUE}   _
+${AnsiColor.BRIGHT_RED} / __|${AnsiColor.BRIGHT_GREEN}| |/ / ${AnsiColor.BRIGHT_BLUE}  /_\
+${AnsiColor.BRIGHT_RED}| (__ ${AnsiColor.BRIGHT_GREEN}| ' <  ${AnsiColor.BRIGHT_BLUE} / _ \
+${AnsiColor.BRIGHT_RED} \___|${AnsiColor.BRIGHT_GREEN}|_|\_\ ${AnsiColor.BRIGHT_BLUE}/_/ \_\
+${AnsiColor.BRIGHT_RED} Capture ${AnsiColor.DEFAULT}·${AnsiColor.BRIGHT_GREEN} Knowledge ${AnsiColor.DEFAULT}·${AnsiColor.BRIGHT_BLUE} Action
+${AnsiColor.DEFAULT} Turn your knowledge into action automatically, with the tools you already know.
+

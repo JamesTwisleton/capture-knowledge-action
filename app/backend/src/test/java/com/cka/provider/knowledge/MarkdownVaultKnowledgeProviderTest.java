@@ -1,11 +1,13 @@
 package com.cka.provider.knowledge;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.cka.core.CapturedContent;
 import com.cka.core.Provenance;
 import com.cka.core.Summary;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -84,8 +86,55 @@ class MarkdownVaultKnowledgeProviderTest {
         assertThat(noteAt(page.id()))
                 .contains("- #142 — agreed done, to be closed.")
                 .contains("Priya: #142 is merged and verified, so it can be closed.")
-                .contains("## Summary")
-                .contains("## Transcript");
+                .contains("\n# Summary\n")
+                .contains("\n# Transcript\n");
+    }
+
+    @Test
+    @DisplayName("A stored note's title reads back exactly as it was written")
+    void aStoredTitleReadsBackExactly() throws IOException {
+        // The reconciler compares these against the capture record character for character, so
+        // a title that does not survive render's quoting reads as a deleted note.
+        var awkward = "Planning: \"Q4\" \\ backlog";
+        provider().store(content(awkward), SUMMARY);
+        Files.writeString(vault.resolve("My own note.md"), "No front matter here.");
+
+        assertThat(provider().storedTitles()).containsExactly(awkward);
+    }
+
+    @Test
+    @DisplayName("A note Obsidian has edited, or that was filed into a folder, is still found")
+    void aNoteObsidianEditedOrFiledIsStillFound() throws IOException {
+        // Editing any property in Obsidian's panel rewrites the front matter, title unquoted, and
+        // filing a note into a folder moves it. Missing either would read as a deleted note, and
+        // the meeting would be summarised again.
+        Files.createDirectories(vault.resolve("Refinements"));
+        Files.writeString(
+                vault.resolve("Refinements/Edited.md"), "---\ntitle: Sprint Refinement\ntags:\n  - q4\n---\n\nBody.");
+        Files.createDirectories(vault.resolve(".trash"));
+        Files.writeString(vault.resolve(".trash/Gone.md"), "---\ntitle: \"Retro\"\n---\n");
+
+        assertThat(provider().storedTitles()).containsExactly("Sprint Refinement");
+    }
+
+    @Test
+    @DisplayName("A note whose front matter cannot be read throws rather than reading as deleted")
+    void unreadableFrontMatterThrows() throws IOException {
+        Files.writeString(vault.resolve("Broken.md"), "---\ntitle: [unclosed\n---\n");
+
+        assertThatThrownBy(() -> provider().storedTitles())
+                .isInstanceOf(UncheckedIOException.class)
+                .hasMessageContaining("Broken.md");
+    }
+
+    @Test
+    @DisplayName("A vault that is not there throws rather than reporting no notes")
+    void aMissingVaultThrows() {
+        // "No notes" would have the reconciler forget every meeting and re-summarise the folder.
+        var missing =
+                new MarkdownVaultKnowledgeProvider(vault.resolve("not-mounted").toString(), CLOCK);
+
+        assertThatThrownBy(missing::storedTitles).isInstanceOf(UncheckedIOException.class);
     }
 
     @Test
@@ -118,7 +167,90 @@ class MarkdownVaultKnowledgeProviderTest {
                 .store(content("Sprint Refinement 2026-10-07"), SUMMARY)
                 .id());
 
-        assertThat(note).contains("[[Sprint Refinement]]");
+        assertThat(note).contains("Capture type: [[Sprint Refinement]]");
+    }
+
+    @Test
+    @DisplayName("An undetermined type says so, and is not a wiki link")
+    void anUndeterminedTypeSaysSo() throws IOException {
+        // [[Unknown]] would give Obsidian a page collecting every note CKA could not identify,
+        // which is a worse thing to have than no page. The line says which prompt ran instead.
+        var undetermined = CapturedContent.builder()
+                .sourceUri("https://drive.google.test/x")
+                .title("Copy of Meeting started 2026/06/27 21:43 BST")
+                .contentType(CapturedContent.UNKNOWN_CONTENT_TYPE)
+                .transcript("Priya: hello.")
+                .build();
+
+        var note = noteAt(provider().store(undetermined, SUMMARY).id());
+
+        assertThat(note).contains("Capture type: unknown, used default summary prompt");
+        assertThat(note).doesNotContain("[[Unknown]]");
+    }
+
+    @Test
+    @DisplayName("The note says who summarised it, not only the front matter")
+    void theNoteSaysWhoSummarisedIt() throws IOException {
+        // The front matter is Obsidian's property panel and the search index; this is for the
+        // person reading the page, who should not have to open a drawer to learn which model
+        // wrote what they are reading.
+        var note =
+                noteAt(provider().store(content("Sprint Refinement"), SUMMARY).id());
+
+        assertThat(note).contains("Summarised by anthropic/claude-sonnet-5, prompt v3");
+    }
+
+    @Test
+    @DisplayName("A summary's own headings are pushed below the section heading above them")
+    void aSummarysOwnHeadingsArePushedBelow() throws IOException {
+        // An LLM writes whatever heading levels it likes, and in practice starts at "#". Left
+        // alone, its first heading renders *larger* than the "Summary" heading above it and the
+        // page reads as three documents pasted together.
+        var withHeadings = Summary.builder()
+                .text("# Meeting Summary\n\n## What was decided\n\n- A thing.\n\n### Detail\n\nMore.")
+                .producedBy(SUMMARY.producedBy())
+                .promptVersion(1)
+                .build();
+
+        var note = noteAt(
+                provider().store(content("Sprint Refinement"), withHeadings).id());
+
+        assertThat(note).contains("\n# Summary\n");
+        assertThat(note).contains("\n## Meeting Summary\n");
+        assertThat(note).contains("\n### What was decided\n");
+        assertThat(note).contains("\n#### Detail\n");
+        // The model's structure survives the shift; only its depth changes.
+        assertThat(note).doesNotContain("\n# Meeting Summary");
+    }
+
+    @Test
+    @DisplayName("A comment inside a code block in a summary is not mistaken for a heading")
+    void aCommentInACodeBlockIsNotAHeading() throws IOException {
+        var withCode = Summary.builder()
+                .text("# Decisions\n\n```bash\n# install deps\nnpm ci\n```")
+                .producedBy(SUMMARY.producedBy())
+                .promptVersion(1)
+                .build();
+
+        var note =
+                noteAt(provider().store(content("Sprint Refinement"), withCode).id());
+
+        assertThat(note).contains("## Decisions").contains("\n# install deps\n");
+    }
+
+    @Test
+    @DisplayName("A summary that already starts below the section heading is left alone")
+    void aSummaryThatAlreadyStartsBelowIsLeftAlone() throws IOException {
+        var alreadyDeep = Summary.builder()
+                .text("## Decisions\n\n- A thing.")
+                .producedBy(SUMMARY.producedBy())
+                .promptVersion(1)
+                .build();
+
+        var note = noteAt(
+                provider().store(content("Sprint Refinement"), alreadyDeep).id());
+
+        assertThat(note).contains("## Decisions").doesNotContain("### Decisions");
     }
 
     @Test
