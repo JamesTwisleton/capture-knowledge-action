@@ -17,10 +17,22 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+import org.yaml.snakeyaml.LoaderOptions;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.SafeConstructor;
+import org.yaml.snakeyaml.error.YAMLException;
 
 /**
  * The knowledge store as a folder of Markdown files (T06): one note per captured item, with YAML
@@ -78,6 +90,21 @@ public class MarkdownVaultKnowledgeProvider implements KnowledgeProvider {
      */
     private static final DateTimeFormatter SUFFIX = DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss");
 
+    /**
+     * How much of a note is read to find its front matter, which is at the top by definition. A
+     * transcript is tens of thousands of characters and there are a few hundred notes.
+     */
+    private static final int FRONT_MATTER_SCAN_BYTES = 16 * 1024;
+
+    /** A Markdown ATX heading: the hashes at the start of a line, and the space after them. */
+    private static final Pattern HEADING = Pattern.compile("^(#{1,6})\\s");
+
+    /** Where a fenced code block opens or closes, inside which nothing is a heading. */
+    private static final Pattern CODE_FENCE = Pattern.compile("^ {0,3}(```|~~~)");
+
+    /** The level this note's own section headings use, so content inside one starts below it. */
+    private static final int SECTION_LEVEL = 1;
+
     private final Path vault;
 
     /** Injected rather than {@code Instant.now()}, as {@code AuditTrail}'s is, so a test can pin it. */
@@ -128,6 +155,95 @@ public class MarkdownVaultKnowledgeProvider implements KnowledgeProvider {
         } catch (IOException e) {
             log.warn("Left {} behind in the vault after a failed write", leftover, e);
         }
+    }
+
+    /**
+     * Read back out of the notes themselves, from the {@code title} the front matter records,
+     * rather than from the filenames. A filename is this provider's own invention — illegal
+     * characters replaced, a clashing one given a timestamp — so deriving a title from one would
+     * be undoing a transformation that is deliberately not reversible. The front matter holds
+     * the title exactly as it arrived.
+     *
+     * <p>Every note on every call, subfolders included, because filing a note into a folder is
+     * an ordinary thing to do in a vault and must not read as deleting it. Folders whose name
+     * starts with a dot are skipped — {@code .obsidian} is configuration and {@code .trash} is
+     * where Obsidian puts what a person deleted. A vault is a few hundred files, read once per
+     * poll interval, and a cache would be a second thing to keep true about a folder whose
+     * entire point is that a person edits it behind CKA's back.
+     *
+     * <p>Throws rather than answering for a vault it cannot fully read — one that is missing, or
+     * a note that cannot be read or whose front matter does not parse. Each of those is "I cannot
+     * tell", and answering as though the note were absent would forget its meeting and summarise
+     * it again; a missing vault would do that for every meeting at once.
+     */
+    @Override
+    public Set<String> storedTitles() {
+        try (var paths = Files.walk(vault)) {
+            return paths.filter(path -> path.getFileName().toString().endsWith(".md"))
+                    .filter(path -> !inHiddenFolder(path))
+                    .filter(Files::isRegularFile)
+                    .map(this::titleOf)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toUnmodifiableSet());
+        } catch (IOException e) {
+            throw new UncheckedIOException("Could not read the vault at " + vault, e);
+        }
+    }
+
+    private boolean inHiddenFolder(Path note) {
+        var folder = vault.relativize(note).getParent();
+        if (folder == null) {
+            return false;
+        }
+        for (var part : folder) {
+            if (part.toString().startsWith(".")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * The front matter's {@code title}, or {@code null} for a note with no front matter or no
+     * title in it — somebody's own note. Read as YAML rather than matched as a line, because
+     * Obsidian rewrites the front matter whenever a property is edited in its panel, and it
+     * writes a plain title unquoted.
+     *
+     * <p>Decoded leniently: the scan stops at a byte count, which can fall inside a character,
+     * and a stray byte further down a transcript has nothing to do with the title.
+     */
+    private String titleOf(Path note) {
+        String head;
+        try (var in = Files.newInputStream(note)) {
+            head = new String(in.readNBytes(FRONT_MATTER_SCAN_BYTES), StandardCharsets.UTF_8).replace("\uFEFF", "");
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        var lines = head.lines().toList();
+        if (lines.isEmpty() || !lines.getFirst().strip().equals("---")) {
+            return null;
+        }
+        var end = -1;
+        for (int i = 1; i < lines.size(); i++) {
+            if (lines.get(i).strip().equals("---")) {
+                end = i;
+                break;
+            }
+        }
+        if (end < 0) {
+            return null;
+        }
+        Object frontMatter;
+        try {
+            frontMatter =
+                    new Yaml(new SafeConstructor(new LoaderOptions())).load(String.join("\n", lines.subList(1, end)));
+        } catch (YAMLException e) {
+            throw new UncheckedIOException(new IOException("Unreadable front matter in " + vault.relativize(note), e));
+        }
+        if (frontMatter instanceof Map<?, ?> properties && properties.get("title") != null) {
+            return String.valueOf(properties.get("title"));
+        }
+        return null;
     }
 
     /**
@@ -228,33 +344,93 @@ public class MarkdownVaultKnowledgeProvider implements KnowledgeProvider {
                 .append('\n')
                 .append("---\n\n");
 
-        // A wiki link rather than a tag: Obsidian shows every note of a type on one page, so the
-        // vault organises itself by content type without anything here maintaining an index.
-        sb.append("# ")
-                .append(content.title())
-                .append("\n\n")
-                .append("Type: [[")
-                .append(content.contentType())
-                .append("]] · ")
-                .append("[Recording](")
+        // A wiki link for a type a team actually uses, because Obsidian then lists every note of
+        // that type on one page. Not for an undetermined one: [[Unknown]] would make a page
+        // collecting everything CKA could not identify, which is a worse thing to have than no
+        // page — and the line says plainly which prompt summarised it instead.
+        sb.append("# ").append(content.title()).append("\n\n");
+        sb.append(
+                        CapturedContent.UNKNOWN_CONTENT_TYPE.equals(content.contentType())
+                                ? "Capture type: unknown, used default summary prompt"
+                                : "Capture type: [[" + content.contentType() + "]]")
+                .append(" · [Recording](")
                 .append(content.sourceUri())
                 .append(")\n\n");
 
-        sb.append("## Summary\n\n").append(summary.text()).append("\n\n");
+        // In the note as well as the front matter: the front matter is for Obsidian's property
+        // panel and for searching, and this is for the person reading the page, who should not
+        // have to open a properties drawer to find out which model wrote what they are reading.
+        sb.append("Summarised by ")
+                .append(summary.producedBy().provider())
+                .append("/")
+                .append(summary.producedBy().model())
+                .append(", prompt v")
+                .append(summary.promptVersion())
+                .append("\n\n");
+
+        sb.append("# Summary\n\n").append(demoted(summary.text())).append("\n\n");
 
         if (content.platformSummary() != null) {
-            sb.append("## The platform's own summary\n\n")
-                    .append(content.platformSummary())
+            sb.append("# The platform's own summary\n\n")
+                    .append(demoted(content.platformSummary()))
                     .append("\n\n");
         }
 
-        // Last, and deliberately: it is the longest part and the least often read, but it is the
-        // evidence behind everything above it, so it is kept in the same file rather than linked
-        // from one — a vault of notes that depend on a second file is a vault that can lose half.
-        return sb.append("## Transcript\n\n")
+        return sb.append("# Transcript\n\n")
                 .append(content.transcript())
                 .append('\n')
                 .toString();
+    }
+
+    /**
+     * Pushes a block's own headings below the section heading it sits under, so the note reads
+     * as one document rather than as three pasted together.
+     *
+     * <p>An LLM writes whatever heading levels it likes, and both of the ones here do start at
+     * {@code #} — so a summary dropped in verbatim renders its first heading <em>larger</em> than
+     * the "Summary" heading above it, and its second at the same size. The shape of the page
+     * then depends on what the model felt like today, which is not a thing to leave to chance.
+     *
+     * <p>Shifted by the whole block's shallowest heading rather than per line, so the relative
+     * structure the model chose survives: a document using {@code #} and {@code ##} becomes
+     * {@code ##} and {@code ###}, and one that already starts at {@code ##} is left alone.
+     * Clamped at six, below which Markdown has no headings left.
+     */
+    private String demoted(String markdown) {
+        var lines = markdown.lines().toList();
+        var levels = headingLevels(lines);
+        var shallowest = Arrays.stream(levels).filter(level -> level > 0).min().orElse(0);
+        if (shallowest == 0 || shallowest >= SECTION_LEVEL + 1) {
+            return markdown;
+        }
+        var shift = SECTION_LEVEL + 1 - shallowest;
+        return IntStream.range(0, lines.size())
+                .mapToObj(i -> levels[i] == 0
+                        ? lines.get(i)
+                        : "#".repeat(Math.min(6, levels[i] + shift))
+                                + lines.get(i).substring(levels[i]))
+                .collect(Collectors.joining("\n"));
+    }
+
+    /**
+     * Each line's heading level, or zero for a line that is not a heading — which includes a
+     * {@code #} inside a fenced code block. A summary of a meeting about a deploy script carries
+     * that script's shell comments, and demoting those would change the code a person copies.
+     */
+    private static int[] headingLevels(List<String> lines) {
+        var levels = new int[lines.size()];
+        var fenced = false;
+        for (int i = 0; i < lines.size(); i++) {
+            if (CODE_FENCE.matcher(lines.get(i)).find()) {
+                fenced = !fenced;
+                continue;
+            }
+            var heading = HEADING.matcher(lines.get(i));
+            if (!fenced && heading.find()) {
+                levels[i] = heading.group(1).length();
+            }
+        }
+        return levels;
     }
 
     /**

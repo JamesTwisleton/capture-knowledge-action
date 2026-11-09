@@ -118,6 +118,11 @@ public class RabbitEventBus implements EventBus {
                 log.warn("Ignoring {} delivered to a {} subscriber", event.getClass(), type);
             }
         });
+        // A handler that throws has its event dropped, not put back. The container's default is
+        // to requeue, and the broker redelivers at once, so a failing summarise was retried back
+        // to back — a paid LLM call each time, for as long as the failure lasted. Dropped, the
+        // meeting stays captured and never stored, where a person can see it and retry it.
+        container.setDefaultRequeueRejected(false);
         // start() runs afterPropertiesSet() itself if it has not already run, so there is no
         // manual initialisation to make here.
         container.start();

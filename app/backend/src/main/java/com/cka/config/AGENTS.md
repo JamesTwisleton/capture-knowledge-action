@@ -7,7 +7,7 @@ detail of one implementation, while this package is the composition of the whole
 
 | | |
 |---|---|
-| `PipelineConfiguration` | Builds the pipeline stages and starts them listening (T12, T06) |
+| `PipelineConfiguration` | Builds the pipeline stages and the reconciler and starts them (T09, T12, T06) |
 | `ClockConfiguration` | The one clock the application reads time from, in UTC (T06) |
 
 ## Conventions specific to this package

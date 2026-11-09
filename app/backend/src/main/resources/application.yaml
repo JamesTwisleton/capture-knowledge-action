@@ -1,3 +1,21 @@
+# Compose prefixes every line with "cka-backend  | ", so the application prints only what comes
+# after it: the time, the class that logged, and the message. Boot's default adds a PID, a thread
+# name, a level column and a 40-character package path, none of which earn their width when the
+# question is usually "what just happened, and where".
+#
+# The newline goes *inside* %clr, and nothing follows it. A trailing %clr(%m)%n prints a literal
+# "%n", and a trailing %wEx prints a literal "%wEx" at the head of the next line: the colour
+# converter swallows whatever comes after it. Stack traces are not lost by dropping %wEx —
+# Logback appends a throwable on its own unless the pattern says %nopex.
+#
+# Colour so the eye can find a field without reading it: the time in blue, the class in magenta,
+# the separators faint enough to recede, and the message in its level's own colour — %clr with no
+# colour argument colours by level, which is why the level is not printed. The logger name is
+# %logger{0}, the simple class name, since the package is noise once the class is unique.
+logging:
+  pattern:
+    console: "%clr(%d{HH:mm:ss.SSS}){blue} %clr(|){faint} %clr(%-28.28logger{0}){magenta} %clr(|){faint} %clr(%m%n)"
+
 # Connection settings come from the environment, with defaults that work for a developer
 # running the broker on their own machine. Compose sets EVENT_BUS_HOST to the service name
 # and passes RABBITMQ_USER/RABBITMQ_PASS through from app/.env.
@@ -26,6 +44,22 @@ spring:
       # larger pool cannot add write concurrency — it converts waiting into SQLITE_BUSY errors
       # on whichever connection loses. A pool of one makes the driver queue instead.
       maximum-pool-size: 1
+
+  # The dispatcher servlet is built on the first request by default, so its three initialisation
+  # lines appear in the log whenever that request happens to arrive — after the pipeline has
+  # already captured and summarised something, which reads as though startup were still going on
+  # underneath the work. Building it during startup puts it where it belongs and means the first
+  # caller is not the one who pays for it.
+  mvc:
+    servlet:
+      load-on-startup: 1
+
+  # Colour even though the container's output is a pipe rather than a terminal. Boot detects
+  # ANSI support from the console it is attached to and finds none, so without this the colour
+  # that distinguishes a warning from a line of progress never appears in `docker compose logs`.
+  output:
+    ansi:
+      enabled: always
 
   # Migrations live in the same repository as the schema they create and are applied at startup,
   # so a database is never a version behind the code that reads it. T14's audit columns and T11's
@@ -68,6 +102,9 @@ cka:
     audit: sql
     # T06. Needs a directory rather than a credential, so unlike the LLM it ships selected.
     knowledge: markdown-vault
+    # T09. Off by default for the same reason as the LLM: it needs credentials nobody has on a
+    # fresh clone, and selecting it without them stops the backend starting.
+    capture: none
     prompt: sql
     # T12, and the one capability that ships switched *off*. Every other provider here can
     # satisfy itself from the stack alone; this one needs a credential nobody has on a fresh
@@ -75,6 +112,11 @@ cka:
     # So `docker compose up` works immediately, and `CKA_PROVIDER_LLM=langchain4j` in app/.env
     # turns summarising on once LLM_API_KEY is set — which is what T20's ./setup.sh will write.
     llm: none
+
+  # The origin the front end is served from, which is what the browser sends when it calls
+  # /api/ from another port. Compose derives it from FRONTEND_PORT.
+  api:
+    allowed-origin: ${CKA_API_ALLOWED_ORIGIN:http://localhost:3000}
 
   # Where the Markdown vault writes (T06). Relative by default, for the same reason the
   # datasource URL above is: ../data/vault from the backend's working directory is app/data/vault,
@@ -84,6 +126,34 @@ cka:
   # Compose sets VAULT_PATH to the absolute container path.
   vault:
     path: ${VAULT_PATH:../data/vault}
+
+  # How the folder watcher reaches Google Drive (T09). The client id and secret come from a
+  # published Desktop-app OAuth client; the refresh token from running GoogleConsent once.
+  # ./app/scripts/google-consent.sh does that and prints the line to add.
+  capture:
+    # The unit is appended here rather than being part of the variable's name, so .env keeps a
+    # plain number and Spring still gets a Duration it can parse.
+    poll-interval: ${CAPTURE_POLL_INTERVAL_SECONDS:60}s
+
+    # Deleting a page from the knowledge store asks for that meeting to be captured again.
+    #
+    # On by default, because the knowledge store is a folder of Markdown files that a person is
+    # meant to open and edit — so deleting a note is the obvious way to say "do that one again",
+    # and it is the one edit that would otherwise do nothing: CKA's record of having captured
+    # the meeting outlives the note, and the invisible record wins.
+    #
+    # It runs one way only. A page with no capture record is never deleted — that is somebody's
+    # own note, and tidying it away would be CKA removing a file on a guess.
+    #
+    # Turn it off (CAPTURE_RECAPTURE_DELETED_NOTES=false) for a store that is pruned on a
+    # schedule or by retention policy, where every pruned note would otherwise be captured and
+    # summarised a second time, at a real cost per meeting.
+    recapture-deleted-notes: ${CAPTURE_RECAPTURE_DELETED_NOTES:true}
+    google-drive:
+      folder-id: ${GOOGLE_DRIVE_FOLDER_ID:}
+      client-id: ${GOOGLE_CLIENT_ID:}
+      client-secret: ${GOOGLE_CLIENT_SECRET:}
+      refresh-token: ${GOOGLE_REFRESH_TOKEN:}
 
   # How the LLM provider reaches a model (T12).
   llm:

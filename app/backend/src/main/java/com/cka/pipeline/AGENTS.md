@@ -12,6 +12,7 @@ bus exists — which is what lets any stage be swapped, run alone, or driven by 
 | `KnowledgeStage` | `ContentSummarised` | `KnowledgeProvider` | `KnowledgeStored` |
 | `ActionStage` | `KnowledgeStored` | `WorkItemProvider`, `DecisionProvider` | `ActionProposed`; unmatched mentions go to the audit service |
 | `AuditTrail` | every event, plus direct calls | `AuditStore` | nothing |
+| `RecaptureDeletedNotes` | its own timer | `CapturedItems`, `KnowledgeProvider` | nothing; forgets a meeting whose note was seen and is now gone |
 
 ## Conventions specific to this package
 
@@ -53,11 +54,15 @@ call `accepted` and `rejected`.
   production code that relies on either — and in a test, assert the chain's causal spine as a
   *subsequence*, not as an exact list: where an unmatched mention falls among the proposals from
   the same knowledge is the decision provider's iteration order, which nothing promises.
-- **The stages are still not Spring beans, and two of them are wired all the same.**
-  [`com.cka.config`](../config/AGENTS.md) builds `SummariseStage` (T12) and `KnowledgeStage`
-  (T06) and starts them on `ApplicationReadyEvent`; the classes themselves keep no annotations,
-  which is what lets `PipelineWiringTest` assemble the whole chain from mocks with no container.
-  `CaptureStage` and `ActionStage` wait on T09 and T08.
+- **The stages are still not Spring beans, and three of them are wired all the same.**
+  [`com.cka.config`](../config/AGENTS.md) builds `CaptureStage` (T09), `SummariseStage` (T12)
+  and `KnowledgeStage` (T06), and the reconciler, and starts them on `ApplicationReadyEvent`;
+  the classes themselves keep no annotations, which is what lets `PipelineWiringTest` assemble
+  the whole chain from mocks with no container. `ActionStage` waits on T08.
+- **A missing note means deleted only once it has been seen.** A meeting is recorded as captured
+  when it is handed on and its note appears after summarising, so `RecaptureDeletedNotes` forgets
+  only rows whose `stored_at` it has set. Reading "not written yet" as "deleted" recaptured every
+  meeting on every poll.
 - **Subscribing at startup against an unreachable broker fails, deliberately** — the question
   this file previously left open. `EventBus.subscribe` declares its queue before attaching a
   listener, and that queue is anonymous and auto-delete, so a caught failure leaves no queue and

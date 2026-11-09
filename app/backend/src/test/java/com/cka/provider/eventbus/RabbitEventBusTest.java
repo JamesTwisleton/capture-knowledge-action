@@ -223,6 +223,31 @@ class RabbitEventBusTest {
     }
 
     @Test
+    @DisplayName("An event its subscriber throws on is dropped, not delivered again")
+    void anEventItsSubscriberThrowsOnIsDroppedNotDeliveredAgain() throws Exception {
+        // A summarise that fails would otherwise be retried by the broker as fast as it can
+        // redeliver: a paid LLM call each time, back to back, for as long as the failure lasts.
+        // Dropped instead, the meeting is left captured and never stored, which is the list a
+        // person retries from (UnstoredCapturesController).
+        BlockingQueue<ContentCaptured> inbox = new LinkedBlockingQueue<>();
+        bus.subscribe(ContentCaptured.class, event -> {
+            inbox.add(event);
+            throw new IllegalStateException("the LLM is down");
+        });
+        var failing = ContentCaptured.builder()
+                .chainId(ChainId.next())
+                .content(REFINEMENT)
+                .build();
+
+        bus.publish(failing);
+
+        assertThat(next(inbox)).isEqualTo(failing);
+        // A redelivery to a handler that fails at once is back within milliseconds — over a
+        // thousand a second before the fix — so a second of silence is not a race.
+        assertThat(inbox.poll(1, TimeUnit.SECONDS)).isNull();
+    }
+
+    @Test
     @DisplayName("The health check reports up while the broker is reachable")
     void theHealthCheckReportsUpWhileTheBrokerIsReachable() {
         assertThat(bus.checkHealth().up()).isTrue();

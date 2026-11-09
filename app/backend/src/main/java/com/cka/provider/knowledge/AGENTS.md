@@ -19,9 +19,11 @@ implementation — Obsidian-compatible, not Obsidian-dependent.
   written them.
 - **`PageReference.location` is what a person clicks** in the stored knowledge view (T16) — make
   it something that opens, not an internal key.
-- **Nothing reads the page back.** Mention detection works from the `Knowledge` that
-  `KnowledgeStage` puts on the event, so the page's format serves people and their tools, never
-  the pipeline. That is what makes it safe to change.
+- **One thing reads the page back: `storedTitles`, for its front matter's `title`.** The
+  reconciler compares that against the capture record, so a note whose title cannot be read back
+  exactly is a note it treats as deleted. Everything else about the page serves people and their
+  tools rather than the pipeline — mention detection works from the `Knowledge` on the event —
+  and is safe to change.
 
 ## The Markdown vault
 

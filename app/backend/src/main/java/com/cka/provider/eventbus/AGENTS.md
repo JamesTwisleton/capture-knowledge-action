@@ -44,6 +44,11 @@ tests only, in [`com.cka.testsupport`](../../../../../../test/java/com/cka/tests
   while the app is down either, since every producer is in this process. It stops being true the
   moment a producer lives outside it, and that is the point to revisit durability — along with
   whether `subscribe` should take a subscriber name so queues can be stable and durable.
+- **An event its handler throws on is dropped, not requeued.** The container's default puts it
+  back, and the broker redelivers at once — a failing summarise was retried back to back, a
+  paid LLM call each time, for as long as it failed. Recovery is a person's: the meeting stays captured and never stored, and
+  `api/UnstoredCapturesController` lists it with a retry. Don't add broker-side retries without
+  a limit and a delay.
 - **Boot's RabbitMQ health indicator is off**, by way of `management.health.rabbit.enabled:
   false`, so a broker hiccup cannot fail the healthcheck that Compose and T04 read as "is the
   backend up". Bus reachability is `checkHealth()` instead; the reasoning behind that split is in

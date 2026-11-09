@@ -37,4 +37,8 @@ ENV SERVER_PORT=8080
 
 # suspend=n so the app boots without waiting for a debugger; address=*:5005 because
 # the JDK binds the agent to localhost otherwise, unreachable from outside.
-CMD ["mvn", "spring-boot:run", "-Dspring-boot.run.jvmArguments=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"]
+# --enable-native-access=ALL-UNNAMED: the SQLite driver loads a native library, which JDK 24+
+# warns about on every start and will block outright in a later release. It belongs on this line
+# rather than in the pom's spring-boot plugin configuration, because -Dspring-boot.run.jvmArguments
+# on the command line replaces that configuration rather than adding to it.
+CMD ["mvn", "spring-boot:run", "-Dspring-boot.run.jvmArguments=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 --enable-native-access=ALL-UNNAMED"]
